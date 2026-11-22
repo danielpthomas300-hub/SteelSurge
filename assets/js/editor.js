@@ -22,12 +22,12 @@
   /* ---------------- Sidebar groups and "view on site" links ---------------- */
   const GROUPS = [
     ["Team", ["team", "members", "values", "projects", "mentors"]],
-    ["Season", ["competition", "achievements", "outreach"]],
+    ["Season", ["achievements", "outreach"]],
     ["Media", ["featuredVideos", "updates"]],
     ["Sponsors & contact", ["sponsors", "tiers", "contact"]],
     ["Settings", ["settings"]],
   ];
-  const PAGE_FOR = { team: "index.html", members: "team.html", values: "team.html", projects: "team.html", mentors: "team.html", outreach: "index.html", competition: "achievements.html", achievements: "achievements.html", featuredVideos: "media.html", updates: "media.html", sponsors: "sponsors.html", tiers: "sponsors.html", contact: "contact.html" };
+  const PAGE_FOR = { team: "index.html", members: "team.html", values: "team.html", projects: "team.html", mentors: "team.html", outreach: "index.html", achievements: "team.html", featuredVideos: "media.html", updates: "media.html", sponsors: "sponsors.html", tiers: "sponsors.html", contact: "contact.html" };
   const eye = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
   const lockIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
   const undoIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>';
@@ -73,10 +73,7 @@
     { id: "mentors", title: "Mentors", icon: "star", desc: "Shown on the team page only when at least one mentor is listed.",
       get: (c) => c.mentors || [], set: (c, v) => (c.mentors = v), list: true, itemLabel: "mentor", summary: (m) => m.name || "New mentor", sub: (m) => m.role,
       fields: [{ k: "name", label: "Name", type: "text", required: true }, { k: "role", label: "What they help with", type: "text" }] },
-    { id: "competition", title: "Competition page", icon: "chart", desc: "Events, matches, and awards update automatically from FTCScout. Choose whether event rows show your rank and win-loss record.",
-      get: (c) => ({ showRecords: !!c.showRecords }), set: (c, v) => (c.showRecords = !!v.showRecords),
-      fields: [{ k: "showRecords", label: "Show rank and win-loss record for each event", type: "bool" }] },
-    { id: "achievements", title: "Milestones & awards", icon: "trophy", desc: "Official FTC awards and match results appear automatically from FTCScout. Add anything else worth celebrating here.",
+    { id: "achievements", title: "Milestones & awards", icon: "trophy", desc: "The milestones timeline on the Team page. Official FTC awards are added there automatically from FTCScout; add anything else worth celebrating here.",
       get: (c) => c.achievements, set: (c, v) => (c.achievements = v), list: true, itemLabel: "milestone", summary: (a) => a.title || "New milestone", sub: (a) => a.date,
       fields: [
         { k: "date", label: "Month", type: "month", required: true },

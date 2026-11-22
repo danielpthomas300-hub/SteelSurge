@@ -24,20 +24,20 @@
     autonomous: "Autonomous", signal: "Signal Lost", flywheel: "Flywheel", mecanum: "Mecanum Rush", wireup: "Wire Up",
     stackup: "Stack Up", balance: "Balance", odometry: "Odometry", kilovolt: "Kilovolt", all: "Steel Surge",
   };
-  const MAIN_PAGES = ["home", "team", "achievements", "ftc", "media", "arcade", "sponsors", "contact", "trophies"];
+  const MAIN_PAGES = ["home", "team", "ftc", "calculator", "media", "arcade", "sponsors", "contact", "trophies"];
   const GAME_IDS = ["overclock", "gridlock", "echo", "pitcrew", "autonomous", "signal", "flywheel", "mecanum", "wireup", "stackup", "balance", "odometry", "kilovolt"];
 
   const LIST = [
     // Exploring the site
     ["first-contact", "site", "bronze", "First Contact", "Visit the Steel Surge website."],
     ["meet-crew", "site", "bronze", "Meet the Crew", "Visit the team page."],
-    ["scouting", "site", "bronze", "Scouting Report", "Check out our competition results."],
-    ["rookie", "site", "bronze", "Rookie Briefing", "Read the About FTC page all the way to the end."],
+    ["scouting", "site", "bronze", "Number Cruncher", "Open the FTC score calculator."],
+    ["rookie", "site", "bronze", "Rookie Briefing", "Read the FTC page all the way to the end."],
     ["pit-pass", "site", "bronze", "Pit Pass", "Visit the sponsors page."],
     ["say-hello", "site", "bronze", "Say Hello", "Visit the contact page."],
     ["now-playing", "site", "bronze", "Now Playing", "Watch one of our team videos."],
     ["dept", "site", "bronze", "Department Head", "Filter the team page by department."],
-    ["time-travel", "site", "bronze", "Time Traveler", "Look back at a past season's results."],
+    ["time-travel", "site", "bronze", "Time Traveler", "Score a match from a past FTC season in the calculator."],
     ["night-shift", "site", "bronze", "Night Shift", "Switch between light and dark mode."],
     ["trophy-case", "site", "bronze", "Trophy Case", "Open your trophy case."],
     ["off-field", "site", "bronze", "Off the Field", "Find the page that doesn't exist.", true],
@@ -47,8 +47,8 @@
     ["arcade-regular", "site", "gold", "Arcade Regular", "Play all thirteen arcade games."],
     ["daredevil", "site", "gold", "Daredevil", "Earn the Extreme trophy in 3 different arcade games."],
     ["tinkerer", "site", "bronze", "Make It Yours", "Change a setting in any arcade game."],
-    ["field-trip", "site", "silver", "Field Trip", "Explore 5 different FTC fields in 3D on the About FTC page."],
-    ["historian", "site", "gold", "FTC Historian", "Explore every FTC field in 3D on the About FTC page."],
+    ["field-trip", "site", "silver", "Field Trip", "Explore 5 different FTC fields in 3D on the FTC page."],
+    ["historian", "site", "gold", "FTC Historian", "Explore every FTC field in 3D on the FTC page."],
     // Games
     ["oc-first", "overclock", "bronze", "Ignition", "Finish a run in Overclock."],
     ["oc-close", "overclock", "silver", "Close Call", "Earn a close-call bonus in Overclock."],
@@ -176,7 +176,7 @@
     const s = stats();
     if (event === "page") {
       s.pages[data] = 1;
-      const map = { home: "first-contact", team: "meet-crew", achievements: "scouting", sponsors: "pit-pass", contact: "say-hello", trophies: "trophy-case", 404: "off-field" };
+      const map = { home: "first-contact", team: "meet-crew", calculator: "scouting", sponsors: "pit-pass", contact: "say-hello", trophies: "trophy-case", 404: "off-field" };
       trophy("first-contact");
       if (map[data]) trophy(map[data]);
       if (MAIN_PAGES.every((p) => s.pages[p])) trophy("grand-tour");
@@ -247,7 +247,7 @@
     updateBadge();
     renderCase();
     pop();
-    // About FTC: award when the reader reaches the end.
+    // FTC page: award when the reader reaches the end.
     const end = document.getElementById("ftc-end");
     if (end && "IntersectionObserver" in window) new IntersectionObserver(([en], io) => { if (en.isIntersecting) { trophy("rookie"); io.disconnect(); } }).observe(end);
     addEventListener("ss:theme", (ev) => { if (ev.detail === "light" || ev.detail === "dark") trophy("night-shift"); });

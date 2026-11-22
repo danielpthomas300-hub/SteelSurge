@@ -117,7 +117,7 @@ pages["index.html"] = shell("Steel Surge — FTC Robotics Team 27254", "Steel Su
         <dl class="hero-meta" id="hero-meta"></dl>
       </div>
     </section>
-''' + section(head_block("Our journey so far", "By the numbers", "Updated automatically from FTCScout after every event.", f'<a class="link-arrow" href="achievements.html">See our competition history {A}</a>') + '\n        <div id="home-stats"></div>')
+''' + section(head_block("Our journey so far", "By the numbers", "Updated automatically from FTCScout after every event.", f'<a class="link-arrow" href="https://ftcscout.org/teams/27254" target="_blank" rel="noopener">See every event on FTCScout {A}</a>') + '\n        <div id="home-stats"></div>')
   + section(head_block("What we do", "Three crews, one robot") + '\n        <div class="grid cols-3" id="pillars"></div>')
   + section(head_block("How we build", "From kickoff to competition", "Every season starts from scratch. Here's how a new robot comes together.") + '\n        <ol class="steps" id="build-steps"></ol>', cls="section alt")
   + section(head_block("Watch", "Latest from our channel", "Builds, matches, and moments from the build room. New videos appear here as soon as we post them.", f'<a class="link-arrow" href="media.html">All videos {A}</a>') + '\n        <div class="latest-videos" id="latest-videos"></div>')
@@ -134,21 +134,19 @@ pages["team.html"] = shell("Team" + T, "Meet the students behind Steel Surge, FT
   + section(head_block("How we work", "What Steel Surge stands for") + '\n        <div class="values-grid" id="values-grid"></div>', attrs=' id="values" hidden')
   + section(head_block("Made by Steel Surge", "From our CAD to the 3D printer", "Beyond the robot, we design and print our own team gear and shop tools.") + '\n        <div class="projects-grid" id="projects-grid"></div>', attrs=' id="projects" hidden')
   + section(head_block("Mentors", "The people who guide us") + '\n        <div class="grid cols-3" id="mentor-grid"></div>', attrs=' id="mentors" hidden')
+  + section(head_block("Our story", "Milestones and awards", "Official awards appear here automatically from FTCScout.", f'<a class="link-arrow" id="results-link" href="https://ftcscout.org/teams/27254" target="_blank" rel="noopener">Every event and match on FTCScout {A}</a>') + '\n        <div class="timeline" id="timeline"></div>', attrs=' id="milestones"')
   + section(f'''        <div class="cta-band reveal">
           <div><h2>Want to join Steel Surge?</h2><p>Builders, coders, designers, and storytellers welcome. No experience needed, just curiosity and commitment.</p></div>
           <div class="actions"><a class="btn primary" id="join-link" href="#" target="_blank" rel="noopener">Fill out the interest form {A}</a></div>
         </div>'''), path="team.html")
 
-pages["achievements.html"] = shell("Competition" + T, "Steel Surge's competition history: events, awards, and milestones, updated automatically from FTCScout.", "achievements",
-  page_hero("Competition", "Our competition journey", "Every event we've played, every award we've earned, and the milestones along the way. Event data updates automatically from FTCScout.")
-  + section('        <div id="ach-next"></div>\n        <div id="ach-stats"></div>\n        <div id="ach-source"></div>')
-  + section(head_block("Awards", "Trophy shelf") + '\n        <div class="trophy-shelf" id="trophy-shelf"></div>')
-  + section('''        <div class="section-head">
-          <div><span class="eyebrow">Events</span><h2>Where we've competed</h2></div>
-          <div class="season-tabs" id="season-tabs" role="tablist" aria-label="Season"></div>
-        </div>
-        <div class="events" id="season-results" role="tabpanel"></div>''')
-  + section(head_block("Milestones", "The story so far") + '\n        <div class="timeline" id="timeline"></div>'), path="achievements.html")
+# The old Competition page now forwards to the team's story on the Team page
+pages["achievements.html"] = f'''<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Moved · Steel Surge</title>
+<meta http-equiv="refresh" content="0; url=team.html#milestones"><link rel="canonical" href="{SITE}team.html">
+<script>location.replace("team.html#milestones")</script></head>
+<body><p>This page moved to <a href="team.html#milestones">our Team page</a>.</p></body></html>
+'''
 
 pages["media.html"] = shell("Media" + T, "Videos, highlights, and social media from Steel Surge, FTC team 27254.", "media",
   page_hero("Media", "Videos &amp; updates", "Our YouTube channel, team favorites, and where to follow along. New videos appear here automatically.")
@@ -263,10 +261,10 @@ pages["contact.html"] = shell("Contact" + T, "Contact Steel Surge, FTC team 2725
           <details><summary>How quickly will you reply?</summary><p>We're a student team, so replies usually come within a few days, a little longer during busy competition weekends. Team leads answer with mentor oversight.</p></details>
           <details><summary>Can our robot visit my school or event?</summary><p>We love doing demos. Choose "Book a demo" above and tell us the date, location, and what kind of event it is.</p></details>
           <details><summary>Who can join Steel Surge?</summary><p>Students in grades 7–12 in our area. No experience is needed. Fill out the interest form or send us a message.</p></details>
-          <details><summary>What is FTC?</summary><p>FIRST Tech Challenge is a robotics program for grades 7–12. Our <a href="ftc.html">About FTC page</a> explains everything, including every recent game.</p></details>
+          <details><summary>What is FTC?</summary><p>FIRST Tech Challenge is a robotics program for grades 7–12. Our <a href="ftc.html">FTC page</a> explains everything, including every recent game.</p></details>
         </div>'''), path="contact.html")
 
-pages["ftc.html"] = shell("About FTC" + T, "New to FIRST Tech Challenge? How FTC seasons and matches work, judged awards, a glossary, and how to get involved.", "ftc",
+pages["ftc.html"] = shell("What is FTC?" + T, "New to FIRST Tech Challenge? How FTC seasons and matches work, judged awards, a glossary, and how to get involved.", "ftc",
   open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ftc_page.html"), encoding="utf-8").read(), path="ftc.html",
   extra_head='\n  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>\n  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>')
 
@@ -481,7 +479,7 @@ for name, html in pages.items():
         f.write(html)
 
 # Sitemap + robots
-urls = [n for n in pages if n not in ("404.html", "editor.html")]
+urls = [n for n in pages if n not in ("404.html", "editor.html", "achievements.html")]
 with open(os.path.join(OUT, "sitemap.xml"), "w", encoding="utf-8", newline="\n") as f:
     f.write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n')
     for n in urls:

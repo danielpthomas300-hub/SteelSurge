@@ -107,6 +107,7 @@
 
   function update() {
     const r = compute();
+    if (season.year < CURRENT && r.total > 0) window.SS?.trophy?.("time-travel");
     // per-item points and states
     for (const it of allItems(season)) {
       const el = $(`[data-item="${it.id}"]`); if (!el) continue;

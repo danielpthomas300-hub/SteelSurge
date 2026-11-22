@@ -37,7 +37,7 @@ for js in glob.glob("assets/js/**/*.js", recursive=True):
     for ref in re.findall(r'url\("([^"]+)"\)', src):
         check(ref, ".", js)
 
-ids = {"index", "team", "achievements", "ftc", "media", "arcade", "sponsors", "contact", "trophies", "editor"}
+ids = {"index", "team", "calculator", "ftc", "media", "arcade", "sponsors", "contact", "trophies", "editor"}
 for page in ids:
     if not os.path.exists(f"{page}.html"):
         missing.append(f"page missing: {page}.html")

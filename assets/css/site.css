@@ -922,3 +922,13 @@ html.no-scroll, html.no-scroll body { overflow: hidden; }
 }
 .calc-link { margin-top: 14px; }
 .calc-link svg { width: 16px; height: 16px; }
+
+/* FTC page: score calculator card */
+.calc-promo { display: flex; align-items: center; gap: 16px; margin-top: 22px; padding: 16px 18px; border-radius: 18px; border: 1px solid var(--line-2); background: linear-gradient(120deg, var(--surge-soft), transparent 70%), var(--surface); color: var(--text); max-width: 620px; transition: border-color .15s, transform .15s; }
+.calc-promo:hover { border-color: var(--surge); color: var(--text); transform: translateY(-1px); }
+.calc-promo-ico { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--surge); color: #fff; flex: none; }
+.calc-promo-ico svg { width: 22px; height: 22px; }
+.calc-promo b { display: block; font-size: 16px; }
+.calc-promo small { display: block; color: var(--muted); font-size: 14px; margin-top: 2px; }
+.calc-promo-go { margin-left: auto; font-weight: 600; color: var(--surge); white-space: nowrap; }
+@media (max-width: 520px) { .calc-promo-go { display: none; } }

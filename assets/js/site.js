@@ -221,8 +221,8 @@
 
   /* ---------------- Layout: header / footer ---------------- */
   const NAV = [
-    ["index.html", "Home", "home"], ["team.html", "Team", "team"], ["achievements.html", "Competition", "achievements"],
-    ["ftc.html", "About FTC", "ftc"], ["calculator.html", "Calculator", "calculator"], ["media.html", "Media", "media"], ["arcade.html", "Arcade", "arcade"], ["sponsors.html", "Sponsors", "sponsors"], ["contact.html", "Contact", "contact"],
+    ["index.html", "Home", "home"], ["team.html", "Team", "team"],
+    ["ftc.html", "FTC", "ftc"], ["calculator.html", "Score Calculator", "calculator"], ["media.html", "Media", "media"], ["arcade.html", "Arcade", "arcade"], ["sponsors.html", "Sponsors", "sponsors"], ["contact.html", "Contact", "contact"],
   ];
   const navSection = () => (PAGE.startsWith("game") ? "arcade" : PAGE);
 
@@ -699,6 +699,7 @@
   };
 
   pages.team = async (c) => {
+    renderTimeline(c);
     if (c.team.school) $("#team-lead").textContent = `Students from ${c.team.school} who design, build, code, and promote our robot every season.`;
     const depts = [...new Set(c.members.map((m) => m.dept).filter(Boolean))];
     const bar = $("#team-filter");
@@ -740,62 +741,29 @@
     }
   };
 
-  pages.achievements = async (c) => {
-    const shelf = $("#trophy-shelf"), seasonsHost = $("#season-results"), tabs = $("#season-tabs"), tl = $("#timeline");
-    shelf.innerHTML = `<div class="trophy skeleton" style="height:150px"></div>`.repeat(3);
-    seasonsHost.innerHTML = `<div class="event skeleton" style="height:86px"></div>`.repeat(3);
-    const ftc = await loadFTC(c.team.number, c.team.rookieYear);
-    $("#ach-source").innerHTML = sourceLine(ftc);
-    const sum = summarize(ftc);
-    if (sum?.next) $("#ach-next").innerHTML = nextEventCard(sum.next);
-    $("#ach-stats").innerHTML = journeyStats(c, ftc, true);
-    runCounts($("#ach-stats"));
-
-    const awards = (ftc?.awards || []).slice().sort((a, b) => String(b.eventStart).localeCompare(String(a.eventStart)));
-    const manualTrophies = (c.achievements || []).filter((a) => a.icon === "award");
-    const trophies = [
-      ...awards.map((a) => ({ title: awardName(a), sub: `${a.eventName} · ${seasonLabel(a.season)}` })),
-      ...manualTrophies.map((a) => ({ title: a.title, sub: `${a.detail || ""}${a.date ? " · " + fmtDate(a.date, false) : ""}` })),
-    ];
-    shelf.innerHTML = trophies.length
-      ? trophies.map((t) => `<div class="trophy reveal">${ICON.trophy}<h3>${esc(t.title)}</h3><p>${esc(t.sub)}</p></div>`).join("")
-      : `<div class="empty-state" style="grid-column:1/-1">${ICON.trophy}<p><b>Our first award is on the way.</b><br>Awards appear here automatically as soon as FIRST posts them.</p></div>`;
-
-    const seasons = (ftc?.seasons || []).filter((s) => s.events.length);
-    if (!seasons.length) {
-      tabs.hidden = true;
-      seasonsHost.innerHTML = `<div class="empty-state">${ICON.chart}<p>Our events will appear here after we compete.</p></div>`;
-    } else {
-      tabs.innerHTML = seasons.map((s, i) => `<button role="tab" type="button" id="tab-${s.season}" aria-controls="season-results" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-season="${s.season}">${seasonLabel(s.season)}</button>`).join("");
-      const show = (y, focus = false) => {
-        const s = seasons.find((x) => x.season === +y);
-        $$("button", tabs).forEach((b) => { const on = +b.dataset.season === +y; b.setAttribute("aria-selected", String(on)); b.tabIndex = on ? 0 : -1; if (on && focus) b.focus(); });
-        seasonsHost.setAttribute("aria-labelledby", `tab-${y}`);
-        const matches = s.events.reduce((n, e) => n + (e.played || e.wins + e.losses + e.ties), 0);
-        seasonsHost.innerHTML = `<p class="muted" style="margin-bottom:14px">${s.events.length} event${s.events.length === 1 ? "" : "s"} · ${matches} qualification matches played</p>` + s.events.slice().reverse().map((e) => eventRow(e, c.showRecords)).join("");
-        initReveal(seasonsHost);
-      };
-      const travel = (y) => { if (+y !== seasons[0].season) window.SS?.trophy?.("time-travel"); };
-      tabs.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { show(b.dataset.season); travel(b.dataset.season); } });
-      tabs.addEventListener("keydown", (e) => {
-        const list = $$("button", tabs), i = list.indexOf(document.activeElement);
-        if (i < 0 || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
-        e.preventDefault();
-        const j = e.key === "Home" ? 0 : e.key === "End" ? list.length - 1 : (i + (e.key === "ArrowRight" ? 1 : -1) + list.length) % list.length;
-        show(list[j].dataset.season, true); travel(list[j].dataset.season);
-      });
-      show(seasons[0].season);
-    }
-    const items = [
-      ...(c.achievements || []).map((a) => ({ date: a.date, title: a.title, detail: a.detail, kind: a.icon === "award" ? "award" : "milestone" })),
-      ...awards.map((a) => ({ date: a.eventStart, title: awardName(a), detail: `Earned at ${a.eventName}.`, kind: "award" })),
-    ].sort((a, b) => String(b.date).localeCompare(String(a.date)));
-    tl.innerHTML = items.map((i) => `
-      <article class="tl-item reveal ${i.kind}">
-        <div class="tl-meta"><span>${fmtDate(i.date, false)}</span>${i.kind === "award" ? '<span class="tag amber">Award</span>' : ""}</div>
-        <h3>${esc(i.title)}</h3>${i.detail ? `<p>${esc(i.detail)}</p>` : ""}
-      </article>`).join("");
-  };
+  /** Team page: milestones from the editor plus official awards from FTCScout, newest first. */
+  async function renderTimeline(c) {
+    const tl = $("#timeline"); if (!tl) return;
+    $("#results-link")?.setAttribute("href", `https://ftcscout.org/teams/${c.team.number}`);
+    const draw = (awards) => {
+      const items = [
+        ...(c.achievements || []).map((a) => ({ date: a.date, title: a.title, detail: a.detail, kind: a.icon === "award" ? "award" : "milestone" })),
+        ...awards.map((a) => ({ date: a.eventStart, title: awardName(a), detail: `Earned at ${a.eventName}.`, kind: "award" })),
+      ].sort((x, y) => String(y.date).localeCompare(String(x.date)));
+      $("#milestones").hidden = !items.length;
+      tl.innerHTML = items.map((i) => `
+        <article class="tl-item reveal ${i.kind}">
+          <div class="tl-meta"><span>${fmtDate(i.date, false)}</span>${i.kind === "award" ? '<span class="tag amber">Award</span>' : ""}</div>
+          <h3>${esc(i.title)}</h3>${i.detail ? `<p>${esc(i.detail)}</p>` : ""}
+        </article>`).join("");
+      initReveal(tl);
+    };
+    draw([]);
+    const ftc = await loadFTC(c.team.number, c.team.rookieYear).catch(() => null);
+    if (ftc?.awards?.length) draw(ftc.awards);
+    // Links to #milestones (including the old Competition page) land here once it has content
+    if (location.hash === "#milestones") $("#milestones").scrollIntoView({ block: "start" });
+  }
 
   pages.media = async (c) => {
     $("#media-video").innerHTML = videoEmbed(c.team.youtubeChannelId, "Steel Surge on YouTube");
@@ -939,7 +907,7 @@
   }
   function exitPseudo(el) { el.classList.remove("pseudo-full"); document.documentElement.classList.remove("no-scroll"); dispatchEvent(new Event("resize")); }
 
-  /* ---------------- About FTC: season explorer with 3D fields ---------------- */
+  /* ---------------- FTC page: season explorer with 3D fields ---------------- */
   pages.ftc = async (c) => {
     let data;
     for (let attempt = 0; attempt < 3 && !data; attempt++) {
@@ -1015,7 +983,7 @@
         </div>
         <div class="season-grid two">
           <div><h3>How scoring works</h3><table class="score-table"><tbody>${s.scoring.map(([a, p]) => `<tr><th scope="row">${esc(a)}</th><td>${esc(p)}</td></tr>`).join("")}</tbody></table><p class="fine">Highlights from the official manual. See the Competition Manual for every rule and penalty.</p><a class="btn sm calc-link" href="${url(`calculator.html?season=${s.year}`)}">${ICON.chart || ""} Open the ${esc(s.name)} score calculator</a></div>
-          <div class="unique"><h3>What made it special</h3><p>${esc(s.unique)}</p>${competed.has(y) ? `<a class="link-arrow" href="${url("achievements.html")}">See how Steel Surge did ${ICON.arrow}</a>` : ""}</div>
+          <div class="unique"><h3>What made it special</h3><p>${esc(s.unique)}</p>${competed.has(y) ? `<a class="link-arrow" href="https://ftcscout.org/teams/${esc(c.team.number)}?season=${y}" target="_blank" rel="noopener">See how Steel Surge did ${ICON.arrow}</a>` : ""}</div>
         </div>`;
       $("#field-title").textContent = `${s.name} field · ${seasonLabel(s.year)}`;
       if (push) history.replaceState(null, "", `${location.pathname}?season=${y}#games`);
