@@ -13,10 +13,25 @@
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------------- Player settings (shared by every game, saved on this device) ---------------- */
-  const DEFAULTS = { difficulty: "normal", volume: 0.7, sfx: true, shake: !reducedMotion, particles: true, contrast: false, bigText: false };
+  /** Five difficulty levels shared by every game. `m` scales speed and pressure in action games. */
+  const LEVELS = [
+    { key: "superEasy", label: "Super Easy", m: 0.55 },
+    { key: "easy", label: "Easy", m: 0.78 },
+    { key: "medium", label: "Medium", m: 1 },
+    { key: "hard", label: "Hard", m: 1.3 },
+    { key: "extreme", label: "Extreme", m: 1.6 },
+  ];
+  const DEFAULTS = { difficulty: "medium", volume: 0.7, sfx: true, shake: !reducedMotion, particles: true, contrast: false, bigText: false };
   const Settings = Object.assign({}, DEFAULTS, store.get("ss-arcade-settings", {}));
-  /** Difficulty multiplier games use for pressure: easy 0.75, normal 1, hard 1.3. */
-  const diff = () => ({ easy: 0.75, normal: 1, hard: 1.3 }[Settings.difficulty] || 1);
+  if (Settings.difficulty === "normal") Settings.difficulty = "medium"; // older saved setting
+  if (!LEVELS.some((l) => l.key === Settings.difficulty)) Settings.difficulty = "medium";
+  /** 0 = Super Easy … 4 = Extreme */
+  const level = () => Math.max(0, LEVELS.findIndex((l) => l.key === Settings.difficulty));
+  const levelName = () => LEVELS[level()].label;
+  /** Pressure multiplier for action games: 0.55 (Super Easy) to 1.6 (Extreme). */
+  const diff = () => LEVELS[level()].m;
+  /** Pick a value by difficulty: pick([superEasy, easy, medium, hard, extreme]) */
+  const pick = (arr) => arr[level()];
   const saveSettings = () => { store.set("ss-arcade-settings", Settings); applyLook(); if (typeof Sound !== "undefined") Sound.applyVolume(); };
   function applyLook() { const g = document.getElementById("game"); if (g) { g.classList.toggle("hc", Settings.contrast); g.classList.toggle("bigtext", Settings.bigText); } }
 
@@ -179,6 +194,13 @@
       gear.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>';
       mute?.before(gear);
       gear.addEventListener("click", () => this.openSettings());
+      // Difficulty badge: always shows the current level; click to change it
+      const badge = document.createElement("button");
+      badge.className = "diff-badge"; badge.type = "button"; badge.dataset.act = "difficulty"; badge.title = "Change difficulty";
+      gear.before(badge);
+      this._syncBadge = () => { const i = level(); badge.textContent = levelName(); badge.dataset.level = String(i); badge.setAttribute("aria-label", `Difficulty: ${levelName()}. Change difficulty`); };
+      this._syncBadge();
+      badge.addEventListener("click", () => this.openSettings());
       applyLook();
       pause?.addEventListener("click", () => (this.paused ? this.resume() : this.pause()));
       if (full) {
@@ -258,8 +280,8 @@
       const check = (name, label, hint) => `<label class="toggle"><input type="checkbox" name="${name}" ${Settings[name] ? "checked" : ""}><span class="sw"></span><span><b>${label}</b>${hint ? `<small>${hint}</small>` : ""}</span></label>`;
       layer.innerHTML = `<div class="overlay-card settings">
         <span class="kicker">Settings</span><h2>Make it yours</h2>
-        <fieldset><legend>Difficulty</legend><div class="opts">${radio("difficulty", "easy", "Easy")}${radio("difficulty", "normal", "Normal")}${radio("difficulty", "hard", "Hard")}</div>
-          <p class="set-note">${this.puzzle ? "This is a puzzle game, so difficulty doesn't change the levels. Use hints if you get stuck." : "Takes effect on your next run. Hard mode unlocks extra trophies."}</p></fieldset>
+        <fieldset><legend>Difficulty</legend><div class="opts five">${LEVELS.map((l) => radio("difficulty", l.key, l.label)).join("")}</div>
+          <p class="set-note">${this.difficultyNote || "Higher levels are faster and less forgiving."} ${this.puzzle ? "Changes apply right away." : "Takes effect on your next run."} Hard and Extreme unlock extra trophies.</p></fieldset>
         <fieldset><legend>Sound</legend>${check("sfx", "Sound effects")}<label class="range"><span>Volume</span><input type="range" name="volume" min="0" max="1" step="0.05" value="${Settings.volume}"></label></fieldset>
         <fieldset><legend>Accessibility</legend>${check("shake", "Screen shake", "Turn off if motion bothers you")}${check("particles", "Particle effects", "Sparks and bursts")}${check("contrast", "High contrast", "Brighter, stronger colors")}${check("bigText", "Larger text", "Bigger menus and labels")}</fieldset>
         <div class="overlay-actions"><button class="btn primary" data-done>Done</button><button class="btn" data-reset>Reset to defaults</button></div></div>`;
@@ -273,6 +295,7 @@
       layer.querySelectorAll("input").forEach((el) => el.addEventListener("input", () => {
         if (el.type === "radio") Settings[el.name] = el.value; else if (el.type === "checkbox") Settings[el.name] = el.checked; else Settings[el.name] = +el.value;
         saveSettings(); Sound.blip(); window.SS?.trophy?.("tinkerer");
+        if (el.name === "difficulty") { this._syncBadge?.(); this.onDifficulty?.(); }
       }));
     }
 
@@ -301,5 +324,5 @@
     });
   }
 
-  window.Arcade = { Game, Sound, Particles, Floaters, COLORS, drawBot, roundRect, clamp, lerp, ease, rand, store, onSwipe, reducedMotion, Settings, diff };
+  window.Arcade = { Game, Sound, Particles, Floaters, COLORS, drawBot, roundRect, clamp, lerp, ease, rand, store, onSwipe, reducedMotion, Settings, diff, level, levelName, pick, LEVELS };
 })();

@@ -67,7 +67,14 @@
   };
   const game = new Game({ id: "autonomous", width: W, height: H, pausable: false });
   game.puzzle = true;
+  game.difficultyNote = "Sets how many blocks you may use and how much the hints reveal. Super Easy hints show the whole program; Extreme has no hints, allows only par blocks, and gives you 3 runs per level.";
   const prog$ = store.get("ss-auto-progress", { stars: {}, last: 0 });
+  // Difficulty: extra blocks allowed beyond par, hint presses per level, runs per level
+  const extraBlocks = () => window.Arcade.pick([10, 7, 5, 2, 0]);
+  const hintPresses = () => window.Arcade.pick([Infinity, Infinity, 2, 1, 0]);
+  const runLimit = () => window.Arcade.pick([Infinity, Infinity, Infinity, Infinity, 3]);
+  let hintsUsed = 0, runs = 0;
+  game.onDifficulty = () => { if (L && !won && !running) { if (program.length > limit()) program.length = limit(); renderUI(); game.setMessage(`Difficulty set to ${window.Arcade.levelName()}: up to ${limit()} blocks.`); } };
   const saveProg = () => {
     store.set("ss-auto-progress", prog$);
     const cleared = Object.keys(prog$.stars).length, total = Object.values(prog$.stars).reduce((a, b) => a + b, 0);
@@ -76,10 +83,10 @@
   };
 
   let L, li, program = [], st, steps = [], stepI = -1, stepT = 0, running = false, view, lastEvent = "", won = false;
-  const limit = () => L.par + 5;
+  const limit = () => L.par + extraBlocks();
 
   function load(i) {
-    li = clamp(i, 0, LEVELS.length - 1); L = LEVELS[li]; program = []; won = false; hintN = 0; reset();
+    li = clamp(i, 0, LEVELS.length - 1); L = LEVELS[li]; program = []; won = false; hintN = 0; hintsUsed = 0; runs = 0; reset();
     prog$.last = li; saveProg();
     game.setHud("level", `${li + 1}/${LEVELS.length}`); game.setHud("par", String(L.par));
     game.setMessage(li === 0 ? "Add blocks below, then press Run. Drive onto the sample, Grab, then go to the basket and Score." : li === 4 ? "New block: Repeat. ×3 then Forward drives three squares using only two blocks." : `Score all ${L.samples.length} sample${L.samples.length > 1 ? "s" : ""} in ${L.par} blocks for 3 stars.`);
@@ -91,6 +98,8 @@
     if (won) return;
     if (running) { reset(); renderUI(); return; }
     if (!program.length) { game.setMessage("Your program is empty. Add some blocks first."); return; }
+    if (runs >= runLimit()) { game.setMessage(`No runs left on ${window.Arcade.levelName()}. Press R to clear the program and start the level over.`); return; }
+    runs++;
     reset(); steps = expand(program); running = true; stepI = 0; stepT = 0; begin(steps[0]); renderUI();
     Sound.select();
   }
@@ -111,7 +120,9 @@
     running = false; highlight(-1);
     if (st.scored === L.samples.length) return win();
     const left = L.samples.length - st.scored;
-    game.setMessage(`Autonomous over: ${left} sample${left > 1 ? "s" : ""} not scored. Edit your program and run it again.`);
+    const rl = runLimit() - runs;
+    if (rl <= 0) { game.setMessage(`Out of runs: ${left} sample${left > 1 ? "s" : ""} not scored. Starting the level over.`); setTimeout(() => load(li), 1600); }
+    else game.setMessage(`Autonomous over: ${left} sample${left > 1 ? "s" : ""} not scored. Edit your program and run it again.${Number.isFinite(rl) ? ` ${rl} run${rl === 1 ? "" : "s"} left.` : ""}`);
     Sound.tone({ f: 400, f2: 200, dur: 0.3, type: "sawtooth", vol: 0.08 });
     renderUI();
   }
@@ -121,6 +132,7 @@
     prog$.stars[li] = Math.max(prog$.stars[li] || 0, stars); saveProg();
     game.trophy("au-first"); if (Object.values(prog$.stars).filter((n) => n === 3).length >= 10) game.trophy("au-stars"); if (program.some((b) => b === "2" || b === "3")) game.trophy("au-repeat");
     if (Object.keys(prog$.stars).length >= LEVELS.length) game.trophy("au-all");
+    if (window.Arcade.level() === 4) { prog$.extreme = [...new Set([...(prog$.extreme || []), li])]; saveProg(); if (prog$.extreme.length >= 5) game.trophy("au-extreme"); }
     const STAR = (on) => `<svg viewBox="0 0 24 24" fill="currentColor" class="${on ? "on" : ""}"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>`;
     const last = li === LEVELS.length - 1;
     setTimeout(() => {
@@ -257,7 +269,10 @@
   /** Reveals an optimal program a few blocks at a time. */
   function hint() {
     if (!L?.sol) return;
-    hintN = Math.min(L.sol.length, hintN + 3);
+    const max = hintPresses();
+    if (hintsUsed >= max) { game.setMessage(max ? `No hints left for this level on ${window.Arcade.levelName()}.` : `Hints are off on ${window.Arcade.levelName()}.`); return; }
+    hintsUsed++;
+    hintN = window.Arcade.level() === 0 ? L.sol.length : Math.min(L.sol.length, hintN + 3);
     const names = { F: "Forward", L: "Turn left", R: "Turn right", G: "Grab", S: "Score", 2: "Repeat ×2", 3: "Repeat ×3" };
     game.setMessage(`Hint: an optimal program starts with ${[...L.sol.slice(0, hintN)].map((b) => names[b]).join(" → ")}${hintN < L.sol.length ? " …" : ". That's the whole thing!"}`);
     Sound.select();

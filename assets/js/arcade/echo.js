@@ -101,7 +101,13 @@
   const KEY_COLORS = { a: C.surge, b: C.amber, c: C.violet };
   const game = new Game({ id: "echo", width: W, height: H, pausable: false });
   game.puzzle = true;
+  game.difficultyNote = "Super Easy and Easy give each loop extra battery. Hard limits how many loops you get, and Extreme limits loops even more and turns off undo.";
   const prog = store.get("ss-echo-progress", { done: {}, last: 0 });
+  // Difficulty: extra battery ticks per loop, and spare loops beyond the echoes a level needs (Infinity = no limit)
+  const extraBattery = () => window.Arcade.pick([6, 3, 0, 0, 0]);
+  const spareLoops = () => window.Arcade.pick([Infinity, Infinity, Infinity, 4, 2]);
+  const loopLimit = () => L.echoes + 1 + spareLoops();
+  game.onDifficulty = () => { if (L && game.running && !won) load(li); };
   const saveProg = () => {
     store.set("ss-echo-progress", prog);
     const n = Object.keys(prog.done).length;
@@ -112,14 +118,14 @@
   let L, li, ghosts, t, pos, trail, actions, anim, queue, won, loopCount, flashT;
 
   function load(i) {
-    li = clamp(i, 0, LEVELS.length - 1); L = parse(LEVELS[li]);
+    li = clamp(i, 0, LEVELS.length - 1); L = parse(LEVELS[li]); L.T += extraBattery();
     ghosts = []; loopCount = 1; won = false; prog.last = li; saveProg();
     resetLoop(); game.setMessage(L.hint);
     game.setHud("level", `${li + 1}/${LEVELS.length}`);
     game.start();
   }
   function resetLoop() { t = 0; pos = L.start.slice(); trail = [pos]; actions = ""; anim = null; queue = []; updateHud(); }
-  function updateHud() { game.setHud("echoes", `${ghosts.length}/${L.echoes}`); game.setHud("loop", String(loopCount)); }
+  function updateHud() { game.setHud("echoes", `${ghosts.length}/${L.echoes}`); const lim = loopLimit(); game.setHud("loop", Number.isFinite(lim) ? `${loopCount}/${lim}` : String(loopCount)); }
 
   function robotsAt(tt, p) { return [...ghosts.map((g) => ghostAt(g, tt)), p]; }
 
@@ -154,12 +160,20 @@
     let dropped = false;
     if (ghosts.length > L.echoes) { ghosts.shift(); dropped = true; }
     loopCount++;
+    if (loopCount > loopLimit()) { outOfLoops(); return; }
     game.setMessage(auto ? "Battery drained — loop recorded as an echo." : dropped ? "Oldest echo replaced by your newest." : "Echo recorded. It will replay everything you just did.");
     Sound.rewind(); game.shake(3); flashT = 0.35;
     resetLoop();
   }
+  function outOfLoops() {
+    won = true; anim = null; queue = [];
+    game.showOverlay(`<span class="kicker">Level ${li + 1} · ${window.Arcade.levelName()}</span><h2>Out of loops</h2>
+      <p>${window.Arcade.levelName()} allows ${loopLimit()} loops on this level. Plan each echo before you record it, then try again.</p>
+      <div class="overlay-actions"><button class="btn primary" data-primary>Try again</button></div>`, { onPrimary: () => load(li) });
+  }
   function undoStep() {
     if (won || !actions.length || !L) return;
+    if (window.Arcade.level() === 4) { game.setMessage("Undo is off on Extreme. Shift+R restarts the level."); return; }
     const replay = actions.slice(0, -1);
     resetLoop(); for (const a of replay) { pos = step(L, ghosts, t, pos, a); t++; trail.push(pos); actions += a; }
     Sound.tone({ f: 500, f2: 300, dur: 0.08, type: "triangle", vol: 0.06 });
@@ -174,6 +188,7 @@
     if (prev == null || used < prev) prog.done[li] = used;
     const cleared = Object.keys(prog.done).length;
     if (cleared >= 5) game.trophy("ec-half"); if (cleared >= LEVELS.length) game.trophy("ec-all");
+    if (window.Arcade.level() === 4) { prog.extreme = [...new Set([...(prog.extreme || []), li])]; if (prog.extreme.length >= 3) game.trophy("ec-extreme"); }
     saveProg();
     const last = li === LEVELS.length - 1;
     setTimeout(() => {

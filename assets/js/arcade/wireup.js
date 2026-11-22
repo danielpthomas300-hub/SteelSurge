@@ -5,15 +5,24 @@
    ========================================================================== */
 (() => {
   "use strict";
-  const { Game, Sound, COLORS: C, roundRect, clamp, store } = window.Arcade;
+  const { Game, Sound, COLORS: C, roundRect, clamp, store, Settings } = window.Arcade;
   const W = 760, H = 760;
   const N = 1, E = 2, S = 4, Wd = 8, DIRS = [[N, 0, -1, S], [E, 1, 0, Wd], [S, 0, 1, N], [Wd, -1, 0, E]];
   const rot = (m) => ((m << 1) | (m >> 3)) & 15;
-  const DIFF = { easy: { size: 5, wrap: false, label: "Easy" }, medium: { size: 7, wrap: false, label: "Medium" }, hard: { size: 9, wrap: true, label: "Hard" } };
+  // One board size per difficulty level (shared with the arcade-wide setting)
+  const DIFF = {
+    superEasy: { size: 4, wrap: false, label: "Super Easy" }, easy: { size: 5, wrap: false, label: "Easy" }, medium: { size: 7, wrap: false, label: "Medium" },
+    hard: { size: 9, wrap: true, label: "Hard" }, extreme: { size: 11, wrap: true, label: "Extreme" },
+  };
 
   const game = new Game({ id: "wireup", width: W, height: H, pausable: false });
   game.puzzle = true;
-  const prog = store.get("ss-wireup", { solved: 0, byDiff: {}, diff: "easy" });
+  game.difficultyNote = "Sets the board size, from 4×4 on Super Easy to 11×11 on Extreme. On Hard and Extreme, wires can wrap around the edges.";
+  const prog = store.get("ss-wireup", { solved: 0, byDiff: {} });
+  prog.diff = Settings.difficulty in DIFF ? Settings.difficulty : "medium";
+  /** Picking a board size here also changes the arcade-wide difficulty. */
+  function setDiff(key) { Settings.difficulty = key; store.set("ss-arcade-settings", Settings); game._syncBadge?.(); }
+  game.onDifficulty = () => { if (b) newBoard(Settings.difficulty); else { prog.diff = Settings.difficulty; renderDiff(); } };
   let b; // board
 
   function generate(diffKey) {
@@ -79,7 +88,7 @@
     b.done = true; prog.solved++; prog.byDiff[b.diff] = (prog.byDiff[b.diff] || 0) + 1; store.set("ss-wireup", prog);
     store.set("ss-arcade-wireup", { value: prog.solved, label: `${prog.solved} solved` });
     game.setHud("solved", String(prog.solved)); game.setHudBest(`${prog.solved}`);
-    game.trophy("wu-first"); if (b.moves <= b.par) game.trophy("wu-par"); if (prog.solved >= 10) game.trophy("wu-10"); if (b.diff === "hard") game.trophy("wu-hard");
+    game.trophy("wu-first"); if (b.moves <= b.par) game.trophy("wu-par"); if (prog.solved >= 10) game.trophy("wu-10"); if (b.diff === "hard" || b.diff === "extreme") game.trophy("wu-hard"); if (b.diff === "extreme") game.trophy("wu-extreme");
     Sound.win(); game.shake(3);
     const g = geo();
     b.leaves.forEach((leaf, i) => { if (leaf) { const [cx, cy] = cellXY(g, i); game.particles.burst(cx, cy, { n: 10, color: C.surge, speed: 160, life: 0.6, gravity: 0 }); } });
@@ -131,8 +140,8 @@
   document.querySelector("[data-act=restart]")?.addEventListener("click", () => { Sound.select(); newBoard(prog.diff); });
   const pick = document.getElementById("diff-pick");
   function renderDiff() {
-    pick.innerHTML = Object.entries(DIFF).map(([k, d]) => `<button type="button" class="chip" data-diff="${k}" aria-pressed="${prog.diff === k}">${d.label} · ${d.size}×${d.size}${d.wrap ? " · wraps" : ""}<span class="count">${prog.byDiff[k] || 0} solved</span></button>`).join("");
-    pick.querySelectorAll("[data-diff]").forEach((btn) => btn.addEventListener("click", () => { Sound.select(); game.hideOverlay(); newBoard(btn.dataset.diff); }));
+    pick.innerHTML = Object.entries(DIFF).map(([k, d]) => `<button type="button" class="chip" data-diff="${k}" aria-pressed="${prog.diff === k}">${d.label} · ${d.size}×${d.size}<span class="count">${prog.byDiff[k] || 0} solved</span></button>`).join("");
+    pick.querySelectorAll("[data-diff]").forEach((btn) => btn.addEventListener("click", () => { Sound.select(); game.hideOverlay(); setDiff(btn.dataset.diff); newBoard(btn.dataset.diff); }));
   }
   renderDiff();
 

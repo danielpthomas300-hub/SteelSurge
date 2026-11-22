@@ -33,6 +33,7 @@
   });
 
   const game = new Game({ id: "mecanum", width: W, height: H });
+  game.difficultyNote = "Sets the cone penalty: none on Super Easy, up to 3 seconds per touch on Extreme.";
   const prog = store.get("ss-mecanum", { best: {}, last: 0, mode: "field" });
   let s, ci = prog.last || 0, joy = null, turnBtn = 0;
 
@@ -64,7 +65,7 @@
     store.set("ss-mecanum", prog);
     const golds = COURSES.filter((_, i) => prog.best[i]?.medal === "gold").length;
     store.set("ss-arcade-mecanum", { value: golds, label: `${Object.keys(prog.best).length}/${COURSES.length} · ${golds} gold` });
-    game.trophy("mr-first"); if (!s.touched) game.trophy("mr-clean"); if (prog.mode === "robot") game.trophy("mr-robot"); if (golds === COURSES.length) game.trophy("mr-gold");
+    game.trophy("mr-first"); if (!s.touched) game.trophy("mr-clean"); if (window.Arcade.level() === 4 && medal === "gold") game.trophy("mr-extreme"); if (prog.mode === "robot") game.trophy("mr-robot"); if (golds === COURSES.length) game.trophy("mr-gold");
     medal ? Sound.win() : Sound.pickup();
     game.particles.burst(s.x, s.y, { n: 40, color: medal === "gold" ? "#f2c443" : C.surge, speed: 300, life: 0.9, gravity: 0 });
     const last = ci === COURSES.length - 1;
@@ -118,8 +119,8 @@
         cn.x -= dx / d * 4; cn.y -= dy / d * 4;
         s.x = cn.x + dx / d * min; s.y = cn.y + dy / d * min;
         const last = s.hit.get(cn) || -9;
-        const pen = { easy: 0.5, normal: 1, hard: 2 }[window.Arcade.Settings.difficulty] || 1;
-        if (s.t - last > 0.8) { s.penalty += pen; s.touched++; s.hit.set(cn, s.t); Sound.tone({ f: 180, dur: 0.1, type: "square", vol: 0.08 }); game.shake(4); game.floaters.add(`+${pen}s`, cn.x, cn.y - 16, C.danger, 18); }
+        const pen = window.Arcade.pick([0, 0.5, 1, 2, 3]);
+        if (s.t - last > 0.8) { s.penalty += pen; s.touched++; s.hit.set(cn, s.t); Sound.tone({ f: 180, dur: 0.1, type: "square", vol: 0.08 }); game.shake(4); game.floaters.add(pen ? `+${pen}s` : "Bump!", cn.x, cn.y - 16, pen ? C.danger : C.amber, 18); }
       }
       cn.x += (cn.ox - cn.x) * dt * 0.6; cn.y += (cn.oy - cn.y) * dt * 0.6;
     }

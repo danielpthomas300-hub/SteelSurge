@@ -17,6 +17,10 @@ PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 5173
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
+    # HTTP/1.1 keeps connections open; on Windows, the 1.0 default can reset
+    # connections mid-transfer when a browser loads many files at once.
+    protocol_version = "HTTP/1.1"
+
     def end_headers(self):
         self.send_header("Cache-Control", "no-store")
         super().end_headers()

@@ -66,7 +66,13 @@
 
   const game = new Game({ id: "gridlock", width: W, height: H, pausable: false });
   game.puzzle = true;
+  game.difficultyNote = "Super Easy shows the next best move after every move. Medium allows 3 hints per level, Hard allows 1 and adds a move limit, and Extreme has no hints, no undo, and a tight move limit.";
   const prog = store.get("ss-gridlock-progress", { stars: {}, last: 0 });
+  // Difficulty: hints per level, and extra moves allowed beyond par (0 = no limit)
+  const hintLimit = () => window.Arcade.pick([Infinity, Infinity, 3, 1, 0]);
+  const moveLimit = () => { const extra = window.Arcade.pick([0, 0, 0, 8, 3]); return extra ? L.par + extra : 0; };
+  let hintsUsed = 0;
+  game.onDifficulty = () => { if (L && game.running && !won) load(li); };
   const saveProg = () => {
     store.set("ss-gridlock-progress", prog);
     const cleared = Object.keys(prog.stars).length, total = Object.values(prog.stars).reduce((a, b) => a + b, 0);
@@ -78,15 +84,17 @@
   let L, li, pos, history, anim, queued, won, dockedPrev, bump;
 
   function load(i) {
-    li = clamp(i, 0, LEVELS.length - 1); L = LEVELS[li];
+    li = clamp(i, 0, LEVELS.length - 1); L = LEVELS[li]; hintsUsed = 0;
     pos = L.robots.map((p) => p.slice()); history = []; anim = null; queued = null; won = false; bump = pos.map(() => 0);
     dockedPrev = pos.map(() => false);
     prog.last = li; saveProg();
     game.setHud("level", `${li + 1}/${LEVELS.length}`); game.setHud("par", String(L.par)); updateMoves();
-    game.setMessage(HINTS[li] || `Dock every robot in ${L.par} moves for 3 stars.`);
+    const lim = moveLimit();
+    game.setMessage(lim ? `${window.Arcade.levelName()}: dock every robot within ${lim} moves${window.Arcade.level() === 4 ? " (no hints or undo)" : ""}. Par is ${L.par}.` : HINTS[li] || `Dock every robot in ${L.par} moves for 3 stars.`);
     game.start();
+    if (window.Arcade.level() === 0) setTimeout(() => !won && hint(true), 400);
   }
-  const updateMoves = () => game.setHud("moves", String(history.length));
+  const updateMoves = () => { const lim = L ? moveLimit() : 0; game.setHud("moves", lim ? `${history.length}/${lim}` : String(history.length)); };
 
   function slide(from, d) {
     const [dx, dy] = DIRS[d], p = from.map((q) => q.slice());
@@ -125,11 +133,22 @@
       dockedPrev[i] = docked;
     });
     if (dockedPrev.every(Boolean)) return win();
+    const lim = moveLimit();
+    if (lim && history.length >= lim) return outOfMoves();
     if (queued) { const d = queued; queued = null; tryMove(d); }
+    else if (window.Arcade.level() === 0) hint(true);
+  }
+
+  function outOfMoves() {
+    won = true; queued = null; Sound.tone({ f: 300, f2: 120, dur: 0.3, type: "sawtooth", vol: 0.08 });
+    game.showOverlay(`<span class="kicker">Level ${li + 1} · ${window.Arcade.levelName()}</span><h2>Out of moves</h2>
+      <p>You used all ${moveLimit()} moves. Par for this level is ${L.par}. Plan the route, then try again.</p>
+      <div class="overlay-actions"><button class="btn primary" data-primary>Try again</button></div>`, { onPrimary: () => load(li) });
   }
 
   function undo() {
     if (won || !history.length) return;
+    if (window.Arcade.level() === 4) { game.setMessage("Undo is off on Extreme. Press R to restart the level."); return; }
     anim = null; queued = null; pos = history.pop(); updateMoves(); Sound.rewind();
     dockedPrev = pos.map((q, i) => q[0] === L.pads[i][0] && q[1] === L.pads[i][1]);
   }
@@ -143,6 +162,7 @@
     const moves = history.length, stars = starsFor(moves), prev = prog.stars[li] || 0;
     prog.stars[li] = Math.max(prev, stars); saveProg();
     game.trophy("gl-first");
+    if (window.Arcade.level() === 4) { prog.extreme = [...new Set([...(prog.extreme || []), li])]; saveProg(); if (prog.extreme.length >= 5) game.trophy("gl-extreme"); }
     if (Object.values(prog.stars).filter((n) => n === 3).length >= 10) game.trophy("gl-perfect");
     if (Object.keys(prog.stars).length >= LEVELS.length) game.trophy("gl-all");
     if (Object.keys(prog.stars).filter((k) => +k >= 30).length >= 5) game.trophy("gl-expert");
@@ -271,8 +291,13 @@
   document.querySelector("[data-act=hint]")?.addEventListener("click", hint);
 
   /** Finds the shortest solution from the current position and shows its next move. */
-  function hint() {
+  function hint(auto = false) {
     if (won || anim || !L) return;
+    if (!auto) {
+      const max = hintLimit();
+      if (hintsUsed >= max) { game.setMessage(max ? `No hints left for this level on ${window.Arcade.levelName()}.` : `Hints are off on ${window.Arcade.levelName()}. Change the difficulty to get hints.`); return; }
+      hintsUsed++;
+    }
     const key = (p) => p.map((q) => q.join(",")).join("|"), goal = key(L.pads);
     const seen = new Map([[key(pos), null]]); let frontier = [pos], found = null;
     for (let depth = 0; depth < 40 && frontier.length && !found; depth++) {
@@ -283,8 +308,9 @@
     if (!found) { game.setMessage("Hmm, no solution from here. Try undoing a few moves."); return; }
     let k = found, first = null, len = 0; while (seen.get(k)) { const [pk, d] = seen.get(k); first = d; k = pk; len++; }
     const names = { U: "up ↑", D: "down ↓", L: "left ←", R: "right →" };
-    game.setMessage(`Hint: move ${names[first]}. You can still finish in ${len} move${len === 1 ? "" : "s"} from here.`);
-    Sound.select();
+    const left = hintLimit() - hintsUsed;
+    game.setMessage(`${auto ? "Guide" : "Hint"}: move ${names[first]}. You can still finish in ${len} move${len === 1 ? "" : "s"} from here.${!auto && Number.isFinite(left) ? ` (${left} hint${left === 1 ? "" : "s"} left)` : ""}`);
+    if (!auto) Sound.select();
   }
 
   saveProg();

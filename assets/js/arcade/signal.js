@@ -8,6 +8,7 @@
   const W = 960, H = 540, TS = 46, LIGHT = 1.9, PING_MAX = 7.5, PING_SPEED = 15, PING_COOLDOWN = 1.1, REVEAL_TIME = 3.2;
 
   const game = new Game({ id: "signal", width: W, height: H });
+  game.difficultyNote = "Higher levels add more drones, and they move faster.";
   let s, joy = null;
 
   /* ---------------- Maze ---------------- */
@@ -54,7 +55,7 @@
     const cores = [];
     for (const c of candidates) { if (cores.length >= 3) break; if (cores.every((k) => Math.abs(k[0] - c[0]) + Math.abs(k[1] - c[1]) > 6)) cores.push(c); }
     while (cores.length < 3) cores.push(candidates[cores.length * 3] || far[1 + cores.length]);
-    const D = window.Arcade.diff(), droneCount = Math.max(1, Math.min(1 + f + (D > 1.2 ? 1 : D < 0.9 ? -1 : 0), 8));
+    const D = window.Arcade.diff(), droneCount = Math.max(1, Math.min(1 + f + window.Arcade.pick([-2, -1, 0, 1, 2]), 9));
     const spots = cells.filter((c) => c[2] > 10).sort(() => Math.random() - 0.5).slice(0, droneCount);
     s.maze = m; s.reveal = Array.from({ length: m.th }, () => Array(m.tw).fill(-99)); s.seen = Array.from({ length: m.th }, () => Array(m.tw).fill(false));
     s.px = 1.5; s.py = 1.5; s.exit = exit; s.cores = cores.map(([x, y]) => ({ x, y, got: false })); s.got = 0;
@@ -145,7 +146,7 @@
       const bonus = 300 + s.floor * 50 + Math.max(0, Math.round(120 - s.floorT) * 2);
       s.score += bonus; Sound.win(); game.floaters.add(`FLOOR CLEAR +${bonus}`, W / 2, H / 2 - 40, C.ok, 26); game.shake(4);
       if ((s.pings || 0) <= 3) game.trophy("sl-quiet");
-      s.floor++; game.trophy("sl-floor"); if (s.floor >= 5) game.trophy("sl-5"); newFloor();
+      s.floor++; game.trophy("sl-floor"); if (s.floor >= 5) game.trophy("sl-5"); if (s.floor >= 3 && window.Arcade.level() === 4) game.trophy("sl-extreme"); newFloor();
     }
     game.setHud("score", s.score.toLocaleString());
   };

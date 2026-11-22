@@ -9,6 +9,7 @@
   const LAUNCH = { x: 132, y: GROUND - 74 };
 
   const game = new Game({ id: "flywheel", width: W, height: H });
+  game.difficultyNote = "Higher levels bring stronger wind and a shorter aiming guide. Extreme has no guide at all.";
   let s;
   const aim = { angle: 48, power: 0.7 };
 
@@ -49,6 +50,7 @@
       game.trophy("fw-first"); if (s.streak >= 5) game.trophy("fw-streak");
       if (perfect && ++s.perfects >= 3) game.trophy("fw-bull");
       if (s.score >= 500) game.trophy("fw-gold");
+      if (s.D > 1.5 && s.score >= 250) game.trophy("fw-extreme");
       newHive();
     } else { if (s.streak) game.floaters.add("Streak lost", b.x, Math.min(b.y, GROUND - 30), C.danger, 16); s.streak = 0; Sound.tone({ f: 260, f2: 160, dur: 0.2, type: "triangle", vol: 0.07 }); }
     newWind(); updateHud();
@@ -121,7 +123,7 @@
     if (!s.ball && s.balls > 0) {
       let [x, y] = muzzle(), [vx, vy] = velocity();
       ctx.fillStyle = "rgba(132,205,255,0.7)";
-      const dots = s.D < 0.9 ? 30 : s.D > 1.2 ? 10 : 18;
+      const dots = window.Arcade.pick([48, 30, 18, 10, 0]);
       for (let i = 0; i < dots; i++) { const dt = 0.02; for (let k = 0; k < 2; k++) { vx += s.wind * dt * 0.9; vy += G * dt; x += vx * dt; y += vy * dt; } if (i % 2 === 0) { ctx.globalAlpha = 1 - i / dots; ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill(); } }
       ctx.globalAlpha = 1;
     }

@@ -17,6 +17,7 @@
   const SPOTS = [[-0.42, 0.32], [0.42, 0.32], [0.0, -0.62], [-0.28, -0.05], [0.28, -0.05], [0.0, 0.3]];
 
   const game = new Game({ id: "pitcrew", width: W, height: H });
+  game.difficultyNote = "Higher levels give each robot less time before its match starts.";
   let s;
 
   function newRun() {
@@ -73,7 +74,7 @@
     const b = s.bot; b.state = "out"; b.stateT = 0;
     const bonus = Math.round(b.time * 10) * (b.golden ? 2 : 1);
     s.score += bonus; s.fixed++;
-    if (s.fixed >= 5) game.trophy("pc-5"); if (s.fixed >= 30) game.trophy("pc-30"); if (s.D > 1.2 && s.fixed >= 15) game.trophy("pc-hard");
+    if (s.fixed >= 5) game.trophy("pc-5"); if (s.fixed >= 30) game.trophy("pc-30"); if (s.D > 1.2 && s.fixed >= 15) game.trophy("pc-hard"); if (s.D > 1.5 && s.fixed >= 10) game.trophy("pc-extreme");
     if (s.fixed % 10 === 0) game.floaters.add("Rush hour! Robots are coming faster.", STAND_X, STAND_Y - 200, C.amber, 18);
     Sound.win();
     game.floaters.add(`Back on the field! +${bonus}`, STAND_X, STAND_Y - 170, C.ok, 22);

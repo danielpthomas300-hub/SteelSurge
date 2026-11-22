@@ -21,10 +21,11 @@
   };
   const GROUPS = {
     site: "Exploring the site", overclock: "Overclock", gridlock: "Gridlock", echo: "Echo", pitcrew: "Pit Crew",
-    autonomous: "Autonomous", signal: "Signal Lost", flywheel: "Flywheel", mecanum: "Mecanum Rush", wireup: "Wire Up", all: "Steel Surge",
+    autonomous: "Autonomous", signal: "Signal Lost", flywheel: "Flywheel", mecanum: "Mecanum Rush", wireup: "Wire Up",
+    stackup: "Stack Up", balance: "Balance", odometry: "Odometry", all: "Steel Surge",
   };
   const MAIN_PAGES = ["home", "team", "achievements", "ftc", "media", "arcade", "sponsors", "contact", "trophies"];
-  const GAME_IDS = ["overclock", "gridlock", "echo", "pitcrew", "autonomous", "signal", "flywheel", "mecanum", "wireup"];
+  const GAME_IDS = ["overclock", "gridlock", "echo", "pitcrew", "autonomous", "signal", "flywheel", "mecanum", "wireup", "stackup", "balance", "odometry"];
 
   const LIST = [
     // Exploring the site
@@ -43,7 +44,8 @@
     ["binge", "site", "silver", "Binge Watcher", "Watch four different team videos."],
     ["grand-tour", "site", "silver", "Grand Tour", "Visit every main page of the site."],
     ["overdrive", "site", "gold", "Overdrive", "Discover the secret code.", true],
-    ["arcade-regular", "site", "gold", "Arcade Regular", "Play all nine arcade games."],
+    ["arcade-regular", "site", "gold", "Arcade Regular", "Play all twelve arcade games."],
+    ["daredevil", "site", "gold", "Daredevil", "Earn the Extreme trophy in 3 different arcade games."],
     ["tinkerer", "site", "bronze", "Make It Yours", "Change a setting in any arcade game."],
     ["field-trip", "site", "silver", "Field Trip", "Explore 5 different FTC fields in 3D on the About FTC page."],
     ["historian", "site", "gold", "FTC Historian", "Explore every FTC field in 3D on the About FTC page."],
@@ -51,38 +53,60 @@
     ["oc-first", "overclock", "bronze", "Ignition", "Finish a run in Overclock."],
     ["oc-close", "overclock", "silver", "Close Call", "Earn a close-call bonus in Overclock."],
     ["oc-1000", "overclock", "gold", "Heat Sink", "Score 1,000 points in a single Overclock run."],
-    ["oc-hard", "overclock", "silver", "Redline", "Score 750 points in Overclock on Hard."],
+    ["oc-hard", "overclock", "silver", "Redline", "Score 750 points in Overclock on Hard or Extreme."],
+    ["oc-extreme", "overclock", "gold", "Meltdown", "Score 500 points in Overclock on Extreme."],
     ["gl-first", "gridlock", "bronze", "Docked", "Clear a Gridlock level."],
     ["gl-perfect", "gridlock", "silver", "Perfectionist", "Earn 3 stars on 10 Gridlock levels."],
     ["gl-all", "gridlock", "gold", "Gridmaster", "Clear all 40 Gridlock levels."],
     ["gl-expert", "gridlock", "silver", "Expert Mover", "Clear 5 of Gridlock's Expert levels (31–40)."],
+    ["gl-extreme", "gridlock", "gold", "No Room for Error", "Clear 5 Gridlock levels on Extreme."],
     ["ec-first", "echo", "bronze", "Hello, Me", "Record your first echo."],
     ["ec-half", "echo", "silver", "Déjà Vu", "Clear 5 Echo levels."],
     ["ec-all", "echo", "gold", "Echo Chamber", "Clear every Echo level."],
+    ["ec-extreme", "echo", "gold", "Paradox", "Clear 3 Echo levels on Extreme."],
     ["pc-5", "pitcrew", "bronze", "Pit Stop", "Fix 5 robots in one Pit Crew shift."],
     ["pc-combo", "pitcrew", "silver", "Combo Crew", "Reach a ×6 combo in Pit Crew."],
     ["pc-30", "pitcrew", "gold", "Pit Boss", "Fix 30 robots in one Pit Crew shift."],
-    ["pc-hard", "pitcrew", "silver", "Crunch Time", "Fix 15 robots in one Pit Crew shift on Hard."],
+    ["pc-hard", "pitcrew", "silver", "Crunch Time", "Fix 15 robots in one Pit Crew shift on Hard or Extreme."],
+    ["pc-extreme", "pitcrew", "gold", "Championship Pit", "Fix 10 robots in one Pit Crew shift on Extreme."],
     ["au-first", "autonomous", "bronze", "Hello, World", "Clear your first Autonomous level."],
     ["au-repeat", "autonomous", "silver", "Loop de Loop", "Clear an Autonomous level using a Repeat block."],
     ["au-all", "autonomous", "gold", "Full Auto", "Clear all 18 Autonomous levels."],
     ["au-stars", "autonomous", "silver", "Code Review", "Earn 3 stars on 10 Autonomous levels."],
+    ["au-extreme", "autonomous", "gold", "Zero Margin", "Clear 5 Autonomous levels on Extreme."],
     ["sl-ping", "signal", "bronze", "Marco...", "Send your first ping in Signal Lost."],
     ["sl-floor", "signal", "silver", "Data Miner", "Clear a floor in Signal Lost."],
     ["sl-5", "signal", "gold", "Deep Dive", "Reach floor 5 in Signal Lost."],
     ["sl-quiet", "signal", "silver", "Silent Running", "Clear a Signal Lost floor using 3 pings or fewer."],
+    ["sl-extreme", "signal", "gold", "Ghost Protocol", "Reach floor 3 in Signal Lost on Extreme."],
     ["fw-first", "flywheel", "bronze", "Pollinator", "Score your first shot in Flywheel."],
     ["fw-streak", "flywheel", "silver", "Hot Hand", "Score 5 shots in a row in Flywheel."],
     ["fw-gold", "flywheel", "gold", "Sharpshooter", "Score 500 points in a single Flywheel round."],
     ["fw-bull", "flywheel", "silver", "Bullseye", "Make 3 perfect shots in one Flywheel round."],
+    ["fw-extreme", "flywheel", "gold", "No Guide Needed", "Score 250 points in one Flywheel round on Extreme."],
     ["mr-first", "mecanum", "bronze", "Strafe Left", "Finish a course in Mecanum Rush."],
     ["mr-clean", "mecanum", "silver", "Clean Run", "Finish a Mecanum Rush course without touching a cone."],
     ["mr-gold", "mecanum", "gold", "Podium Finish", "Earn a gold time on every Mecanum Rush course."],
     ["mr-robot", "mecanum", "silver", "Pro Driver", "Finish a Mecanum Rush course in robot-centric mode."],
+    ["mr-extreme", "mecanum", "gold", "Flawless Lap", "Earn a gold time on a Mecanum Rush course on Extreme."],
     ["wu-first", "wireup", "bronze", "It's Alive!", "Power up your first circuit in Wire Up."],
     ["wu-10", "wireup", "silver", "Electrician", "Power up 10 circuits in Wire Up."],
-    ["wu-hard", "wireup", "gold", "Master Electrician", "Solve a Hard circuit in Wire Up."],
+    ["wu-hard", "wireup", "gold", "Master Electrician", "Solve a Hard or Extreme circuit in Wire Up."],
     ["wu-par", "wireup", "silver", "Efficient Engineer", "Solve a Wire Up circuit in the fewest possible turns."],
+    ["wu-extreme", "wireup", "gold", "Live Wire", "Solve an 11×11 Extreme circuit in Wire Up."],
+    ["su-10", "stackup", "bronze", "Foundation", "Stack 10 pieces in Stack Up."],
+    ["su-25", "stackup", "silver", "High Rise", "Stack 25 pieces in Stack Up."],
+    ["su-perfect", "stackup", "silver", "Dead Center", "Make 5 perfect drops in a row in Stack Up."],
+    ["su-50", "stackup", "gold", "Skyscraper", "Stack 50 pieces in Stack Up."],
+    ["su-extreme", "stackup", "gold", "Steady Slide", "Stack 20 pieces in Stack Up on Extreme."],
+    ["ba-10", "balance", "bronze", "Collector", "Collect 10 pieces in one Balance run."],
+    ["ba-60", "balance", "silver", "Steady", "Keep the platform up for 60 seconds in Balance."],
+    ["ba-500", "balance", "gold", "Perfectly Balanced", "Score 500 points in one Balance run."],
+    ["ba-extreme", "balance", "gold", "Tightrope", "Last 45 seconds in Balance on Extreme."],
+    ["od-5", "odometry", "bronze", "Dead Reckoning", "Drive a 5-step route from memory in Odometry."],
+    ["od-10", "odometry", "silver", "Pathfinder", "Drive a 10-step route from memory in Odometry."],
+    ["od-15", "odometry", "gold", "Photographic Memory", "Drive a 15-step route from memory in Odometry."],
+    ["od-extreme", "odometry", "gold", "Total Recall", "Drive an 8-step route in Odometry on Extreme."],
     // Platinum
     ["platinum", "all", "platinum", "Surge Ahead", "Earn every other trophy."],
   ].map(([id, group, tier, name, desc, hidden]) => ({ id, group, tier, name, desc, hidden: !!hidden }));
@@ -136,6 +160,7 @@
     queue.push(t); if (document.body) pop(); else addEventListener("DOMContentLoaded", pop);
     updateBadge();
     window.dispatchEvent(new CustomEvent("ss:trophy", { detail: t }));
+    if (/-extreme$/.test(id) && Object.keys(e).filter((k) => /-extreme$/.test(k)).length >= 3) setTimeout(() => trophy("daredevil"), 900);
     if (id !== "platinum" && LIST.every((x) => x.id === "platinum" || e[x.id])) setTimeout(() => trophy("platinum"), 1200);
     return true;
   }

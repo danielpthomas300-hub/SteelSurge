@@ -8,6 +8,7 @@
   const W = 960, H = 540, GROUND = 432, BOT = 50, CAM_X = 250, PX_PER_M = 40;
 
   const game = new Game({ id: "overclock", width: W, height: H });
+  game.difficultyNote = "Higher levels heat up faster, cool down slower, and bring hazards sooner.";
   let s; // run state
   let holding = false;
 
@@ -124,6 +125,7 @@
     s.score = Math.floor(s.x / PX_PER_M) + s.bonus;
     if (s.score >= 1000) game.trophy("oc-1000");
     if (s.D > 1.2 && s.score >= 750) game.trophy("oc-hard");
+    if (s.D > 1.5 && s.score >= 500) game.trophy("oc-extreme");
     const m = Math.floor(s.x / PX_PER_M / 100);
     if (m > (s.milestone || 0)) { s.milestone = m; game.floaters.add(`${m * 100} m!`, CAM_X + 40, GROUND - 120, C.surge2, 22); Sound.tone({ f: 880, f2: 1320, dur: 0.12, type: "triangle", vol: 0.08 }); }
     game.setHud("score", s.score.toLocaleString());

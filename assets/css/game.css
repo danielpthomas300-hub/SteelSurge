@@ -189,3 +189,15 @@
 #game.bigtext .hud-stat b { font-size: 20px; }
 #game.bigtext .game-msg { font-size: 18px; }
 #game.bigtext .code-block, #game.bigtext .tool-btn { font-size: 16px; }
+
+/* Five difficulty levels */
+.settings .opts.five { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+.settings .opts.five .opt span { padding: 9px 4px; font-size: 12.5px; line-height: 1.15; }
+@media (max-width: 420px) { .settings .opts.five { grid-template-columns: repeat(3, 1fr); } }
+.diff-badge { font: 600 11px/1 var(--font-mono, monospace); letter-spacing: .08em; text-transform: uppercase; padding: 8px 10px; border-radius: 999px; border: 1px solid #2d3b4c; background: #10161e; color: #c9d3de; cursor: pointer; white-space: nowrap; }
+.diff-badge:hover { border-color: #3ba8ff; color: #fff; }
+.diff-badge[data-level="0"] { color: #3ddc97; border-color: rgba(61,220,151,.4); }
+.diff-badge[data-level="1"] { color: #84cdff; border-color: rgba(132,205,255,.35); }
+.diff-badge[data-level="3"] { color: #ffb547; border-color: rgba(255,181,71,.45); }
+.diff-badge[data-level="4"] { color: #ff6b6b; border-color: rgba(255,93,93,.5); background: rgba(255,93,93,.08); }
+@media (max-width: 560px) { .diff-badge { padding: 7px 8px; font-size: 10px; } }

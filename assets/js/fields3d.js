@@ -67,7 +67,7 @@ class Builder {
 }
 
 /* ---------------- Shared field: tiles, perimeter, alliance areas ---------------- */
-function baseField(b, { redSide = "left", wallH = 12, alliance = true } = {}) {
+function baseField(b, { redSide = "left", wallH = 12, alliance = true, audienceZ = H + 16 } = {}) {
   // Floor outside the field
   const ground = mesh(new THREE.PlaneGeometry(520, 520), new THREE.MeshStandardMaterial({ color: 0x14181d, roughness: 1 }), { cast: false });
   ground.rotation.x = -Math.PI / 2; b.add(ground);
@@ -91,7 +91,7 @@ function baseField(b, { redSide = "left", wallH = 12, alliance = true } = {}) {
     b.part("Red alliance area", "Where the red alliance's drivers and coach stand during the match.", side(C.red, red));
     b.part("Blue alliance area", "Where the blue alliance's drivers and coach stand during the match.", side(C.blue, -red));
   }
-  b.add(b.label("AUDIENCE", 0, 0.7, H + 16, { size: 7, color: "#7b8a9e" }));
+  b.add(b.label("AUDIENCE", 0, 0.7, audienceZ, { size: 7, color: "#7b8a9e" }));
 }
 
 /* ---------------- Season builders ---------------- */
@@ -109,20 +109,28 @@ const SEASONS = {
     frame.push(b.bar([-24.7, 44, 0], [24.7, 44, 0], 0.9, C.steel, { metalness: 0.7 }));
     const sign = b.box(20, 6, 0.4, C.yellow, 0, 30, 0); frame.push(sign);
     b.part("HIVE frame", "Two triangular frames joined by a crossbar. The HIVE pivots sit about 44 in. above the tiles.", frame);
-    // Two HIVES, each a seesaw with two CELLS. Red's +Z cell starts up; blue's −Z cell starts up.
+    // Two HIVES, each a seesaw with two open CELLS. The CELL holding the preloaded NECTAR starts up:
+    // red's audience-side (+Z) CELL and blue's back (−Z) CELL (Figures 9-1 and 9-2).
     const hive = (cx, color, upSign) => {
       const g = new THREE.Group(); g.position.set(cx, 44, 0);
-      const arm = b.box(3, 2, 22, C.dark); g.add(arm);
+      g.add(b.box(2.5, 2.5, 30, C.dark, 0, 0, 0, { metalness: 0.5 }));                    // seesaw beam
+      g.add(b.cyl(1.6, 1.6, 4, C.steel, 0, 0, 0, { metalness: 0.7 }).rotateZ(Math.PI / 2)); // pivot
+      // Chamfered "house" profile of a CELL, seen from the side
+      const prof = [[-9, -6], [9, -6], [11, 0], [9, 6], [-9, 6], [-11, 0]];
+      const glass = { transparent: true, opacity: 0.28, depthWrite: false };
       for (const s of [-1, 1]) {
-        const cell = new THREE.Group(); cell.position.set(0, -6, s * 9.4);
-        cell.add(b.box(20, 1, 12, color, 0, -7, 0)); // floor
-        cell.add(b.box(20, 14, 1, color, 0, 0, s * 6)); // back
-        cell.add(b.box(1, 14, 12, color, -10, 0, 0), b.box(1, 14, 12, color, 10, 0, 0));
-        cell.add(b.bar([-10, 7, -s * 6], [10, 7, -s * 6], 0.5, color));
-        if (s === upSign) for (let k = 0; k < 3; k++) cell.add(b.ball(1.8, color === C.red ? C.red : C.blue, -5 + k * 4.2, -6.5, s * 3));
+        const cell = new THREE.Group(); cell.position.set(0, -2, s * 14);
+        for (const dz of [-6, 6]) for (let i = 0; i < prof.length; i++) {
+          const p1 = prof[i], p2 = prof[(i + 1) % prof.length];
+          cell.add(b.bar([p1[0], p1[1], dz], [p2[0], p2[1], dz], 0.45, color, { metalness: 0.3 }));
+        }
+        for (const [px, py] of prof) cell.add(b.bar([px, py, -6], [px, py, 6], 0.4, color, { metalness: 0.3 }));
+        cell.add(b.box(18, 0.5, 12, color, 0, -6, 0, glass));                             // floor
+        cell.add(b.box(18, 12, 0.5, color, 0, 0, s * 6, glass));                          // outer wall
+        if (s === upSign) for (let k = 0; k < 3; k++) cell.add(b.ball(1.8, color, -4.2 + k * 4.2, -5.8, s * 2));
         g.add(cell);
       }
-      g.rotation.x = upSign * 0.38;
+      g.rotation.x = -upSign * 0.45; // tip so the loaded CELL is the high one
       return g;
     };
     b.part("Red HIVE", "The red alliance's HIVE. Launching enough elements into its upward CELL tips it for 20 points.", [hive(-12, C.red, 1)]);
@@ -153,45 +161,79 @@ const SEASONS = {
   },
 
   /* ===== 2025–26 DECODE ===== */
+  // Layout from the Competition Manual, Figures 9-1 to 9-5 (red alliance area on the left).
+  // Blue's GOAL and CLASSIFIER sit in the back-left corner; red's in the back-right.
   2025(b) {
     baseField(b, { redSide: "left", wallH: 12 });
+    // GOAL: about 27 × 27 in., triangular in plan, open on top. The front lip is 38.75 in. high and
+    // the backboard rises to about 54 in.
     const goal = (sx, color) => {
-      const g = new THREE.Group(); g.position.set(sx * 58, 0, -58); g.rotation.y = sx > 0 ? Math.PI / 4 : -Math.PI / 4;
-      g.add(b.box(30, 38, 2, color, 0, 19, -6));
-      g.add(b.box(2, 38, 18, color, -14, 19, 2), b.box(2, 38, 18, color, 14, 19, 2));
-      g.add(b.box(30, 2, 18, color, 0, 38, 2));
-      g.add(b.box(26, 10, 2, color, 0, 33, 10));
-      const tag = b.box(6.5, 6.5, 0.3, C.white, 0, 27, 11.2); g.add(tag);
-      return g;
-    };
-    b.part("Blue GOAL", "Blue launches ARTIFACTS through the top opening of this corner GOAL.", [goal(-1, C.blue)]);
-    b.part("Red GOAL", "Red launches ARTIFACTS through the top opening of this corner GOAL.", [goal(1, C.red)]);
-    // Ramps (classifier) running down each side wall from the goal, with a gate at the bottom
-    const ramp = (sx, color) => {
-      const parts = [];
-      const r = b.box(5, 1, 46, color, sx * 66, 0, -26); r.position.y = 9; r.rotation.x = -0.16; parts.push(r);
-      parts.push(b.box(1, 3, 46, C.rail, sx * 63.5, 10, -26, { metalness: 0.6 }), b.box(1, 3, 46, C.rail, sx * 68.5, 10, -26, { metalness: 0.6 }));
-      for (let k = 0; k < 5; k++) parts.push(b.ball(2.5, k % 3 === 1 ? C.green : C.purple, sx * 66, 6.5 + k * 0.85, -6 - k * 5.2));
+      const ix = -sx, cx = sx * 65, cz = -72, L = 26, parts = [];
+      parts.push(b.box(L, 54, 1.2, color, cx + ix * L / 2, 27, cz + 0.6)); // backboard along the back wall
+      parts.push(b.box(1.2, 54, L, color, cx + ix * 0.6, 27, cz + L / 2)); // side panel
+      for (let k = 0; k < 4; k++) parts.push(b.box(4, 3, 1.2, color, cx + ix * (3 + k * 6.5), 55.5, cz + 0.6)); // sawtooth crest
+      const fx1 = cx + ix * L, fz1 = cz, fx2 = cx, fz2 = cz + L, len = Math.hypot(fx2 - fx1, fz2 - fz1), mx = (fx1 + fx2) / 2, mz = (fz1 + fz2) / 2;
+      const rot = -Math.atan2(fz2 - fz1, fx2 - fx1);
+      const front = b.box(len, 38.75, 1.2, color, mx, 38.75 / 2, mz); front.rotation.y = rot; parts.push(front);
+      const lip = b.box(len, 1.4, 2, C.white, mx, 38.9, mz); lip.rotation.y = rot; parts.push(lip);
+      // AprilTag on the front face, facing the field
+      const nx = ix / Math.SQRT2, nz = 1 / Math.SQRT2;
+      const tag = b.box(8.1, 8.1, 0.3, C.white, mx + nx * 0.9, 28, mz + nz * 0.9); tag.rotation.y = rot; parts.push(tag);
+      const tagIn = b.box(5, 5, 0.32, C.black, mx + nx * 0.95, 28, mz + nz * 0.95); tagIn.rotation.y = rot; parts.push(tagIn);
+      parts.push(b.zone([[cx, cz], [fx1, fz1], [fx2, fz2]], 0x0d1014, 0.7, 38.6)); // the dark opening seen from above
+      // DEPOT: white launch-line tape along the base of the front face
+      parts.push(b.tape(fx1 + nx * 1.5, fz1 + nz * 1.5, fx2 + nx * 1.5, fz2 + nz * 1.5, C.white));
       return parts;
     };
-    b.part("Blue RAMP and CLASSIFIER", "Scored ARTIFACTS roll down here. Their color order forms blue's PATTERN.", ramp(-1, C.blue));
-    b.part("Red RAMP and CLASSIFIER", "Scored ARTIFACTS roll down here. Their color order forms red's PATTERN.", ramp(1, C.red));
-    b.part("GATES", "Robots open the GATE at the bottom of the ramp to release ARTIFACTS.", [b.box(5, 6, 1.5, C.blue, -66, 4, 0), b.box(5, 6, 1.5, C.red, 66, 4, 0), b.tape(-62, 0, -56, 0, C.blue), b.tape(56, 0, 62, 0, C.red)]);
-    // Obelisk outside the back wall
-    const obelisk = b.box(9, 24, 9, C.black, 0, 12, -82); obelisk.rotation.y = Math.PI / 4;
-    const tagO = b.box(6, 6, 0.3, C.white, 0, 18, -76.2);
-    b.part("OBELISK", "Randomized before each match to show one of three MOTIFS that set the PATTERN to build.", [obelisk, tagO]);
-    // Launch line triangles (white tape) and base zones
-    b.part("Launch zones", "White tape marks the launch zones. Robots leave the LAUNCH LINE in auto for 3 points.", [b.tape(-72, -72, 0, 0, C.white), b.tape(72, -72, 0, 0, C.white), b.tape(-24, 72, 0, 48, C.white), b.tape(24, 72, 0, 48, C.white)]);
-    b.part("Red BASE ZONE", "Robots return here at the end: 5 points partially, 10 points fully.", [b.zone([[-42, 28], [-24, 28], [-24, 46], [-42, 46]], C.red, 0.25), ...b.outline([[-42, 28], [-24, 28], [-24, 46], [-42, 46]], C.red)]);
-    b.part("Blue BASE ZONE", "Robots return here at the end: 5 points partially, 10 points fully.", [b.zone([[24, 28], [42, 28], [42, 46], [24, 46]], C.blue, 0.25), ...b.outline([[24, 28], [42, 28], [42, 46], [24, 46]], C.blue)]);
-    b.part("LOADING ZONES", "Human players hand ARTIFACTS to robots in the front corners.", [...b.outline([[-72, 48], [-48, 48], [-48, 72]], C.white, 2, false), ...b.outline([[72, 48], [48, 48], [48, 72]], C.white, 2, false)]);
-    // Artifacts in rows of three (G P P / P G P / P P G)
+    b.part("Blue GOAL", "Blue launches ARTIFACTS into the open top (the front lip is 38.75 in. high). The AprilTag on the front helps robots aim.", goal(-1, C.blue));
+    b.part("Red GOAL", "Red launches ARTIFACTS into the open top (the front lip is 38.75 in. high). The AprilTag on the front helps robots aim.", goal(1, C.red));
+    // CLASSIFIER: a RAMP of aluminum extrusion running from the GOAL down the side wall to a GATE
+    const classifier = (sx, color, balls) => {
+      const parts = [], x = sx * 67, zTop = -46, zBot = 0, yTop = 13, yBot = 5;
+      const len = Math.hypot(zBot - zTop, yTop - yBot), tilt = Math.atan2(yTop - yBot, zBot - zTop);
+      const yAt = (z) => yBot + (yTop - yBot) * (zBot - z) / (zBot - zTop);
+      const deck = b.box(5.4, 0.8, len, C.steel, x, (yTop + yBot) / 2 - 0.4, (zTop + zBot) / 2, { metalness: 0.6, roughness: 0.35 }); deck.rotation.x = tilt; parts.push(deck);
+      for (const off of [-3, 3]) parts.push(b.bar([x + off, yTop + 2, zTop], [x + off, yBot + 2, zBot], 0.45, C.rail, { metalness: 0.7 }));
+      for (const z of [zTop, zBot]) for (const off of [-3, 3]) parts.push(b.bar([x + off, 0.6, z], [x + off, yAt(z) + 2, z], 0.5, C.steel, { metalness: 0.6 }));
+      parts.push(b.box(6.5, 1, 6.5, color, x, yTop + 0.2, zTop - 3.2)); // SQUARE at the top of the ramp
+      balls.forEach((c, k) => { const z = zBot - 3 - k * 5.1; parts.push(b.ball(2.5, c, x, yAt(z), z)); }); // CLASSIFIED artifacts
+      return parts;
+    };
+    b.part("Blue CLASSIFIER (RAMP)", "Scored ARTIFACTS roll out of the GOAL onto this RAMP, which holds 9. Their color order is compared to the MOTIF for PATTERN points.", classifier(-1, C.blue, [C.purple, C.green, C.purple, C.purple]));
+    b.part("Red CLASSIFIER (RAMP)", "Scored ARTIFACTS roll out of the GOAL onto this RAMP, which holds 9. Their color order is compared to the MOTIF for PATTERN points.", classifier(1, C.red, [C.green, C.purple, C.purple]));
+    // GATES: push-to-open arms at the bottom of each ramp, with a taped GATE ZONE in front
+    const gate = (sx, color) => [
+      b.box(1.5, 8, 1.5, C.steel, sx * 64, 4, 1.5, { metalness: 0.6 }),
+      b.box(6, 1.8, 1.2, color, sx * 60.5, 4.6, 1.5),
+      b.tape(sx * 58, -0.4, sx * 48, -0.4, color, 1), b.tape(sx * 58, 2.4, sx * 48, 2.4, color, 1),
+    ];
+    b.part("Blue GATE", "Blue robots push this arm to release CLASSIFIED ARTIFACTS from the ramp, making room for more.", gate(-1, C.blue));
+    b.part("Red GATE", "Red robots push this arm to release CLASSIFIED ARTIFACTS from the ramp, making room for more.", gate(1, C.red));
+    // SECRET TUNNEL ZONES: 6 in. lanes along the side walls between each GATE and LOADING ZONE
+    b.part("Red SECRET TUNNEL", "Released ARTIFACTS roll into this lane along the wall, toward the red LOADING ZONE.", [b.tape(-65.9, 1, -65.9, 48, C.red, 1), b.zone([[-72, 1], [-65.9, 1], [-65.9, 48], [-72, 48]], C.red, 0.15)]);
+    b.part("Blue SECRET TUNNEL", "Released ARTIFACTS roll into this lane along the wall, toward the blue LOADING ZONE.", [b.tape(65.9, 1, 65.9, 48, C.blue, 1), b.zone([[72, 1], [65.9, 1], [65.9, 48], [72, 48]], C.blue, 0.15)]);
+    // OBELISK: a 23 in. tall triangular prism outside the back wall, with an AprilTag on each face
+    const ob = b.cyl(6.35, 6.35, 23, C.black, 0, 11.5, -84, { roughness: 0.5 }, 3); ob.rotation.y = Math.PI;
+    const obTag = b.box(7, 7, 0.3, C.white, 0, 14, -84 + 3.4), obTagIn = b.box(4.4, 4.4, 0.32, C.black, 0, 14, -84 + 3.45);
+    b.part("OBELISK", "A 23 in. triangular prism outside the field. Before each match it is turned to show one of three MOTIFS, which sets the PATTERN to build.", [ob, obTag, obTagIn]);
+    // LAUNCH LINES: a big goal-side triangle (6 tiles × 3 tiles) and a small audience-side one (2 × 1)
+    b.part("LAUNCH LINES", "White tape bounding the two LAUNCH ZONES. Robots may only launch from inside them; leaving the line in auto scores 3 points.",
+      [b.tape(-55.5, -55.5, 0, 0, C.white), b.tape(55.5, -55.5, 0, 0, C.white), b.tape(-24, 72, 0, 48, C.white), b.tape(24, 72, 0, 48, C.white)]);
+    const base = (x0, color) => { const pts = [[x0, 28.5], [x0 + 18, 28.5], [x0 + 18, 46.5], [x0, 46.5]]; return [b.zone(pts, color, 0.25), ...b.outline(pts, color, 1)]; };
+    b.part("Red BASE ZONE", "An 18 × 18 in. square. Returning here at the end scores 5 points partially or 10 fully, plus a bonus if both robots make it.", base(-42, C.red));
+    b.part("Blue BASE ZONE", "An 18 × 18 in. square. Returning here at the end scores 5 points partially or 10 fully, plus a bonus if both robots make it.", base(24, C.blue));
+    b.part("LOADING ZONES", "23 × 23 in. corners beside each alliance area, where human players feed ARTIFACTS to robots. Red's is on the left.",
+      [...b.outline([[-72, 49], [-49, 49], [-49, 72]], C.white, 1, false), ...b.outline([[72, 49], [49, 49], [49, 72]], C.white, 1, false)]);
+    // SPIKE MARKS and ARTIFACTS: three rows of three on each side (G P P / P G P / P P G)
     const rows = [[-12, [C.green, C.purple, C.purple]], [12, [C.purple, C.green, C.purple]], [36, [C.purple, C.purple, C.green]]];
-    const arts = [];
-    for (const [z, cols] of rows) cols.forEach((c, k) => { arts.push(b.ball(2.5, c, -52 + k * 5, 0.6, z)); arts.push(b.ball(2.5, cols[2 - k], 42 + k * 5, 0.6, z)); });
+    const arts = [], spikes = [];
+    for (const [z, cols] of rows) {
+      spikes.push(b.tape(-57, z, -47, z, C.white, 1), b.tape(47, z, 57, z, C.white, 1));
+      cols.forEach((c, k) => { arts.push(b.ball(2.5, c, -52 + k * 5, 0.6, z)); arts.push(b.ball(2.5, cols[2 - k], 42 + k * 5, 0.6, z)); });
+    }
     for (const sx of [-1, 1]) [C.purple, C.green, C.purple].forEach((c, k) => arts.push(b.ball(2.5, c, sx * 68, 0.6, 58 + k * 5)));
-    b.part("ARTIFACTS", "Purple and green balls staged in three rows on each side and in the loading corners.", arts);
+    b.part("SPIKE MARKS", "Six 10 in. white tape marks where ARTIFACTS are set before each match.", spikes);
+    b.part("ARTIFACTS", "5 in. purple and green balls (24 purple and 12 green per match), staged on the spike marks and in the LOADING ZONES.", arts);
   },
 
   /* ===== 2024–25 INTO THE DEEP ===== */
@@ -225,30 +267,34 @@ const SEASONS = {
 
   /* ===== 2023–24 CENTERSTAGE ===== */
   2023(b) {
-    baseField(b, { redSide: "right" });
+    baseField(b, { redSide: "right", audienceZ: H + 84 });
     const backdrop = (x, color) => {
       const g = new THREE.Group(); g.position.set(x, 0, -66); g.rotation.x = -0.52;
-      g.add(b.box(20, 30, 1.2, C.dark, 0, 15, 0));
+      g.add(b.box(24, 30, 1.2, C.dark, 0, 15, 0));
       for (let r = 0; r < 11; r++) for (let c = 0; c < (r % 2 ? 6 : 7); c++) if ((r * 7 + c) % 4 === 0) g.add(b.cyl(1.4, 1.4, 0.6, [C.white, C.yellow, C.green, C.purple][(r + c) % 4], -7.5 + c * 2.5 + (r % 2) * 1.25, 3 + r * 2.4, 0.9, {}, 6).rotateX(Math.PI / 2));
-      g.add(b.box(20, 1.4, 1.4, color, 0, 30.5, 0.6));
+      g.add(b.box(24, 1.4, 1.4, color, 0, 30.5, 0.6));
       return g;
     };
-    b.part("BACKDROPS", "Angled pegboards on the back wall where robots place PIXELS to build rows and MOSAICS.", [backdrop(-24, C.blue), backdrop(24, C.red)]);
-    // Trusses across the field with a stage door in the middle
-    const truss = [];
-    for (const x of [-72, -48, -24, 24, 48, 72]) truss.push(b.box(2, 20, 2, C.dark, x, 10, 0, { metalness: 0.5 }));
-    truss.push(b.box(46, 2, 2, C.yellow, -48, 20, 0), b.box(46, 2, 2, C.yellow, 48, 20, 0), b.box(46, 2, 2, C.yellow, -48, 14, 0), b.box(46, 2, 2, C.yellow, 48, 14, 0));
-    truss.push(b.box(46, 2, 2, C.yellow, 0, 20, 0));
-    b.part("TRUSSES", "Low trusses separate the front of the field from the BACKSTAGE. Robots drive under them.", truss);
-    b.part("STAGE DOOR", "A hinged door in the center truss that robots can push through.", [b.box(44, 12, 0.8, C.gray, 0, 7, 0, { transparent: true, opacity: 0.85 })]);
-    b.part("RIGGING", "Bars robots grab to suspend for 20 points in the End Game.", [b.bar([-72, 24, 0], [-26, 24, 0], 0.7, C.blue), b.bar([26, 24, 0], [72, 24, 0], 0.7, C.red)]);
+    b.part("BACKDROPS", "Angled pegboards against the back wall where robots place PIXELS to build rows and MOSAICS.", [backdrop(-36, C.blue), backdrop(36, C.red)]);
+    // BACKSTAGE tape: runs along each side 2 tiles from the back wall, then angles to the back-wall center
+    b.part("BACKSTAGE", "Each alliance's scoring area beneath its BACKDROP. PIXELS dropped here score 1 point.",
+      [b.tape(-72, -49, -11, -49, C.blue), b.tape(-11, -49, 1, -72, C.blue), b.tape(72, -49, 11, -49, C.red), b.tape(11, -49, -1, -72, C.red)]);
+    // TRUSSES: A-frame legs on the tile seams, centered on the 4th tile row from the back
+    const TZ = 12, truss = [];
+    for (const x of [-72, -48, -24, 24, 48, 72]) truss.push(b.bar([x, 0.6, TZ - 8], [x, 20, TZ], 0.8, C.dark, { metalness: 0.5 }), b.bar([x, 0.6, TZ + 8], [x, 20, TZ], 0.8, C.dark, { metalness: 0.5 }));
+    for (const [x1, x2] of [[-72, -48], [48, 72]]) truss.push(b.bar([x1, 20, TZ], [x2, 20, TZ], 0.9, C.yellow), b.bar([x1, 14, TZ - 2.6], [x2, 14, TZ - 2.6], 0.7, C.yellow), b.bar([x1, 14, TZ + 2.6], [x2, 14, TZ + 2.6], 0.7, C.yellow));
+    for (const [x1, x2] of [[-48, -24], [24, 48]]) truss.push(b.bar([x1, 14, TZ - 2.6], [x2, 14, TZ - 2.6], 0.7, C.yellow), b.bar([x1, 14, TZ + 2.6], [x2, 14, TZ + 2.6], 0.7, C.yellow));
+    truss.push(b.bar([-24, 20, TZ], [24, 20, TZ], 0.9, C.yellow));
+    b.part("TRUSSES", "Low A-frame trusses between the front of the field and the BACKSTAGE. Robots drive under them or through the STAGE DOOR.", truss);
+    b.part("STAGE DOOR", "A hinged door in the center truss that robots can push through.", [b.box(46, 12, 0.8, C.gray, 0, 7.5, TZ, { transparent: true, opacity: 0.8 })]);
+    b.part("RIGGING", "The alliance-colored bars on the side trusses. Robots suspend from them for 20 points in the End Game.", [b.bar([-48, 20, TZ], [-24, 20, TZ], 0.9, C.blue), b.bar([24, 20, TZ], [48, 20, TZ], 0.9, C.red)]);
     b.part("WINGS", "Front-corner triangles where human players load PIXELS.", [b.zone([[-72, 44], [-44, 72], [-72, 72]], C.red, 0.3), b.tape(-72, 44, -44, 72, C.red), b.zone([[72, 44], [44, 72], [72, 72]], C.blue, 0.3), b.tape(72, 44, 44, 72, C.blue)]);
     const marks = [];
-    for (const [x, z] of [[-24, -36], [24, -36], [-24, 36], [24, 36]]) { marks.push(b.tape(x - 12, z, x - 6, z, x < 0 ? C.blue : C.red), b.tape(x + 6, z, x + 12, z, x < 0 ? C.blue : C.red), b.tape(x, z - 12, x, z - 6, x < 0 ? C.blue : C.red)); }
+    for (const [x, z] of [[-32, -24], [32, -24], [-32, 30], [32, 30]]) { marks.push(b.tape(x - 12, z, x - 6, z, x < 0 ? C.blue : C.red), b.tape(x + 6, z, x + 12, z, x < 0 ? C.blue : C.red), b.tape(x, z - 12, x, z - 6, x < 0 ? C.blue : C.red)); }
     b.part("SPIKE MARKS", "Three marks per starting position show the randomized target in autonomous.", marks);
     const stacks = [];
-    for (const x of [-66, 66]) for (let k = 0; k < 5; k++) stacks.push(b.cyl(1.6, 1.6, 0.5, C.white, x, 1 + k * 0.55, 0, {}, 6));
-    b.part("PIXELS", "Hexagonal pieces in white, yellow, green, and purple.", stacks);
+    for (const x of [-37, -25, -12.5, 12.5, 25, 37]) for (let k = 0; k < 5; k++) stacks.push(b.cyl(1.6, 1.6, 0.5, C.white, x, 1 + k * 0.55, 67, {}, 6));
+    b.part("PIXEL STACKS", "Six stacks of five white PIXELS along the audience wall. PIXELS come in white, yellow, green, and purple.", stacks);
     b.part("LANDING ZONES", "Paper drones fly over the truss into zones 1, 2, and 3 beyond the audience wall.", [b.zone([[-72, 76], [72, 76], [72, 98], [-72, 98]], C.tan, 0.28, 0.05), b.zone([[-72, 100], [72, 100], [72, 122], [-72, 122]], C.tan, 0.22, 0.05), b.zone([[-72, 124], [72, 124], [72, 146], [-72, 146]], C.tan, 0.16, 0.05)]);
   },
 
@@ -287,8 +333,8 @@ const SEASONS = {
       g.add(b.cyl(1.4, 1.4, 2, C.yellow, 0, 21.5, 0));
       return g;
     };
-    b.part("Blue SHIPPING HUB", "Freight scores 2, 4, or 6 points on levels 1, 2, and 3.", [hub(-24, 0, C.blue)]);
-    b.part("Red SHIPPING HUB", "Freight scores 2, 4, or 6 points on levels 1, 2, and 3.", [hub(24, 0, C.red)]);
+    b.part("Blue SHIPPING HUB", "Freight scores 2, 4, or 6 points on levels 1, 2, and 3.", [hub(-24, 12, C.blue)]);
+    b.part("Red SHIPPING HUB", "Freight scores 2, 4, or 6 points on levels 1, 2, and 3.", [hub(24, 12, C.red)]);
     b.part("SHARED SHIPPING HUB", "A tipping hub inside the warehouse that both alliances score on.", [hub(0, -50, 0, true)]);
     const bars = [b.box(144, 2.5, 3, C.gray, 0, 1.8, -28.5), b.box(3, 2.5, 43, C.gray, -24, 1.8, -50), b.box(3, 2.5, 43, C.gray, 24, 1.8, -50)];
     b.part("BARRIERS", "Low barriers separate the WAREHOUSE from the rest of the field.", bars);
@@ -301,9 +347,9 @@ const SEASONS = {
     b.part("WAREHOUSE", "The back area where freight is collected. Parking completely inside scores 10 points in auto.", [b.zone([[-72, -72], [72, -72], [72, -28.5], [-72, -28.5]], C.yellow, 0.06)]);
     const carousel = (x, z) => { const g = new THREE.Group(); g.position.set(x, 0, z); g.add(b.cyl(7.5, 7.5, 2, C.dark, 0, 6, 0), b.cyl(1, 1, 6, C.steel, 0, 3, 0)); g.add(b.ball(1.6, C.yellow, 4, 7, 0)); return g; };
     b.part("CAROUSELS", "Turntables holding ducks. Spinning one off scores 10 points in auto.", [carousel(-66, 66), carousel(66, 66)]);
-    b.part("STORAGE UNITS", "Taped squares near the audience wall.", [...b.outline([[-35, 72], [-35, 49], [-12, 49], [-12, 72]], C.blue, 2, false), ...b.outline([[12, 72], [12, 49], [35, 49], [35, 72]], C.red, 2, false)]);
+    b.part("STORAGE UNITS", "Taped squares near the audience wall.", [...b.outline([[-47, 72], [-47, 49], [-25, 49], [-25, 72]], C.blue, 2, false), ...b.outline([[25, 72], [25, 49], [47, 49], [47, 72]], C.red, 2, false)]);
     const barcodes = [];
-    for (const x of [-48, 48]) for (const z of [-18, 18]) for (let k = 0; k < 3; k++) barcodes.push(b.box(1.5, 0.2, 1.5, x < 0 ? C.blue : C.red, x - 3 + k * 0, 0.7, z - 8 + k * 8));
+    for (const x of [-36, 36]) for (const z of [-12, 32]) for (let k = 0; k < 3; k++) barcodes.push(b.box(1.5, 0.2, 1.5, x < 0 ? C.blue : C.red, x, 0.7, z - 8.5 + k * 8.5));
     b.part("BARCODES", "Three positions per start where a duck or team shipping element sets the auto target level.", barcodes);
   },
 
@@ -326,7 +372,7 @@ const SEASONS = {
     const zones = [];
     for (const [x, z, n] of [[-58, -12, "A"], [-36, -36, "B"], [-58, -60, "C"]]) { const pts = [[x - 11, z - 11], [x + 11, z - 11], [x + 11, z + 11], [x - 11, z + 11]]; zones.push(...b.outline(pts, C.blue), ...b.outline(pts.map(([px, pz]) => [-px, pz]), C.red), b.label(n, x, 0.8, z, { size: 8, color: "#8fb3ff" }), b.label(n, -x, 0.8, z, { size: 8, color: "#ff9a9e" })); }
     b.part("TARGET ZONES", "Zones A, B, and C. The starter stack's ring count picks the wobble goal target in auto.", zones);
-    b.part("LAUNCH LINE", "Robots must launch from behind this white line.", [b.tape(-72, -6, 72, -6, C.white, 2)]);
+    b.part("LAUNCH LINE", "Robots must launch from behind this white line.", [b.tape(-72, -12, 72, -12, C.white, 2)]);
     const rings = [];
     for (const x of [-36, 36]) for (let k = 0; k < 4; k++) { const r = mesh(new THREE.TorusGeometry(2.1, 0.55, 10, 20), b.m(C.orange)); r.rotation.x = Math.PI / 2; r.position.set(x, 1.2 + k * 0.85, 24); rings.push(r); }
     b.part("STARTER STACKS", "Zero, one, or four rings, randomized each match.", rings);
@@ -382,10 +428,12 @@ const SEASONS = {
   },
 
   /* ===== 2017–18 RELIC RECOVERY ===== */
+  // From the Game Manual Part 2 field drawing: red on the right as seen from the audience,
+  // RELIC RECOVERY ZONES outside the audience-side wall.
   2017(b) {
-    baseField(b, { redSide: "left" });
+    baseField(b, { redSide: "right", audienceZ: H + 60 });
     const stone = (x, z, color) => b.box(24, 2, 24, color, x, 1.6, z, { roughness: 0.5 });
-    b.part("BALANCING STONES", "Robots start here and balance on them at the end for 20 points.", [stone(-48, -48, C.red), stone(-48, 24, C.red), stone(48, -48, C.blue), stone(48, 24, C.blue)]);
+    b.part("BALANCING STONES", "Robots start on these 24 in. platforms and balance on them at the end for 20 points.", [stone(48, 48, C.red), stone(48, -24, C.red), stone(-48, 48, C.blue), stone(-48, -24, C.blue)]);
     const crypto = (x, z, rot, color) => {
       const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rot;
       for (let c = 0; c < 5; c++) g.add(b.box(1.2, 22, 3, color, -12 + c * 6, 11.6, -2));
@@ -393,15 +441,26 @@ const SEASONS = {
       for (let r = 0; r < 2; r++) for (let c = 0; c < 4; c++) if ((r + c) % 3 !== 2) g.add(b.box(5.6, 5.6, 5.6, (r + c) % 2 ? C.wood : C.gray, -9 + c * 6, 3.2 + r * 6, 1));
       return g;
     };
-    b.part("CRYPTOBOXES", "Four-column boxes on the walls. Completed rows, columns, and ciphers earn bonuses.", [crypto(-66, -12, Math.PI / 2, C.red), crypto(-36, 66, 0, C.red), crypto(66, -12, -Math.PI / 2, C.blue), crypto(36, 66, 0, C.blue)]);
+    // Each alliance has one CRYPTOBOX on the back wall and one on its own side wall, each with a taped SAFE ZONE
+    b.part("CRYPTOBOXES", "Four-column boxes on the walls. Completed rows, columns, and ciphers earn bonuses.",
+      [crypto(36, -68, 0, C.red), crypto(68, 12, -Math.PI / 2, C.red), crypto(-36, -68, 0, C.blue), crypto(-68, 12, Math.PI / 2, C.blue)]);
+    b.part("SAFE ZONES", "Taped triangles in front of each CRYPTOBOX. Parking here in autonomous scores 10 points.", [
+      ...b.outline([[22, -72], [50, -72], [36, -48]], C.red, 2), ...b.outline([[-22, -72], [-50, -72], [-36, -48]], C.blue, 2),
+      ...b.outline([[72, -2], [72, 26], [48, 12]], C.red, 2), ...b.outline([[-72, -2], [-72, 26], [-48, 12]], C.blue, 2),
+    ]);
     const glyphs = [];
-    for (let i = 0; i < 24; i++) { const g = b.box(6, 6, 6, i % 2 ? C.wood : C.gray, -9 + (i % 4) * 6, 3.6, -30 + Math.floor(i / 4) * 10); g.rotation.y = (i % 5) * 0.3; glyphs.push(g); }
-    b.part("GLYPH PIT", "The center pit holds the glyphs (brown and gray six-inch cubes).", [...b.outline([[-24, -46], [0, -60], [24, -46], [24, 26], [0, 40], [-24, 26]], C.red, 2), ...glyphs]);
+    for (let i = 0; i < 24; i++) { const g = b.box(6, 6, 6, i % 2 ? C.wood : C.gray, -9 + (i % 4) * 6, 3.6, -15 + Math.floor(i / 4) * 9); g.rotation.y = (i % 5) * 0.3; glyphs.push(g); }
+    const pit = [[0, 48.7], [25, 25.4], [25, 0.7], [0, -24], [-25, 0.7], [-25, 25.4]];
+    b.part("GLYPH PIT", "The center pit holds 24 glyphs (brown and gray six-inch cubes). A red and blue line splits the field between the alliances.", [
+      ...b.outline(pit.slice(0, 4), C.red, 2, false), ...b.outline([pit[3], pit[4], pit[5], pit[0]], C.blue, 2, false),
+      b.tape(1, 48.7, 1, 72, C.red), b.tape(-1, 48.7, -1, 72, C.blue), b.tape(1, -24, 1, -72, C.red), b.tape(-1, -24, -1, -72, C.blue), ...glyphs,
+    ]);
     const relic = (x, z, color) => { const g = new THREE.Group(); g.position.set(x, 0, z); g.add(b.cyl(2, 2.5, 2, color, 0, 1.6, 0), b.cyl(1.2, 1.5, 6, C.yellow, 0, 5.6, 0), b.ball(1.8, C.yellow, 0, 8, 0)); return g; };
-    b.part("RELICS", "Robots carry relics over the wall into zones 1, 2, or 3 for up to 40 points, plus 15 if upright.", [relic(-66, -66, C.red), relic(66, -66, C.blue), relic(-66, 66, C.red), relic(66, 66, C.blue)]);
-    b.part("RELIC RECOVERY ZONES", "Three zones outside the back wall where relics are scored.", [b.zone([[-48, -76], [-14, -76], [-14, -124], [-48, -124]], C.red, 0.2, 0.05), b.zone([[14, -76], [48, -76], [48, -124], [14, -124]], C.blue, 0.2, 0.05)]);
+    b.part("RELICS", "Robots carry relics over the wall into zones 1, 2, or 3 for up to 40 points, plus 15 if upright.", [relic(68, 68, C.red), relic(68, -68, C.red), relic(-68, 68, C.blue), relic(-68, -68, C.blue)]);
+    const zones = (x1, x2, color) => [0, 1, 2].map((k) => b.zone([[x1, 74 + k * 16], [x2, 74 + k * 16], [x2, 89 + k * 16], [x1, 89 + k * 16]], color, 0.16 + k * 0.06, 0.05));
+    b.part("RELIC RECOVERY ZONES", "Zones 1, 2, and 3 outside the audience-side wall. The farther the relic goes, the more it scores.", [...zones(12, 36, C.red), ...zones(-36, -12, C.blue)]);
     const jewels = [];
-    for (const [x, z] of [[-66, -40], [-66, 30], [66, -40], [66, 30]]) jewels.push(b.box(6, 3, 3, C.dark, x, 2, z), b.ball(1.9, C.red, x - 2, 3.4, z), b.ball(1.9, C.blue, x + 2, 3.4, z));
+    for (const [x, z] of [[67, 46], [67, -26], [-67, 46], [-67, -26]]) jewels.push(b.box(3, 3, 6, C.dark, x, 2, z), b.ball(1.9, C.red, x, 3.4, z - 2), b.ball(1.9, C.blue, x, 3.4, z + 2));
     b.part("JEWELS", "In autonomous, robots knock the opponent's jewel off the platform for 30 points.", jewels);
   },
 };
@@ -495,7 +554,7 @@ export async function mountField(container, year) {
     dispose() {
       cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); document.removeEventListener("visibilitychange", onVis); controls.dispose();
       scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach((m) => { m.map?.dispose(); m.dispose(); }); });
-      renderer.dispose(); renderer.domElement.remove();
+      renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove();
     },
   };
 }

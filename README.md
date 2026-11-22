@@ -35,13 +35,17 @@ Everything editable lives in that one file.
 
 ## Trophies
 
-Visitors earn 55 PlayStation-style trophies (bronze, silver, gold, and a platinum for collecting them all) for exploring the site and playing the arcade. Earned trophies pop up in the corner and are listed on **/trophies.html**. Trophy definitions live in `assets/js/trophies.js`; pages and games award them with `SS.trophy("id")`. Progress is saved per browser.
+Visitors earn 78 PlayStation-style trophies (bronze, silver, gold, and a platinum for collecting them all) for exploring the site and playing the arcade. Earned trophies pop up in the corner and are listed on **/trophies.html**. Trophy definitions live in `assets/js/trophies.js`; pages and games award them with `SS.trophy("id")`. Progress is saved per browser.
 
 ## The arcade
 
-Nine original games share one engine (`assets/js/arcade/kit.js`): sound, particles, overlays, pause, fullscreen, touch controls, and best scores saved per device.
+Twelve original games share one engine (`assets/js/arcade/kit.js`): sound, particles, overlays, pause, fullscreen, touch controls, and best scores saved per device.
 
-The gear button in every game opens **Settings**: difficulty (Easy / Normal / Hard, with Hard-only trophies), sound effects and volume, screen shake, particles, high contrast, and larger text. Settings are shared by all games and saved per browser.
+Every game has five difficulty levels: **Super Easy, Easy, Medium, Hard, and Extreme**. The badge in each game's toolbar shows the current level; click it (or the gear button) to open **Settings**, which also has sound effects and volume, screen shake, particles, high contrast, and larger text. Settings are shared by all games and saved per browser.
+
+- Action games get faster and less forgiving at higher levels.
+- Puzzles change their rules: easier levels add hints (Gridlock's Super Easy shows the next best move after every move), while Hard and Extreme add move, block, or loop limits and turn off hints (and undo on Extreme). Every level stays solvable on every difficulty.
+- Most games have an Extreme-only trophy, and earning 3 of them unlocks **Daredevil**.
 
 | Game | Type | Notes |
 |---|---|---|
@@ -53,7 +57,10 @@ The gear button in every game opens **Settings**: difficulty (Easy / Normal / Ha
 | Signal Lost | Stealth maze | Procedural mazes; pings reveal walls and alert drones; decoys |
 | Flywheel | Aim and launch | Hood angle and flywheel speed, like our real shooter; wind and moving hive |
 | Mecanum Rush | Time trial, 8 courses | Field- or robot-centric driving, cone penalties, ghost of your best run |
-| Wire Up | Rotation puzzle, endless | Boards are random spanning trees, so every circuit is solvable |
+| Wire Up | Rotation puzzle, endless | Boards are random spanning trees, so every circuit is solvable; board size follows the difficulty (4×4 to 11×11) |
+| Stack Up | Timing, endless | Drop pieces from a sweeping linear slide; overhangs are trimmed |
+| Balance | Physics, survival | Keep a tilting platform level while collecting falling game pieces |
+| Odometry | Memory, endless | Watch a route, then drive it from memory; routes grow by one step |
 
 Easter egg: type ↑ ↑ ↓ ↓ ← → ← → B A anywhere on the site.
 
@@ -83,7 +90,7 @@ content/seasons.json      FTC season descriptions for the About FTC page
 assets/js/fields3d.js     3D field models (three.js, loaded only when needed)
 assets/img/projects/      Team project photos
 assets/img/brands/        FIRST Tech Challenge and FTCScout logos
-assets/js/arcade/         Game engine + nine games
+assets/js/arcade/         Game engine + twelve games
 tools/                    Page builder, level generators, image generator, data refresh
 .github/workflows/        Daily data refresh
 ```
@@ -91,8 +98,7 @@ tools/                    Page builder, level generators, image generator, data 
 - **Run locally:** `python tools/serve.py`, then open http://localhost:5173. Opening the files directly won't work. (It's like `python -m http.server`, but handles many connections at once and never caches.)
 - **Check links:** `python tools/check_links.py` confirms every internal link, image, and script exists.
 - **After changing layout, CSS, or JS:** run `python tools/build_pages.py`. It rebuilds the pages and stamps a new version on asset links so visitors get the update right away.
-- **Logo files:** `python tools/make_logo.py` rebuilds the SVG logo, mark, lockups, and favicon from the pit-sign bolt (needs `pip install fonttools`).
-- **Images:** `python tools/make_images.py` regenerates the app icons and the social share card (needs `pip install pillow`).
+- **Logo and icons:** the official logo lives at `assets/img/brand/logo-source.png`. To change it, replace that file and run `python tools/make_images.py` (needs `pip install pillow`). It rebuilds the homepage logo, header icon, browser-tab icon, app icons, and the social share card.
 - **Levels:** `node tools/check_levels.js` checks Echo; the generators check Gridlock and Autonomous.
 - **Editor passcode:** only a SHA-256 hash is stored. It keeps the editor out of sight; it isn't real security and can't change the live site. Publishing always needs the team's GitHub login.
 - **Contact form:** sends through [FormSubmit](https://formsubmit.co) to the team email. The **first** message triggers a one-time activation email; click its link. If sending fails, visitors get a pre-filled email instead.

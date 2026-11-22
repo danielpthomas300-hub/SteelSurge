@@ -44,9 +44,9 @@ def head(title, desc, page, root=".", noindex=False, path="", css=(), js=(), jso
   <meta property="og:site_name" content="Steel Surge FTC 27254">
   <meta property="og:title" content="{title}">
   <meta property="og:description" content="{desc}">
-  <meta property="og:image" content="{SITE}assets/img/og-image.png">
+  <meta property="og:image" content="{SITE}assets/img/og-image.jpg">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="icon" href="{r}/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="{r}/assets/img/favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="{r}/assets/img/icon-180.png">
   <link rel="manifest" href="{r}/manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -105,8 +105,9 @@ JSONLD = '{"@context":"https://schema.org","@type":"SportsTeam","name":"Steel Su
 pages["index.html"] = shell("Steel Surge — FTC Robotics Team 27254", "Steel Surge is FIRST Tech Challenge team 27254 from Kennett Square, PA. Meet the team, follow our season live, and play our robot arcade.", "home", f'''    <section class="hero">
       <canvas class="hero-canvas" aria-hidden="true"></canvas>
       <div class="wrap">
+        <div class="hero-emblem" aria-hidden="true"><img class="logo-dark" src="assets/img/logo-hero.webp" alt="" width="560" height="560" fetchpriority="high"><img class="logo-light" src="assets/img/logo-tile.webp" alt="" width="560" height="560"></div>
         <span class="hero-badge" id="hero-badge"><b>FTC #27254</b> Kennett Square, PA</span>
-        <h1 class="hero-logo"><span class="sr-only">Steel Surge</span><img class="logo-dark" src="assets/img/logo-lockup.svg" alt="" width="620" height="236"><img class="logo-light" src="assets/img/logo-lockup-light.svg" alt="" width="620" height="236"></h1>
+        <h1>Steel<br><span class="surge-text">Surge</span></h1>
         <p class="lead" id="hero-lead"></p>
         <div class="hero-actions">
           <a class="btn primary" href="team.html">Meet the team {A}</a>
@@ -120,7 +121,7 @@ pages["index.html"] = shell("Steel Surge — FTC Robotics Team 27254", "Steel Su
   + section(head_block("What we do", "Three crews, one robot") + '\n        <div class="grid cols-3" id="pillars"></div>')
   + section(head_block("How we build", "From kickoff to competition", "Every season starts from scratch. Here's how a new robot comes together.") + '\n        <ol class="steps" id="build-steps"></ol>', cls="section alt")
   + section(head_block("Watch", "Latest from our channel", "Builds, matches, and moments from the build room. New videos appear here as soon as we post them.", f'<a class="link-arrow" href="media.html">All videos {A}</a>') + '\n        <div class="latest-videos" id="latest-videos"></div>')
-  + section(head_block("Steel Surge Arcade", "Games built by a robotics team", "Nine original games you can play in your browser, on a computer or phone. Here are three to start, and every game has trophies to earn.", f'<a class="link-arrow" href="arcade.html">Open the arcade {A}</a>') + '\n        <div class="grid cols-3" id="home-games"></div>')
+  + section(head_block("Steel Surge Arcade", "Games built by a robotics team", "Twelve original games you can play in your browser, on a computer or phone. Here are three to start, and every game has trophies to earn.", f'<a class="link-arrow" href="arcade.html">Open the arcade {A}</a>') + '\n        <div class="grid cols-3" id="home-games"></div>')
   + section(f'''        <div id="home-sponsors" style="margin-bottom:40px"></div>
         <div class="cta-band reveal">
           <div><h2>Power the surge</h2><p>Sponsors keep our robot running and our outreach growing. Every tier comes with real visibility for your business.</p></div>
@@ -161,8 +162,8 @@ pages["media.html"] = shell("Media" + T, "Videos, highlights, and social media f
   + section(head_block("Build log", "Team updates") + '\n        <div class="grid cols-2" id="updates"></div>')
   + section(head_block("Follow along", "Find us online") + '\n        <div class="grid cols-3" id="socials"></div>'), path="media.html")
 
-pages["arcade.html"] = shell("Arcade" + T, "Nine original browser games from Steel Surge, FTC team 27254, each with trophies to earn.", "arcade",
-  page_hero("Steel Surge Arcade", "Play something we built", 'Nine original robot games starring Surge, our mascot. They run in your browser on a computer or phone, remember your best scores on this device, and award <a href="trophies.html">trophies</a> as you play.')
+pages["arcade.html"] = shell("Arcade" + T, "Twelve original browser games from Steel Surge, FTC team 27254, each with trophies to earn.", "arcade",
+  page_hero("Steel Surge Arcade", "Play something we built", 'Twelve original robot games starring Surge, our mascot. They run in your browser on a computer or phone, remember your best scores on this device, and award <a href="trophies.html">trophies</a> as you play.')
   + section('        <div id="arcade-progress"></div>\n        <div class="grid cols-3" id="arcade-games"></div>'), path="arcade.html")
 
 WHY = [
@@ -302,7 +303,7 @@ ICO = {
     "ping": I('<circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/>'),
     "U": I('<path d="m6 15 6-6 6 6"/>'), "D": I('<path d="m6 9 6 6 6-6"/>'), "L": I('<path d="m15 6-6 6 6 6"/>'), "R": I('<path d="m9 6 6 6-6 6"/>'),
 }
-ALL_GAMES = [("overclock", "Overclock"), ("gridlock", "Gridlock"), ("echo", "Echo"), ("pitcrew", "Pit Crew"), ("autonomous", "Autonomous"), ("signal", "Signal Lost"), ("flywheel", "Flywheel"), ("mecanum", "Mecanum Rush"), ("wireup", "Wire Up")]
+ALL_GAMES = [("overclock", "Overclock"), ("gridlock", "Gridlock"), ("echo", "Echo"), ("pitcrew", "Pit Crew"), ("autonomous", "Autonomous"), ("signal", "Signal Lost"), ("flywheel", "Flywheel"), ("mecanum", "Mecanum Rush"), ("wireup", "Wire Up"), ("stackup", "Stack Up"), ("balance", "Balance"), ("odometry", "Odometry")]
 
 
 def game_page(gid, title, genre, desc, stats, buttons, howto, controls, touch, aria, extra_js=()):
@@ -407,9 +408,30 @@ pages["arcade/mecanum.html"] = game_page(
 pages["arcade/wireup.html"] = game_page(
     "wireup", "Wire Up", "Puzzle · Endless", "Wire Up: a wiring puzzle from Steel Surge, FTC team 27254. Rotate the tiles to power every motor.",
     [("solved", "Solved", "0"), ("moves", "Moves", "0"), ("size", "Board", "Easy")], [("restart", "restart", "New circuit (N)")],
-    ["Every robot needs wiring. Connect the battery to every motor and sensor on the board.", "Click or tap a tile to rotate it. Powered wires light up blue.", "The puzzle is solved when every part has power. Every circuit is guaranteed to have a solution.", "Pick Easy, Medium, or Hard. Harder boards are bigger, and on Hard the wires can wrap around the edges."],
+    ["Every robot needs wiring. Connect the battery to every motor and sensor on the board.", "Click or tap a tile to rotate it. Powered wires light up blue.", "The puzzle is solved when every part has power. Every circuit is guaranteed to have a solution.", "The difficulty setting picks the board size, from 4×4 on Super Easy to 11×11 on Extreme. On Hard and Extreme, wires can wrap around the edges."],
     [("Rotate a tile", ["Click", "Tap"]), ("Rotate backward", ["Right-click"]), ("New circuit", ["N"])],
     '<div class="diff-pick" id="diff-pick"></div>', "Wire Up: a grid of wire tiles connecting a battery to motors")
+
+pages["arcade/stackup.html"] = game_page(
+    "stackup", "Stack Up", "Timing · Endless", "Stack Up: a timing game from Steel Surge, FTC team 27254. Drop game pieces from a linear slide and build the tallest tower.",
+    [("height", "Height", "0"), ("combo", "Perfect", "0"), ("width", "Width", "100%")], [("pause", "pause", "Pause (Esc)")],
+    ["Your robot's linear slide sweeps a game piece back and forth above the stack.", "Drop it at the right moment. Anything hanging over the edge of the piece below gets trimmed off, so the tower gets narrower.", "Line it up almost exactly for a <b>perfect drop</b>: nothing is trimmed, and perfect drops in a row build a combo.", "The slide speeds up as the tower grows. Miss the stack completely and the run is over."],
+    [("Drop", ["Space", "↓"]), ("Drop on touch", ["Tap"]), ("Pause", ["Esc", "P"]), ("Mute", ["M"])],
+    "", "Stack Up: a tower of game pieces built on top of a robot")
+
+pages["arcade/balance.html"] = game_page(
+    "balance", "Balance", "Physics · Survival", "Balance: a physics game from Steel Surge, FTC team 27254. Keep the balancing platform level while game pieces rain down.",
+    [("score", "Score", "0"), ("time", "Time", "0s"), ("lost", "Dropped", "0/3")], [("pause", "pause", "Pause (Esc)")],
+    ["Your robot sits on a balancing platform that tips toward whichever side is heavier.", "Game pieces fall onto the platform. A warning arrow shows where each one will land.", "Drive over pieces to collect them. Heavier pieces (marked ×2 and ×3) tip the platform more but score more.", "Use your robot's own weight to keep the platform level. You earn bonus points every second it stays level.", "Tip too far for too long, or let 3 pieces slide off the ends, and the run is over."],
+    [("Drive", ["←", "→"]), ("Drive on touch", ["Drag", "Buttons"]), ("Pause", ["Esc", "P"]), ("Mute", ["M"])],
+    '<div class="touch-pad"><div class="pad-col" id="bal-pad" style="grid-auto-flow:column"></div></div>', "Balance: a robot on a tilting platform collecting falling game pieces")
+
+pages["arcade/odometry.html"] = game_page(
+    "odometry", "Odometry", "Memory · Endless", "Odometry: a memory game from Steel Surge, FTC team 27254. Watch the robot's route, then drive it from memory.",
+    [("route", "Route", "0"), ("score", "Steps", "0"), ("strikes", "Strikes", "0/3")], [("replay", "rewind", "Watch again (Q)")],
+    ["Real robots use <b>odometry pods</b>, small tracking wheels, to know exactly where they've driven.", "Watch the robot drive a route across the field. The route is drawn in orange.", "Then it's your turn: drive the same route from the start pad, one tile at a time.", "A wrong turn is a strike, and the route plays again. Run out of strikes and the game ends.", "Each route you finish is one step longer. How long a route can you remember?"],
+    [("Drive", ["←", "↑", "↓", "→"]), ("Drive on touch", ["Swipe", "Pad"]), ("Watch again", ["Q"])],
+    f'<div class="touch-pad">{dpad()}<div class="pad-col"><button class="pad-btn" type="button" data-act="replay">{ICO["rewind"]}Replay</button></div></div>', "Odometry: a robot on a 6 by 6 field following a route")
 
 pages["editor.html"] = head("Team editor · Steel Surge", "Team-only content editor.", "editor", noindex=True, css=("editor.css",), js=("editor.js",)) + '''  <div id="app"><div class="ed-lock"><p class="muted">Loading editor…</p></div></div>
 </body>
