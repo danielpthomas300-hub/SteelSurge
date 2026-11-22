@@ -455,7 +455,7 @@
   /* ---------------- Publish ---------------- */
   function openPublish() {
     save();
-    const repo = draft.dev?.repo || "SteelSurge1/SteelSurge", branch = draft.dev?.branch || "main";
+    const repo = draft.dev?.repo || "danielpthomas300-hub/SteelSurge", branch = draft.dev?.branch || "main";
     const json = JSON.stringify(draft, null, 2) + "\n";
     const changedList = dirtySections().map((s) => `<li>${esc(s.title)}</li>`).join("");
     const dlg = $("#publish-dialog");

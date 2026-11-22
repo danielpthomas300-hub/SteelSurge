@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://steelsurge1.github.io/SteelSurge/sitemap.xml
+Sitemap: https://danielpthomas300-hub.github.io/SteelSurge/sitemap.xml

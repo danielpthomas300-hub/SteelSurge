@@ -1,6 +1,6 @@
 # Steel Surge — FTC Team 27254 website
 
-Live site: https://steelsurge1.github.io/SteelSurge/
+Live site: https://danielpthomas300-hub.github.io/SteelSurge/
 
 A fast, static website (plain HTML, CSS, and JavaScript, with no build step needed to run it) hosted free on GitHub Pages.
 

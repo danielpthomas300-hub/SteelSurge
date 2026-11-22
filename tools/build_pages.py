@@ -11,7 +11,7 @@ import hashlib
 import os
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-SITE = "https://steelsurge1.github.io/SteelSurge/"
+SITE = "https://danielpthomas300-hub.github.io/SteelSurge/"
 
 _h = hashlib.sha1()
 for f in sorted(glob.glob(os.path.join(OUT, "assets", "**", "*.*"), recursive=True)):
@@ -304,7 +304,7 @@ pages["trophies.html"] = shell("Trophies" + T, "Your Steel Surge trophy case: ea
   + section('        <div id="trophy-case"></div>'), path="trophies.html")
 
 # 404 is served at any path by GitHub Pages, so it sets a <base> pointing at the site root
-# (works at steelsurge1.github.io/SteelSurge/ and on a custom domain).
+# (works at danielpthomas300-hub.github.io/SteelSurge/ and on a custom domain).
 BASE = '<script>document.write(\'<base href="\'+(/^\\/SteelSurge(\\/|$)/i.test(location.pathname)?"/SteelSurge/":"/")+\'">\')</script>\n  <meta charset="utf-8">'
 SURGE = '''<svg class="lost-bot" viewBox="0 0 120 120" aria-hidden="true"><g transform="rotate(-12 60 60)"><rect x="22" y="30" width="76" height="62" rx="18" fill="#1b2633" stroke="#3ba8ff" stroke-width="5"/><rect x="36" y="48" width="48" height="22" rx="11" fill="#0a0f15"/><path d="M46 55l6 6m0-6-6 6M68 55l6 6m0-6-6 6" stroke="#3ba8ff" stroke-width="3" stroke-linecap="round"/><path d="M60 30V16" stroke="#4a5b70" stroke-width="4"/><circle cx="60" cy="13" r="5" fill="#ffb547"/></g></svg>'''
 pages["404.html"] = shell("Page not found" + T, "This page doesn't exist.", "404", f'''    <section class="wrap notfound">
