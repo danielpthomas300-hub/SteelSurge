@@ -152,6 +152,25 @@
     r = Math.min(r, w / 2, h / 2); ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
   }
 
+  /** Full screen, with a fallback that fills the window where real full screen isn't allowed (iPhone, embedded browsers). */
+  function toggleFull(el) {
+    if (document.fullscreenElement) return document.exitFullscreen();
+    if (el.classList.contains("pseudo-full")) return exitPseudo(el);
+    const req = el.requestFullscreen?.();
+    if (!req) return enterPseudo(el);
+    req.catch(() => enterPseudo(el));
+    // Some embedded browsers neither grant nor refuse; fall back if nothing happened
+    setTimeout(() => { if (!document.fullscreenElement && !el.classList.contains("pseudo-full")) enterPseudo(el); }, 600);
+  }
+  document.addEventListener("fullscreenchange", () => { if (document.fullscreenElement) document.querySelectorAll(".pseudo-full").forEach(exitPseudo); });
+  function enterPseudo(el) {
+    el.classList.add("pseudo-full"); document.documentElement.classList.add("no-scroll");
+    const onKey = (e) => { if (e.key === "Escape") { exitPseudo(el); removeEventListener("keydown", onKey, true); } };
+    addEventListener("keydown", onKey, true);
+    dispatchEvent(new Event("resize"));
+  }
+  function exitPseudo(el) { el.classList.remove("pseudo-full"); document.documentElement.classList.remove("no-scroll"); dispatchEvent(new Event("resize")); }
+
   /* ---------------- Game shell ---------------- */
   /**
    * new Arcade.Game({ id, width, height, update(dt), render(ctx), onKey(e) })
@@ -204,9 +223,9 @@
       badge.addEventListener("click", () => this.openSettings());
       applyLook();
       pause?.addEventListener("click", () => (this.paused ? this.resume() : this.pause()));
+      this._setPauseBtn(); // greyed out until a game is running
       if (full) {
-        if (!document.fullscreenEnabled) full.hidden = true;
-        full.addEventListener("click", () => { if (document.fullscreenElement) document.exitFullscreen(); else this.root.requestFullscreen?.().catch(() => {}); });
+        full.addEventListener("click", () => toggleFull(this.root));
       }
       this.stage.addEventListener("pointerdown", () => Sound.ensure(), { passive: true });
     }

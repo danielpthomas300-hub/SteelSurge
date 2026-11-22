@@ -312,3 +312,7 @@
 /* Game header: keep "All games" on screen on narrow phones */
 .game-top { justify-content: space-between; }
 .game-top .back { white-space: nowrap; }
+
+/* Fill the window when real full screen isn't available */
+.pseudo-full { position: fixed !important; inset: 0 !important; z-index: 2000 !important; width: 100vw !important; height: 100dvh !important; max-width: none !important; margin: 0 !important; border-radius: 0 !important; background: #070a0e; overflow: auto; }
+html.no-scroll, html.no-scroll body { overflow: hidden; }

@@ -874,7 +874,7 @@
     $("#contact-social").innerHTML = socialLinks(c).map((s) => `<a class="social-pill" href="${esc(s.url)}" target="_blank" rel="noopener">${s.icon}<span>${esc(s.label)}</span></a>`).join("");
     $("#copy-email").addEventListener("click", async (e) => {
       e.preventDefault();
-      try { await navigator.clipboard.writeText(c.team.email); toast("Email address copied"); } catch { location.href = `mailto:${c.team.email}`; }
+      try { await navigator.clipboard.writeText(c.team.email); toast("Email address copied"); } catch { toast(`Our email is ${c.team.email}`, "mail"); }
     });
     // Quick-start cards preselect a topic and jump to the form
     $$("[data-topic]").forEach((a) => a.addEventListener("click", (e) => {
@@ -919,6 +919,25 @@
       } finally { btn.disabled = false; btn.innerHTML = `Send message ${ICON.arrow}`; }
     });
   };
+
+  /** Full screen, with a fallback that fills the window where real full screen isn't allowed (iPhone, embedded browsers). */
+  function toggleFull(el) {
+    if (document.fullscreenElement) return document.exitFullscreen();
+    if (el.classList.contains("pseudo-full")) return exitPseudo(el);
+    const req = el.requestFullscreen?.();
+    if (!req) return enterPseudo(el);
+    req.catch(() => enterPseudo(el));
+    // Some embedded browsers neither grant nor refuse; fall back if nothing happened
+    setTimeout(() => { if (!document.fullscreenElement && !el.classList.contains("pseudo-full")) enterPseudo(el); }, 600);
+  }
+  document.addEventListener("fullscreenchange", () => { if (document.fullscreenElement) document.querySelectorAll(".pseudo-full").forEach(exitPseudo); });
+  function enterPseudo(el) {
+    el.classList.add("pseudo-full"); document.documentElement.classList.add("no-scroll");
+    const onKey = (e) => { if (e.key === "Escape") { exitPseudo(el); removeEventListener("keydown", onKey, true); } };
+    addEventListener("keydown", onKey, true);
+    dispatchEvent(new Event("resize"));
+  }
+  function exitPseudo(el) { el.classList.remove("pseudo-full"); document.documentElement.classList.remove("no-scroll"); dispatchEvent(new Event("resize")); }
 
   /* ---------------- About FTC: season explorer with 3D fields ---------------- */
   pages.ftc = async (c) => {
@@ -1013,9 +1032,12 @@
     $("#season-prev").addEventListener("click", () => { const i = seasons.findIndex((s) => s.year === year); if (i < seasons.length - 1) render(seasons[i + 1].year); });
     $("#season-next").addEventListener("click", () => { const i = seasons.findIndex((s) => s.year === year); if (i > 0) render(seasons[i - 1].year); });
     // 3D viewer controls
-    $$("[data-view]", viewerEl).forEach((b) => b.addEventListener("click", () => viewer?.setView(b.dataset.view)));
+    const views = $$("[data-view]", viewerEl);
+    const markView = (v) => views.forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.view === v)));
+    markView("angle");
+    views.forEach((b) => b.addEventListener("click", () => { viewer?.setView(b.dataset.view); markView(b.dataset.view); }));
     $("[data-spin]", viewerEl).addEventListener("click", (e) => { const on = viewer?.toggleSpin(); e.currentTarget.setAttribute("aria-pressed", String(!!on)); });
-    $("[data-full]", viewerEl).addEventListener("click", () => { if (document.fullscreenElement) document.exitFullscreen(); else viewerEl.requestFullscreen?.().catch(() => {}); });
+    $("[data-full]", viewerEl).addEventListener("click", () => toggleFull(viewerEl));
     render(year, false);
     // Load three.js only when the viewer scrolls near the screen
     new IntersectionObserver(([en], io) => { if (en.isIntersecting) { io.disconnect(); viewerEl.dataset.ready = "1"; show3d(year); } }, { rootMargin: "300px" }).observe(viewerEl);

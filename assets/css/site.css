@@ -731,6 +731,8 @@ noscript .noscript { display: block; padding: 18px var(--gutter); background: va
 .field3d { border: 1px solid var(--line-2); border-radius: var(--radius-lg); overflow: hidden; background: #0b0f14; box-shadow: var(--shadow-lg); }
 .field3d:fullscreen { display: flex; flex-direction: column; border-radius: 0; }
 .field3d:fullscreen .field3d-stage { flex: 1; aspect-ratio: auto; }
+.field3d.pseudo-full { display: flex; flex-direction: column; }
+.field3d.pseudo-full .field3d-stage { flex: 1; aspect-ratio: auto; min-height: 0; }
 .field3d-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px 12px 18px; border-bottom: 1px solid #212c39; background: #10161e; color: #e9eef4; }
 .field3d-bar b { font: 700 15px/1.2 var(--font-display); }
 .field3d-tools { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -796,3 +798,7 @@ noscript .noscript { display: block; padding: 18px var(--gutter); background: va
 /* Season panel: keep long scoring lines inside narrow screens */
 .season-panel > *, .season-panel > * > * { min-width: 0; }
 @media (max-width: 560px) { .score-table td { white-space: normal; } .score-table th, .score-table td { padding: 10px 8px; } }
+
+/* Fill the window when real full screen isn't available */
+.pseudo-full { position: fixed !important; inset: 0 !important; z-index: 2000 !important; width: 100vw !important; height: 100dvh !important; max-width: none !important; margin: 0 !important; border-radius: 0 !important; background: #070a0e; overflow: auto; }
+html.no-scroll, html.no-scroll body { overflow: hidden; }

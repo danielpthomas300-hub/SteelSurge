@@ -161,7 +161,7 @@
   }
   ui.querySelector('[data-k="angle"]').addEventListener("input", (e) => { aim.angle = +e.target.value; syncUi(); });
   ui.querySelector('[data-k="power"]').addEventListener("input", (e) => { aim.power = +e.target.value / 100; syncUi(); });
-  ui.querySelector("[data-fire]").addEventListener("click", () => { Sound.ensure(); fire(); });
+  ui.querySelector("[data-fire]").addEventListener("click", () => { Sound.ensure(); if (!game.running && game.overlayOpen() && !s?.over) begin(); else fire(); });
   game.onKey = (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); fire(); } };
   syncUi();
 
