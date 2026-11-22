@@ -121,7 +121,7 @@ pages["index.html"] = shell("Steel Surge — FTC Robotics Team 27254", "Steel Su
   + section(head_block("What we do", "Three crews, one robot") + '\n        <div class="grid cols-3" id="pillars"></div>')
   + section(head_block("How we build", "From kickoff to competition", "Every season starts from scratch. Here's how a new robot comes together.") + '\n        <ol class="steps" id="build-steps"></ol>', cls="section alt")
   + section(head_block("Watch", "Latest from our channel", "Builds, matches, and moments from the build room. New videos appear here as soon as we post them.", f'<a class="link-arrow" href="media.html">All videos {A}</a>') + '\n        <div class="latest-videos" id="latest-videos"></div>')
-  + section(head_block("Steel Surge Arcade", "Games built by a robotics team", "Twelve original games you can play in your browser, on a computer or phone. Here are three to start, and every game has trophies to earn.", f'<a class="link-arrow" href="arcade.html">Open the arcade {A}</a>') + '\n        <div class="grid cols-3" id="home-games"></div>')
+  + section(head_block("Steel Surge Arcade", "Games built by a robotics team", "Thirteen original games you can play in your browser, on a computer or phone. Here are three to start, and every game has trophies to earn.", f'<a class="link-arrow" href="arcade.html">Open the arcade {A}</a>') + '\n        <div class="grid cols-3" id="home-games"></div>')
   + section(f'''        <div id="home-sponsors" style="margin-bottom:40px"></div>
         <div class="cta-band reveal">
           <div><h2>Power the surge</h2><p>Sponsors keep our robot running and our outreach growing. Every tier comes with real visibility for your business.</p></div>
@@ -162,8 +162,8 @@ pages["media.html"] = shell("Media" + T, "Videos, highlights, and social media f
   + section(head_block("Build log", "Team updates") + '\n        <div class="grid cols-2" id="updates"></div>')
   + section(head_block("Follow along", "Find us online") + '\n        <div class="grid cols-3" id="socials"></div>'), path="media.html")
 
-pages["arcade.html"] = shell("Arcade" + T, "Twelve original browser games from Steel Surge, FTC team 27254, each with trophies to earn.", "arcade",
-  page_hero("Steel Surge Arcade", "Play something we built", 'Twelve original robot games starring Surge, our mascot. They run in your browser on a computer or phone, remember your best scores on this device, and award <a href="trophies.html">trophies</a> as you play.')
+pages["arcade.html"] = shell("Arcade" + T, "Thirteen original browser games from Steel Surge, FTC team 27254, each with trophies to earn.", "arcade",
+  page_hero("Steel Surge Arcade", "Play something we built", 'Thirteen original robot games starring Surge, our mascot. They run in your browser on a computer or phone, remember your best scores on this device, and award <a href="trophies.html">trophies</a> as you play.')
   + section('        <div id="arcade-progress"></div>\n        <div class="grid cols-3" id="arcade-games"></div>'), path="arcade.html")
 
 WHY = [
@@ -233,7 +233,7 @@ pages["contact.html"] = shell("Contact" + T, "Contact Steel Surge, FTC team 2725
             <div class="field"><label for="heard">How did you hear about us? <span class="hint">(optional)</span></label><select class="select input" id="heard" name="heard"><option value="">Choose one</option><option>At a competition</option><option>At an outreach event</option><option>School or a friend</option><option>YouTube or social media</option><option>Search engine</option><option>Other</option></select></div>
           </div>
           <div class="field"><label for="message">Message *</label><textarea class="textarea" id="message" name="message" required maxlength="2000"></textarea><div class="field-foot"><span class="field-error" id="message-err" aria-live="polite"></span><span class="hint" id="msg-count">0 / 2000</span></div></div>
-          <input type="text" name="_honey" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+          <input type="text" name="_honey" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true" aria-label="Leave this field empty">
           <div class="form-status" id="form-status" tabindex="-1" role="status"></div>
           <div class="form-actions"><button class="btn primary" id="send-btn" type="submit">Send message {A}</button><span class="hint">We never share your information.</span></div>
         </form>
@@ -303,7 +303,7 @@ ICO = {
     "ping": I('<circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/>'),
     "U": I('<path d="m6 15 6-6 6 6"/>'), "D": I('<path d="m6 9 6 6 6-6"/>'), "L": I('<path d="m15 6-6 6 6 6"/>'), "R": I('<path d="m9 6 6 6-6 6"/>'),
 }
-ALL_GAMES = [("overclock", "Overclock"), ("gridlock", "Gridlock"), ("echo", "Echo"), ("pitcrew", "Pit Crew"), ("autonomous", "Autonomous"), ("signal", "Signal Lost"), ("flywheel", "Flywheel"), ("mecanum", "Mecanum Rush"), ("wireup", "Wire Up"), ("stackup", "Stack Up"), ("balance", "Balance"), ("odometry", "Odometry")]
+ALL_GAMES = [("overclock", "Overclock"), ("gridlock", "Gridlock"), ("echo", "Echo"), ("pitcrew", "Pit Crew"), ("autonomous", "Autonomous"), ("signal", "Signal Lost"), ("flywheel", "Flywheel"), ("mecanum", "Mecanum Rush"), ("wireup", "Wire Up"), ("stackup", "Stack Up"), ("balance", "Balance"), ("odometry", "Odometry"), ("kilovolt", "Kilovolt")]
 
 
 def game_page(gid, title, genre, desc, stats, buttons, howto, controls, touch, aria, extra_js=()):
@@ -432,6 +432,13 @@ pages["arcade/odometry.html"] = game_page(
     ["Real robots use <b>odometry pods</b>, small tracking wheels, to know exactly where they've driven.", "Watch the robot drive a route across the field. The route is drawn in orange.", "Then it's your turn: drive the same route from the start pad, one tile at a time.", "A wrong turn is a strike, and the route plays again. Run out of strikes and the game ends.", "Each route you finish is one step longer. How long a route can you remember?"],
     [("Drive", ["←", "↑", "↓", "→"]), ("Drive on touch", ["Swipe", "Pad"]), ("Watch again", ["Q"])],
     f'<div class="touch-pad">{dpad()}<div class="pad-col"><button class="pad-btn" type="button" data-act="replay">{ICO["rewind"]}Replay</button></div></div>', "Odometry: a robot on a 6 by 6 field following a route")
+
+pages["arcade/kilovolt.html"] = game_page(
+    "kilovolt", "Kilovolt", "Trivia · Daily", "Kilovolt: a daily FTC team-name trivia game from Steel Surge, FTC team 27254. Name real teams; the rarer the answer, the bigger the charge.",
+    [("round", "Prompt", "1/7"), ("charge", "Charge", "0 V"), ("streak", "Streak", "0")], [],
+    ["Each round has 7 prompts, like “Name an FTC team from Ohio” or “Name an FTC team with an animal in its name.”", "Type the <b>name</b> of a real FTC team that fits. Small typos are OK. You get one answer per prompt, and the clock is running.", "Any correct answer charges you up, but the less famous the team, the more it's worth: <b>Spark</b> (100 V), Static, Current, Voltage, Overload, and <b>Full Surge</b> (1,000 V).", "Fame is based on each team's awards, seasons, and events, using official data from FTCScout. Answers cover every FTC team that has competed since 2019–20.", "Everyone gets the same <b>Daily Charge</b>, once a day. Want more? Play <b>Unlimited</b> rounds as often as you like."],
+    [("Submit an answer", ["Enter"]), ("Next prompt", ["Enter"]), ("Skip", ["Click Skip"])],
+    "", "Kilovolt: a team-name trivia game")
 
 pages["editor.html"] = head("Team editor · Steel Surge", "Team-only content editor.", "editor", noindex=True, css=("editor.css",), js=("editor.js",)) + '''  <div id="app"><div class="ed-lock"><p class="muted">Loading editor…</p></div></div>
 </body>

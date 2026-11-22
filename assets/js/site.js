@@ -507,6 +507,7 @@
     { id: "stackup", title: "Stack Up", genre: "Timing · Endless", blurb: "Drop game pieces from a sweeping linear slide. Overhangs get trimmed, so every drop counts. How high can you build?", controls: "Space / tap" },
     { id: "balance", title: "Balance", genre: "Physics · Survival", blurb: "Keep a balancing platform level while game pieces rain down. Collect them before they slide off the ends.", controls: "Arrows / drag" },
     { id: "odometry", title: "Odometry", genre: "Memory · Endless", blurb: "Watch the robot drive a route, then drive it from memory. Every route you finish gets one step longer.", controls: "Arrows / swipe" },
+    { id: "kilovolt", title: "Kilovolt", genre: "Trivia · Daily", blurb: "Name real FTC teams that fit each prompt. Famous answers are a Spark; deep cuts are a Full Surge. New prompts every day.", controls: "Type answers" },
   ];
   const bestFor = (id) => store.get(`ss-arcade-${id}`, null);
 
@@ -590,6 +591,16 @@
       ${bot(...c(4, 3), "#ffb547", .7)}
       <text x="250" y="40" fill="#67768a" font-family="JetBrains Mono, monospace" font-size="10">ROUTE</text><text x="250" y="62" fill="#e9eef4" font-family="Space Grotesk, sans-serif" font-size="22" font-weight="700">9</text></svg>`;
     }
+    if (id === "kilovolt") return `<svg viewBox="0 0 320 200" aria-hidden="true">${bg}
+      <rect x="22" y="24" width="214" height="152" rx="12" fill="#0d141c" stroke="#2d3b4c"/>
+      <text x="38" y="52" fill="#3ba8ff" font-family="JetBrains Mono, monospace" font-size="9" letter-spacing="1.5">DAILY CHARGE · 3 / 7</text>
+      <text x="38" y="80" fill="#e9eef4" font-family="Space Grotesk, sans-serif" font-size="15" font-weight="700">Name an FTC team</text>
+      <text x="38" y="98" fill="#e9eef4" font-family="Space Grotesk, sans-serif" font-size="15" font-weight="700">from Pennsylvania.</text>
+      <rect x="38" y="114" width="182" height="26" rx="7" fill="#070a0e" stroke="#3ba8ff"/><text x="48" y="131" fill="#e9eef4" font-family="Inter, sans-serif" font-size="11">Steel Hornets|</text>
+      <rect x="38" y="148" width="84" height="18" rx="6" fill="rgba(195,139,255,.15)" stroke="#c38bff"/><text x="46" y="161" fill="#c38bff" font-family="JetBrains Mono, monospace" font-size="9" font-weight="700">OVERLOAD +850 V</text>
+      <rect x="262" y="30" width="30" height="146" rx="15" fill="#0d141c" stroke="#2d3b4c"/><rect x="262" y="88" width="30" height="88" rx="15" fill="url(#kvg)"/>
+      <defs><linearGradient id="kvg" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#1e6fe0"/><stop offset=".6" stop-color="#3ba8ff"/><stop offset="1" stop-color="#ffd166"/></linearGradient></defs>
+      <path d="M281 52l-9 14h7l-3 12 10-15h-7z" fill="#ffd166"/></svg>`;
     if (id === "signal") return `<svg viewBox="0 0 320 200" aria-hidden="true"><rect width="320" height="200" fill="#04060a"/>
       <g fill="none" stroke="#3ba8ff" stroke-width="2"><circle cx="150" cy="110" r="46" opacity=".55"/><circle cx="150" cy="110" r="80" opacity=".2"/></g>
       <g stroke="#3a5672" stroke-width="5" stroke-linecap="square" opacity=".9"><path d="M110 70H200M110 70V150M200 70V110M150 110H200M110 150H170"/></g>

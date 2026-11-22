@@ -35,11 +35,11 @@ Everything editable lives in that one file.
 
 ## Trophies
 
-Visitors earn 78 PlayStation-style trophies (bronze, silver, gold, and a platinum for collecting them all) for exploring the site and playing the arcade. Earned trophies pop up in the corner and are listed on **/trophies.html**. Trophy definitions live in `assets/js/trophies.js`; pages and games award them with `SS.trophy("id")`. Progress is saved per browser.
+Visitors earn 85 PlayStation-style trophies (bronze, silver, gold, and a platinum for collecting them all) for exploring the site and playing the arcade. Earned trophies pop up in the corner and are listed on **/trophies.html**. Trophy definitions live in `assets/js/trophies.js`; pages and games award them with `SS.trophy("id")`. Progress is saved per browser.
 
 ## The arcade
 
-Twelve original games share one engine (`assets/js/arcade/kit.js`): sound, particles, overlays, pause, fullscreen, touch controls, and best scores saved per device.
+Thirteen original games share one engine (`assets/js/arcade/kit.js`): sound, particles, overlays, pause, fullscreen, touch controls, and best scores saved per device.
 
 Every game has five difficulty levels: **Super Easy, Easy, Medium, Hard, and Extreme**. The badge in each game's toolbar shows the current level; click it (or the gear button) to open **Settings**, which also has sound effects and volume, screen shake, particles, high contrast, and larger text. Settings are shared by all games and saved per browser.
 
@@ -61,6 +61,16 @@ Every game has five difficulty levels: **Super Easy, Easy, Medium, Hard, and Ext
 | Stack Up | Timing, endless | Drop pieces from a sweeping linear slide; overhangs are trimmed |
 | Balance | Physics, survival | Keep a tilting platform level while collecting falling game pieces |
 | Odometry | Memory, endless | Watch a route, then drive it from memory; routes grow by one step |
+| Kilovolt | Trivia, daily | Name real FTC teams that fit each prompt; rarer answers score more (see below) |
+
+### Kilovolt (team-name trivia)
+
+Seven prompts a day, like "Name an FTC team from Ohio." Any real team that fits scores, but less famous answers are worth more: **Spark** (100 V), **Static**, **Current**, **Voltage**, **Overload**, and **Full Surge** (1,000 V), up to 7,000 V a day. Steel Surge always counts as a Full Surge when it fits.
+
+- **Data:** `content/teams.json` lists every FTC team that has competed since 2019–20 (about 15,000), built by `node tools/fetch-teams.mjs` from FTCScout. "Fame" comes from each team's awards, seasons, events, and age. The daily GitHub Action refreshes it every Monday.
+- **Prompts** are generated from the data (states, provinces, countries, big cities, rookie seasons, name keywords, and themes like animals or food), so new teams and places appear automatically.
+- **Daily Charge** is the same for everyone each day; **Unlimited** plays random rounds. The difficulty setting changes the answer timer.
+- **FRC** isn't included yet: the free FRC data sources were down or need an API key. The game is built so another program's team list can be added later.
 
 Easter egg: type ↑ ↑ ↓ ↓ ← → ← → B A anywhere on the site.
 
@@ -90,7 +100,8 @@ content/seasons.json      FTC season descriptions for the About FTC page
 assets/js/fields3d.js     3D field models (three.js, loaded only when needed)
 assets/img/projects/      Team project photos
 assets/img/brands/        FIRST Tech Challenge and FTCScout logos
-assets/js/arcade/         Game engine + twelve games
+assets/js/arcade/         Game engine + thirteen games
+content/teams.json        Every FTC team since 2019 for Kilovolt (auto-refreshed weekly)
 tools/                    Page builder, level generators, image generator, data refresh
 .github/workflows/        Daily data refresh
 ```

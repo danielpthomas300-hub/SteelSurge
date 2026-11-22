@@ -22,10 +22,10 @@
   const GROUPS = {
     site: "Exploring the site", overclock: "Overclock", gridlock: "Gridlock", echo: "Echo", pitcrew: "Pit Crew",
     autonomous: "Autonomous", signal: "Signal Lost", flywheel: "Flywheel", mecanum: "Mecanum Rush", wireup: "Wire Up",
-    stackup: "Stack Up", balance: "Balance", odometry: "Odometry", all: "Steel Surge",
+    stackup: "Stack Up", balance: "Balance", odometry: "Odometry", kilovolt: "Kilovolt", all: "Steel Surge",
   };
   const MAIN_PAGES = ["home", "team", "achievements", "ftc", "media", "arcade", "sponsors", "contact", "trophies"];
-  const GAME_IDS = ["overclock", "gridlock", "echo", "pitcrew", "autonomous", "signal", "flywheel", "mecanum", "wireup", "stackup", "balance", "odometry"];
+  const GAME_IDS = ["overclock", "gridlock", "echo", "pitcrew", "autonomous", "signal", "flywheel", "mecanum", "wireup", "stackup", "balance", "odometry", "kilovolt"];
 
   const LIST = [
     // Exploring the site
@@ -44,7 +44,7 @@
     ["binge", "site", "silver", "Binge Watcher", "Watch four different team videos."],
     ["grand-tour", "site", "silver", "Grand Tour", "Visit every main page of the site."],
     ["overdrive", "site", "gold", "Overdrive", "Discover the secret code.", true],
-    ["arcade-regular", "site", "gold", "Arcade Regular", "Play all twelve arcade games."],
+    ["arcade-regular", "site", "gold", "Arcade Regular", "Play all thirteen arcade games."],
     ["daredevil", "site", "gold", "Daredevil", "Earn the Extreme trophy in 3 different arcade games."],
     ["tinkerer", "site", "bronze", "Make It Yours", "Change a setting in any arcade game."],
     ["field-trip", "site", "silver", "Field Trip", "Explore 5 different FTC fields in 3D on the About FTC page."],
@@ -107,6 +107,13 @@
     ["od-10", "odometry", "silver", "Pathfinder", "Drive a 10-step route from memory in Odometry."],
     ["od-15", "odometry", "gold", "Photographic Memory", "Drive a 15-step route from memory in Odometry."],
     ["od-extreme", "odometry", "gold", "Total Recall", "Drive an 8-step route in Odometry on Extreme."],
+    ["kv-first", "kilovolt", "bronze", "Charged Up", "Finish a round of Kilovolt."],
+    ["kv-surge", "kilovolt", "silver", "One in a Surge", "Get a Full Surge answer in Kilovolt."],
+    ["kv-home", "kilovolt", "bronze", "Home Team", "Answer Steel Surge when it fits a Kilovolt prompt.", true],
+    ["kv-3000", "kilovolt", "silver", "High Voltage", "Reach 3,000 V in one Kilovolt round."],
+    ["kv-5000", "kilovolt", "gold", "Power Grid", "Reach 5,000 V in one Kilovolt round."],
+    ["kv-streak", "kilovolt", "silver", "Daily Current", "Play the Kilovolt Daily Charge 3 days in a row."],
+    ["kv-extreme", "kilovolt", "gold", "Lightning Round", "Reach 2,500 V in one Kilovolt round on Extreme."],
     // Platinum
     ["platinum", "all", "platinum", "Surge Ahead", "Earn every other trophy."],
   ].map(([id, group, tier, name, desc, hidden]) => ({ id, group, tier, name, desc, hidden: !!hidden }));
@@ -144,7 +151,7 @@
     showing = true;
     const t = queue.shift(), root = document.documentElement.dataset.root || ".";
     const el = document.createElement("a");
-    el.className = `trophy-pop tier-${t.tier}`; el.href = `${root}/trophies.html#${t.id}`; el.setAttribute("role", "status");
+    el.className = `trophy-pop tier-${t.tier}`; el.href = `${root}/trophies.html#trophy-${t.id}`; el.setAttribute("role", "status");
     el.innerHTML = `${cup(t.tier, 44)}<span><small>You earned a ${TIERS[t.tier].label.toLowerCase()} trophy</small><b>${t.name}</b></span>`;
     document.body.append(el);
     chime(t.tier);
@@ -217,7 +224,7 @@
           const ts = LIST.filter((t) => t.group === g), got = ts.filter((t) => e[t.id]).length;
           return `<section class="tc-group"><h2>${GROUPS[g]} <span>${got}/${ts.length}</span></h2><div class="tc-list">${ts.map((t) => {
             const have = !!e[t.id], secret = t.hidden && !have;
-            return `<article class="tc-item${have ? " earned" : ""}" id="${t.id}">${cup(t.tier, 44)}<div><h3>${secret ? "Hidden trophy" : t.name}</h3><p>${secret ? "Keep exploring to reveal this one." : t.desc}</p></div><div class="tc-meta"><span class="tc-tier tier-${t.tier}">${TIERS[t.tier].label}</span>${have ? `<small>Earned ${fmt(e[t.id])}</small>` : `<small>Locked</small>`}</div></article>`;
+            return `<article class="tc-item${have ? " earned" : ""}" id="trophy-${t.id}">${cup(t.tier, 44)}<div><h3>${secret ? "Hidden trophy" : t.name}</h3><p>${secret ? "Keep exploring to reveal this one." : t.desc}</p></div><div class="tc-meta"><span class="tc-tier tier-${t.tier}">${TIERS[t.tier].label}</span>${have ? `<small>Earned ${fmt(e[t.id])}</small>` : `<small>Locked</small>`}</div></article>`;
           }).join("")}</div></section>`;
         }).join("")}
         <div class="tc-foot"><p>Trophies are saved in this browser on this device.</p><button class="btn ghost sm" type="button" data-reset>Reset my trophies</button></div>`;
