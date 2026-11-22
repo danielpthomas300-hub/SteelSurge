@@ -20,9 +20,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap">
-  <link rel="stylesheet" href="./assets/css/site.css?v=d053b608">
+  <link rel="stylesheet" href="./assets/css/site.css?v=b26e1591">
   <script>try{var t=JSON.parse(localStorage.getItem("ss-theme"));document.documentElement.dataset.theme=t==="light"?"light":"dark"}catch(e){document.documentElement.dataset.theme="dark"}</script>
-  <script src="./assets/js/site.js?v=d053b608" defer></script>
+  <script src="./assets/js/site.js?v=b26e1591" defer></script>
+  <script src="./assets/js/trophies.js?v=b26e1591" defer></script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsTeam","name":"Steel Surge","alternateName":"FTC Team 27254","sport":"Robotics","url":"https://steelsurge1.github.io/SteelSurge/","logo":"https://steelsurge1.github.io/SteelSurge/assets/img/icon-512.png","email":"surgesteel1@gmail.com","location":{"@type":"Place","address":{"@type":"PostalAddress","addressLocality":"Kennett Square","addressRegion":"PA","addressCountry":"US"}},"memberOf":{"@type":"SportsOrganization","name":"FIRST Tech Challenge"}}</script>
 </head>
 <body data-page="home">
@@ -34,18 +35,19 @@
       <canvas class="hero-canvas" aria-hidden="true"></canvas>
       <div class="wrap">
         <span class="hero-badge" id="hero-badge"><b>FTC #27254</b> Kennett Square, PA</span>
-        <h1>Steel<br><span class="surge-text">Surge</span></h1>
+        <h1 class="hero-logo"><span class="sr-only">Steel Surge</span><img class="logo-dark" src="assets/img/logo-lockup.svg" alt="" width="620" height="236"><img class="logo-light" src="assets/img/logo-lockup-light.svg" alt="" width="620" height="236"></h1>
         <p class="lead" id="hero-lead"></p>
         <div class="hero-actions">
           <a class="btn primary" href="team.html">Meet the team <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-          <a class="btn" href="arcade.html">Play the arcade</a>
+          <a class="btn" href="ftc.html">What is FTC?</a>
+          <a class="btn ghost" href="arcade.html">Play the arcade</a>
         </div>
         <dl class="hero-meta" id="hero-meta"></dl>
       </div>
     </section>
     <section class="section">
       <div class="wrap">
-        <div class="section-head"><div><span class="eyebrow">Season at a glance</span><h2>Numbers that update themselves</h2></div><a class="link-arrow" href="achievements.html">All results &amp; awards <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+        <div class="section-head"><div><span class="eyebrow">Our journey so far</span><h2>By the numbers</h2><p>Updated automatically from FTCScout after every event.</p></div><a class="link-arrow" href="achievements.html">See our competition history <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
         <div id="home-stats"></div>
       </div>
     </section>
@@ -55,32 +57,21 @@
         <div class="grid cols-3" id="pillars"></div>
       </div>
     </section>
-    <section class="section" hidden>
-      <div class="wrap">
-        <div id="home-robot"></div>
-      </div>
-    </section>
     <section class="section alt">
-      <div class="wrap split">
-        <div class="reveal">
-          <span class="eyebrow">Watch</span>
-          <h2 style="font-size:clamp(30px,4.4vw,46px);margin:14px 0 16px">From the pit to the field</h2>
-          <p class="lead">Builds, matches, and behind-the-scenes moments. Our newest uploads play right here.</p>
-          <div id="home-updates" class="grid" style="margin-top:28px"></div>
-          <a class="link-arrow" href="media.html" style="margin-top:22px">More media <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-        </div>
-        <div id="home-video" class="reveal"></div>
+      <div class="wrap">
+        <div class="section-head"><div><span class="eyebrow">How we build</span><h2>From kickoff to competition</h2><p>Every season starts from scratch. Here's how a new robot comes together.</p></div></div>
+        <ol class="steps" id="build-steps"></ol>
       </div>
     </section>
     <section class="section">
       <div class="wrap">
-        <div class="section-head"><div><span class="eyebrow">Behind the scenes</span><h2>Life on Steel Surge</h2><p>Theme songs, ping pong rivalries, and the occasional robot. This is what our meetings actually look like.</p></div><a class="link-arrow" href="media.html">All videos <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
-        <div class="video-grid" id="home-bts"></div>
+        <div class="section-head"><div><span class="eyebrow">Watch</span><h2>Latest from our channel</h2><p>Builds, matches, and moments from the build room. New videos appear here as soon as we post them.</p></div><a class="link-arrow" href="media.html">All videos <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+        <div class="latest-videos" id="latest-videos"></div>
       </div>
     </section>
     <section class="section">
       <div class="wrap">
-        <div class="section-head"><div><span class="eyebrow">Steel Surge Arcade</span><h2>Games built by a robotics team</h2><p>Six original games you can play in your browser, on a laptop or your phone. Here are three to start.</p></div><a class="link-arrow" href="arcade.html">Open the arcade <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+        <div class="section-head"><div><span class="eyebrow">Steel Surge Arcade</span><h2>Games built by a robotics team</h2><p>Nine original games you can play in your browser, on a computer or phone. Here are three to start, and every game has trophies to earn.</p></div><a class="link-arrow" href="arcade.html">Open the arcade <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
         <div class="grid cols-3" id="home-games"></div>
       </div>
     </section>

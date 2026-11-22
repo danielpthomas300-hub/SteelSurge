@@ -1,9 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
-  <defs>
-    <linearGradient id="st" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4757"/><stop offset="1" stop-color="#151c25"/></linearGradient>
-    <linearGradient id="bl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9ad6ff"/><stop offset="1" stop-color="#3ba8ff"/></linearGradient>
-  </defs>
-  <path d="M20 1.8 36.2 11v18L20 38.2 3.8 29V11z" fill="url(#st)" stroke="#5a6a7d" stroke-width="1.4" stroke-linejoin="round"/>
-  <path d="M20 6.5 32 13.3v13.4L20 33.5 8 26.7V13.3z" stroke="#0b1016" stroke-opacity=".6" stroke-width="1"/>
-  <path d="M23.2 7.5 12.4 22.2h6.9L16.8 32.6 27.6 17.6h-7z" fill="url(#bl)" stroke="#041220" stroke-width=".8" stroke-linejoin="round"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><defs><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5fb0ff"/><stop offset="1" stop-color="#1e6fe0"/></linearGradient></defs><rect x="1.5" y="1.5" width="61" height="61" rx="14" fill="#14191f" stroke="#3a4757" stroke-width="2"/><path d="M34.76 9.00 L43.73 9.00 L35.45 28.17 L44.42 28.17 L25.45 55.00 L33.03 33.53 L24.07 33.53 Z" fill="none" stroke="#1e6fe0" stroke-width="5" stroke-linejoin="miter"/><path d="M34.76 9.00 L43.73 9.00 L35.45 28.17 L44.42 28.17 L25.45 55.00 L33.03 33.53 L24.07 33.53 Z" fill="none" stroke="#14191f" stroke-width="2.4" stroke-linejoin="miter"/><path d="M34.76 9.00 L43.73 9.00 L35.45 28.17 L44.42 28.17 L25.45 55.00 L33.03 33.53 L24.07 33.53 Z" fill="url(#b)"/></svg>

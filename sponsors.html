@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sponsors · Steel Surge FTC 27254</title>
-  <meta name="description" content="Sponsor Steel Surge, FTC team 27254. See sponsorship tiers and the partners who power our season.">
+  <meta name="description" content="Sponsor Steel Surge, FTC team 27254. See sponsorship tiers, what your support funds, and the partners who power our season.">
   <meta name="theme-color" content="#090c11">
   <link rel="canonical" href="https://steelsurge1.github.io/SteelSurge/sponsors.html">
   <meta property="og:url" content="https://steelsurge1.github.io/SteelSurge/sponsors.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Steel Surge FTC 27254">
   <meta property="og:title" content="Sponsors · Steel Surge FTC 27254">
-  <meta property="og:description" content="Sponsor Steel Surge, FTC team 27254. See sponsorship tiers and the partners who power our season.">
+  <meta property="og:description" content="Sponsor Steel Surge, FTC team 27254. See sponsorship tiers, what your support funds, and the partners who power our season.">
   <meta property="og:image" content="https://steelsurge1.github.io/SteelSurge/assets/img/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="./assets/img/favicon.svg" type="image/svg+xml">
@@ -20,20 +20,28 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap">
-  <link rel="stylesheet" href="./assets/css/site.css?v=d053b608">
+  <link rel="stylesheet" href="./assets/css/site.css?v=b26e1591">
   <script>try{var t=JSON.parse(localStorage.getItem("ss-theme"));document.documentElement.dataset.theme=t==="light"?"light":"dark"}catch(e){document.documentElement.dataset.theme="dark"}</script>
-  <script src="./assets/js/site.js?v=d053b608" defer></script>
+  <script src="./assets/js/site.js?v=b26e1591" defer></script>
+  <script src="./assets/js/trophies.js?v=b26e1591" defer></script>
 </head>
 <body data-page="sponsors">
   <noscript><div class="noscript">This site needs JavaScript for live stats and games. You can still reach us at <a href="mailto:surgesteel1@gmail.com">surgesteel1@gmail.com</a>.</div></noscript>
   <a class="skip-link" href="#main">Skip to content</a>
   <header id="site-header"></header>
   <main id="main">
-    <section class="page-hero">
+    <section class="page-hero sponsor-hero">
       <div class="wrap">
         <span class="eyebrow">Sponsorship</span>
         <h1>Power the surge</h1>
-        <p class="lead"><span id="pitch"></span></p>
+        <p class="lead" id="pitch"></p>
+        <div class="hero-actions" id="sponsor-cta"></div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head"><div><span class="eyebrow">Why sponsor</span><h2>Good for students, good for your business</h2></div></div>
+        <div class="grid cols-3"><div class="card reveal"><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M20 6 9 17l-5-5"/></svg></div><h3>Reach local families</h3><p>Your name travels with us to events, outreach demos, and our online channels all season.</p></div><div class="card reveal"><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M20 6 9 17l-5-5"/></svg></div><h3>Build tomorrow's workforce</h3><p>You help students learn engineering, programming, and teamwork through hands-on experience.</p></div><div class="card reveal"><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M20 6 9 17l-5-5"/></svg></div><h3>Show community spirit</h3><p>Sponsoring a student robotics team shows you invest in your community and in STEM education.</p></div></div>
       </div>
     </section>
     <section class="section">
@@ -42,9 +50,15 @@
         <div id="impact"></div>
       </div>
     </section>
+    <section class="section alt">
+      <div class="wrap">
+        <div class="section-head"><div><span class="eyebrow">Where it goes</span><h2>How we use sponsorships</h2><p>Every dollar goes straight into the program.</p></div></div>
+        <div class="grid cols-4"><div class="use-card reveal"><b>Robot parts</b><p>Motors, sensors, structural kits, and replacement parts for every new game.</p></div><div class="use-card reveal"><b>Competition fees</b><p>Season registration and entry fees for qualifiers and championships.</p></div><div class="use-card reveal"><b>Tools and 3D printing</b><p>Filament, hand tools, and shop equipment for building and prototyping.</p></div><div class="use-card reveal"><b>Outreach and travel</b><p>Demos, STEM events in our community, and getting the team to competitions.</p></div></div>
+      </div>
+    </section>
     <section class="section">
       <div class="wrap">
-        <div class="section-head"><div><span class="eyebrow">Tiers</span><h2>Sponsorship levels</h2><p>Pick a tier, or talk to us about a custom or in-kind sponsorship. Parts, tools, and machining time help just as much.</p></div><div id="packet"></div></div>
+        <div class="section-head"><div><span class="eyebrow">Tiers</span><h2>Sponsorship levels</h2><p>Pick a tier, or talk to us about an in-kind or custom sponsorship. Parts, tools, and machining time help just as much.</p></div></div>
         <div class="tiers" id="tiers"></div>
       </div>
     </section>
@@ -52,6 +66,17 @@
       <div class="wrap">
         <div class="section-head"><div><span class="eyebrow">Thank you</span><h2>Our sponsors &amp; partners</h2></div></div>
         <div class="sponsor-wall" id="sponsor-wall"></div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head"><div><span class="eyebrow">Questions</span><h2>Sponsor FAQ</h2></div></div>
+        <div class="faq">
+          <details><summary>How do I become a sponsor?</summary><p>Send us a message through the contact page or email the team. We'll answer your questions, share details, and handle the paperwork with our school and mentors.</p></details>
+          <details><summary>Can I donate parts, tools, or services instead of money?</summary><p>Yes. In-kind support like parts, tools, machining, printing, or a place to build is incredibly helpful. We'll recognize it just like a financial sponsorship.</p></details>
+          <details><summary>How will my business be recognized?</summary><p>Each tier lists its benefits, such as recognition on social media, logo placement on team shirts, and features on this website. We're happy to talk about what works best for you.</p></details>
+          <details><summary>Does a sponsorship last all season?</summary><p>Yes. Sponsorships cover a full FTC season, from the September kickoff through our last event in the spring.</p></details>
+        </div>
       </div>
     </section>
     <section class="section">

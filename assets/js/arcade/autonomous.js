@@ -58,7 +58,7 @@
      ====================================================================== */
   // [map rows "/"-separated, start "x,y,dir", par, repeat unlocked]
   const RAW = window.AUTONOMOUS_LEVELS;
-  const LEVELS = RAW.map(([m, st, par, rep]) => parse({ map: m.split("/"), start: st.split(",").map(Number), par, repeat: !!rep }));
+  const LEVELS = RAW.map(([m, st, par, rep, sol]) => parse({ map: m.split("/"), start: st.split(",").map(Number), par, repeat: !!rep, sol: sol || "" }));
   const { Game, Sound, COLORS: C, roundRect, clamp, ease, store } = window.Arcade;
   const W = 800, H = 600, STEP = 0.32;
   const BLOCKS = {
@@ -66,6 +66,7 @@
     G: { label: "Grab", color: C.amber, icon: "✋" }, S: { label: "Score", color: C.ok, icon: "★" }, 2: { label: "Repeat ×2", color: C.steelHi, icon: "×2" }, 3: { label: "Repeat ×3", color: C.steelHi, icon: "×3" },
   };
   const game = new Game({ id: "autonomous", width: W, height: H, pausable: false });
+  game.puzzle = true;
   const prog$ = store.get("ss-auto-progress", { stars: {}, last: 0 });
   const saveProg = () => {
     store.set("ss-auto-progress", prog$);
@@ -78,7 +79,7 @@
   const limit = () => L.par + 5;
 
   function load(i) {
-    li = clamp(i, 0, LEVELS.length - 1); L = LEVELS[li]; program = []; won = false; reset();
+    li = clamp(i, 0, LEVELS.length - 1); L = LEVELS[li]; program = []; won = false; hintN = 0; reset();
     prog$.last = li; saveProg();
     game.setHud("level", `${li + 1}/${LEVELS.length}`); game.setHud("par", String(L.par));
     game.setMessage(li === 0 ? "Add blocks below, then press Run. Drive onto the sample, Grab, then go to the basket and Score." : li === 4 ? "New block: Repeat. ×3 then Forward drives three squares using only two blocks." : `Score all ${L.samples.length} sample${L.samples.length > 1 ? "s" : ""} in ${L.par} blocks for 3 stars.`);
@@ -118,6 +119,8 @@
     won = true;
     const n = program.length, stars = n <= L.par ? 3 : n <= L.par + 2 ? 2 : 1;
     prog$.stars[li] = Math.max(prog$.stars[li] || 0, stars); saveProg();
+    game.trophy("au-first"); if (Object.values(prog$.stars).filter((n) => n === 3).length >= 10) game.trophy("au-stars"); if (program.some((b) => b === "2" || b === "3")) game.trophy("au-repeat");
+    if (Object.keys(prog$.stars).length >= LEVELS.length) game.trophy("au-all");
     const STAR = (on) => `<svg viewBox="0 0 24 24" fill="currentColor" class="${on ? "on" : ""}"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>`;
     const last = li === LEVELS.length - 1;
     setTimeout(() => {
@@ -245,9 +248,20 @@
     else if (map[e.key]) { e.preventDefault(); add(map[e.key]); }
     else if ((e.key === "r" || e.key === "R") && !running) clearProg();
     else if (e.key === "l" || e.key === "L") showLevels();
+    else if (e.key === "h" || e.key === "H") hint();
   };
   document.querySelector("[data-act=restart]")?.addEventListener("click", clearProg);
   document.querySelector("[data-act=levels]")?.addEventListener("click", () => { Sound.select(); showLevels(); });
+  document.querySelector("[data-act=hint]")?.addEventListener("click", hint);
+  let hintN = 0;
+  /** Reveals an optimal program a few blocks at a time. */
+  function hint() {
+    if (!L?.sol) return;
+    hintN = Math.min(L.sol.length, hintN + 3);
+    const names = { F: "Forward", L: "Turn left", R: "Turn right", G: "Grab", S: "Score", 2: "Repeat ×2", 3: "Repeat ×3" };
+    game.setMessage(`Hint: an optimal program starts with ${[...L.sol.slice(0, hintN)].map((b) => names[b]).join(" → ")}${hintN < L.sol.length ? " …" : ". That's the whole thing!"}`);
+    Sound.select();
+  }
 
   saveProg();
   li = prog$.last || 0; L = LEVELS[li]; reset(); renderUI();

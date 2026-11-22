@@ -12,6 +12,14 @@
   };
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  /* ---------------- Player settings (shared by every game, saved on this device) ---------------- */
+  const DEFAULTS = { difficulty: "normal", volume: 0.7, sfx: true, shake: !reducedMotion, particles: true, contrast: false, bigText: false };
+  const Settings = Object.assign({}, DEFAULTS, store.get("ss-arcade-settings", {}));
+  /** Difficulty multiplier games use for pressure: easy 0.75, normal 1, hard 1.3. */
+  const diff = () => ({ easy: 0.75, normal: 1, hard: 1.3 }[Settings.difficulty] || 1);
+  const saveSettings = () => { store.set("ss-arcade-settings", Settings); applyLook(); if (typeof Sound !== "undefined") Sound.applyVolume(); };
+  function applyLook() { const g = document.getElementById("game"); if (g) { g.classList.toggle("hc", Settings.contrast); g.classList.toggle("bigtext", Settings.bigText); } }
+
   const COLORS = {
     bg: "#070a0e", floor: "#0e151d", grid: "#131c26", line: "#212c39", steel: "#2d3b4c", steelHi: "#4a5b70",
     text: "#e9eef4", muted: "#97a4b4", dim: "#67768a",
@@ -28,11 +36,12 @@
     ensure() {
       if (this.ctx) { if (this.ctx.state === "suspended") this.ctx.resume(); return this.ctx; }
       const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
-      this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = this.muted ? 0 : 0.5;
+      this.ctx = new AC(); this.master = this.ctx.createGain(); this.applyVolume();
       const comp = this.ctx.createDynamicsCompressor(); this.master.connect(comp); comp.connect(this.ctx.destination);
       return this.ctx;
     },
-    setMuted(m) { this.muted = m; store.set("ss-arcade-muted", m); if (this.master) this.master.gain.value = m ? 0 : 0.5; },
+    setMuted(m) { this.muted = m; store.set("ss-arcade-muted", m); this.applyVolume(); },
+    applyVolume() { if (this.master) this.master.gain.value = this.muted || !Settings.sfx ? 0 : 0.85 * Settings.volume; },
     tone({ f = 440, f2 = null, dur = 0.12, type = "square", vol = 0.18, attack = 0.005, delay = 0 } = {}) {
       const ctx = this.ensure(); if (!ctx || this.muted) return;
       const t = ctx.currentTime + delay, o = ctx.createOscillator(), g = ctx.createGain();
@@ -63,6 +72,7 @@
   class Particles {
     constructor() { this.list = []; }
     burst(x, y, { n = 16, color = COLORS.surge, speed = 220, life = 0.6, size = 3, gravity = 300, spread = Math.PI * 2, angle = 0, drag = 0.9, glow = true } = {}) {
+      if (!Settings.particles) return;
       if (reducedMotion) n = Math.ceil(n / 3);
       for (let i = 0; i < n; i++) {
         const a = angle + (Math.random() - 0.5) * spread, s = speed * (0.35 + Math.random() * 0.65);
@@ -163,6 +173,13 @@
       const setMuteIcon = () => { mute.setAttribute("aria-pressed", String(Sound.muted)); mute.setAttribute("aria-label", Sound.muted ? "Unmute sound" : "Mute sound"); mute.classList.toggle("off", Sound.muted); };
       mute?.addEventListener("click", () => { Sound.setMuted(!Sound.muted); setMuteIcon(); if (!Sound.muted) Sound.blip(); });
       setMuteIcon();
+      // Settings button (difficulty, sound, accessibility)
+      const gear = document.createElement("button");
+      gear.className = "icon-btn"; gear.type = "button"; gear.dataset.act = "settings"; gear.setAttribute("aria-label", "Game settings"); gear.title = "Settings";
+      gear.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>';
+      mute?.before(gear);
+      gear.addEventListener("click", () => this.openSettings());
+      applyLook();
       pause?.addEventListener("click", () => (this.paused ? this.resume() : this.pause()));
       if (full) {
         if (!document.fullscreenEnabled) full.hidden = true;
@@ -178,6 +195,7 @@
         if (gameKeys.includes(e.key) && this.stage.getBoundingClientRect().bottom > 0) e.preventDefault();
         if (e.key === "Escape" || e.key === "p" || e.key === "P") { if (this.running && this.pausable !== false) { this.paused ? this.resume() : this.pause(); } return; }
         if (e.key === "m" || e.key === "M") { $("[data-act=mute]", this.root)?.click(); return; }
+        if (this.stage.querySelector(".settings-layer")) return;
         if (this.overlayOpen() && (e.key === " " || e.key === "Enter")) {
           const primary = $("[data-primary]", this.overlay), a = document.activeElement;
           // Only when focus isn't on some other control (so Tab + Enter on "More games" still works).
@@ -201,7 +219,7 @@
       if (this.shakeAmt > 0 && !reducedMotion) ctx.translate(rand(-1, 1) * this.shakeAmt, rand(-1, 1) * this.shakeAmt);
       this.render?.(ctx, dt);
     }
-    shake(n) { this.shakeAmt = Math.max(this.shakeAmt, n); if (navigator.vibrate && n > 6 && navigator.userActivation?.hasBeenActive) try { navigator.vibrate(Math.min(60, n * 4)); } catch {} }
+    shake(n) { if (!Settings.shake) return; this.shakeAmt = Math.max(this.shakeAmt, n); if (navigator.vibrate && n > 6 && navigator.userActivation?.hasBeenActive) try { navigator.vibrate(Math.min(60, n * 4)); } catch {} }
 
     showOverlay(html, { onPrimary, primarySelector = "[data-primary]" } = {}) {
       this.overlay.innerHTML = `<div class="overlay-card">${html}</div>`;
@@ -218,7 +236,9 @@
       clearTimeout(this._hideT);
       this._hideT = setTimeout(() => { if (this.overlay.classList.contains("out")) { this.overlay.hidden = true; this.overlay.classList.remove("out"); } }, 180);
     }
-    start() { this.running = true; this.paused = false; this.hideOverlay(); this._setPauseBtn(); }
+    start() { this.running = true; this.paused = false; this.hideOverlay(); this._setPauseBtn(); window.SS?.track?.("play", this.id); }
+    /** Awards a site trophy (see assets/js/trophies.js). */
+    trophy(id) { window.SS?.trophy?.(id); }
     stop() { this.running = false; this._setPauseBtn(); }
     pause() {
       if (!this.running || this.paused) return; this.paused = true; this._setPauseBtn();
@@ -227,6 +247,34 @@
     }
     resume() { if (!this.paused) return; this.paused = false; this.last = performance.now(); this.hideOverlay(); this._setPauseBtn(); this.onResume?.(); }
     _setPauseBtn() { const b = $("[data-act=pause]", this.root); if (!b) return; b.setAttribute("aria-label", this.paused ? "Resume" : "Pause"); b.classList.toggle("is-paused", this.paused); b.disabled = !this.running; }
+
+    /** Settings panel. Pauses action games while open; changes save instantly. */
+    openSettings() {
+      const wasRunning = this.running && !this.paused && this.pausable !== false;
+      if (wasRunning) { this.paused = true; this._setPauseBtn(); }
+      this.stage.querySelector(".settings-layer")?.remove();
+      const layer = document.createElement("div"); layer.className = "overlay settings-layer"; layer.setAttribute("role", "dialog"); layer.setAttribute("aria-label", "Game settings");
+      const radio = (name, val, label) => `<label class="opt"><input type="radio" name="${name}" value="${val}" ${Settings[name] === val ? "checked" : ""}><span>${label}</span></label>`;
+      const check = (name, label, hint) => `<label class="toggle"><input type="checkbox" name="${name}" ${Settings[name] ? "checked" : ""}><span class="sw"></span><span><b>${label}</b>${hint ? `<small>${hint}</small>` : ""}</span></label>`;
+      layer.innerHTML = `<div class="overlay-card settings">
+        <span class="kicker">Settings</span><h2>Make it yours</h2>
+        <fieldset><legend>Difficulty</legend><div class="opts">${radio("difficulty", "easy", "Easy")}${radio("difficulty", "normal", "Normal")}${radio("difficulty", "hard", "Hard")}</div>
+          <p class="set-note">${this.puzzle ? "This is a puzzle game, so difficulty doesn't change the levels. Use hints if you get stuck." : "Takes effect on your next run. Hard mode unlocks extra trophies."}</p></fieldset>
+        <fieldset><legend>Sound</legend>${check("sfx", "Sound effects")}<label class="range"><span>Volume</span><input type="range" name="volume" min="0" max="1" step="0.05" value="${Settings.volume}"></label></fieldset>
+        <fieldset><legend>Accessibility</legend>${check("shake", "Screen shake", "Turn off if motion bothers you")}${check("particles", "Particle effects", "Sparks and bursts")}${check("contrast", "High contrast", "Brighter, stronger colors")}${check("bigText", "Larger text", "Bigger menus and labels")}</fieldset>
+        <div class="overlay-actions"><button class="btn primary" data-done>Done</button><button class="btn" data-reset>Reset to defaults</button></div></div>`;
+      this.stage.append(layer);
+      const close = () => { layer.remove(); removeEventListener("keydown", onKey, true); if (wasRunning) this.resume(); this.stage.querySelector("[data-primary]")?.focus({ preventScroll: true }); };
+      const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); e.preventDefault(); close(); } };
+      addEventListener("keydown", onKey, true);
+      layer.querySelector("[data-done]").addEventListener("click", close);
+      layer.querySelector("[data-done]").focus({ preventScroll: true });
+      layer.querySelector("[data-reset]").addEventListener("click", () => { Object.assign(Settings, DEFAULTS); saveSettings(); close(); this.openSettings(); });
+      layer.querySelectorAll("input").forEach((el) => el.addEventListener("input", () => {
+        if (el.type === "radio") Settings[el.name] = el.value; else if (el.type === "checkbox") Settings[el.name] = el.checked; else Settings[el.name] = +el.value;
+        saveSettings(); Sound.blip(); window.SS?.trophy?.("tinkerer");
+      }));
+    }
 
     best() { return store.get(`ss-arcade-${this.id}`, null); }
     /** Saves if better. `better(a,b)` returns true when a beats b. Returns true on new record. */
@@ -253,5 +301,5 @@
     });
   }
 
-  window.Arcade = { Game, Sound, Particles, Floaters, COLORS, drawBot, roundRect, clamp, lerp, ease, rand, store, onSwipe, reducedMotion };
+  window.Arcade = { Game, Sound, Particles, Floaters, COLORS, drawBot, roundRect, clamp, lerp, ease, rand, store, onSwipe, reducedMotion, Settings, diff };
 })();

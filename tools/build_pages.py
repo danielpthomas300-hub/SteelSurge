@@ -21,10 +21,11 @@ V = _h.hexdigest()[:8]
 
 I = lambda d, extra="": f'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" {extra}>{d}</svg>'
 A = I('<path d="M5 12h14M13 6l6 6-6 6"/>')
+ICO_CHECK = I('<path d="M20 6 9 17l-5-5"/>')
 T = " · Steel Surge FTC 27254"
 
 
-def head(title, desc, page, root=".", noindex=False, path="", css=(), js=(), jsonld=""):
+def head(title, desc, page, root=".", noindex=False, path="", css=(), js=(), jsonld="", extra_head=""):
     r = root
     robots = '\n  <meta name="robots" content="noindex">' if noindex else ""
     canon = "" if noindex else f'\n  <link rel="canonical" href="{SITE}{path}">\n  <meta property="og:url" content="{SITE}{path}">'
@@ -53,7 +54,8 @@ def head(title, desc, page, root=".", noindex=False, path="", css=(), js=(), jso
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap">
   <link rel="stylesheet" href="{r}/assets/css/site.css?v={V}">{extra_css}
   <script>try{{var t=JSON.parse(localStorage.getItem("ss-theme"));document.documentElement.dataset.theme=t==="light"?"light":"dark"}}catch(e){{document.documentElement.dataset.theme="dark"}}</script>
-  <script src="{r}/assets/js/site.js?v={V}" defer></script>{extra_js}{ld}
+  <script src="{r}/assets/js/site.js?v={V}" defer></script>
+  <script src="{r}/assets/js/trophies.js?v={V}" defer></script>{extra_js}{ld}{extra_head}
 </head>
 <body data-page="{page}">
   <noscript><div class="noscript">This site needs JavaScript for live stats and games. You can still reach us at <a href="mailto:surgesteel1@gmail.com">surgesteel1@gmail.com</a>.</div></noscript>
@@ -104,32 +106,21 @@ pages["index.html"] = shell("Steel Surge — FTC Robotics Team 27254", "Steel Su
       <canvas class="hero-canvas" aria-hidden="true"></canvas>
       <div class="wrap">
         <span class="hero-badge" id="hero-badge"><b>FTC #27254</b> Kennett Square, PA</span>
-        <h1>Steel<br><span class="surge-text">Surge</span></h1>
+        <h1 class="hero-logo"><span class="sr-only">Steel Surge</span><img class="logo-dark" src="assets/img/logo-lockup.svg" alt="" width="620" height="236"><img class="logo-light" src="assets/img/logo-lockup-light.svg" alt="" width="620" height="236"></h1>
         <p class="lead" id="hero-lead"></p>
         <div class="hero-actions">
           <a class="btn primary" href="team.html">Meet the team {A}</a>
-          <a class="btn" href="arcade.html">Play the arcade</a>
+          <a class="btn" href="ftc.html">What is FTC?</a>
+          <a class="btn ghost" href="arcade.html">Play the arcade</a>
         </div>
         <dl class="hero-meta" id="hero-meta"></dl>
       </div>
     </section>
-''' + section(head_block("Season at a glance", "Numbers that update themselves", link=f'<a class="link-arrow" href="achievements.html">All results &amp; awards {A}</a>') + '\n        <div id="home-stats"></div>')
+''' + section(head_block("Our journey so far", "By the numbers", "Updated automatically from FTCScout after every event.", f'<a class="link-arrow" href="achievements.html">See our competition history {A}</a>') + '\n        <div id="home-stats"></div>')
   + section(head_block("What we do", "Three crews, one robot") + '\n        <div class="grid cols-3" id="pillars"></div>')
-  + section('        <div id="home-robot"></div>', attrs=" hidden")
-  + f'''    <section class="section alt">
-      <div class="wrap split">
-        <div class="reveal">
-          <span class="eyebrow">Watch</span>
-          <h2 style="font-size:clamp(30px,4.4vw,46px);margin:14px 0 16px">From the pit to the field</h2>
-          <p class="lead">Builds, matches, and behind-the-scenes moments. Our newest uploads play right here.</p>
-          <div id="home-updates" class="grid" style="margin-top:28px"></div>
-          <a class="link-arrow" href="media.html" style="margin-top:22px">More media {A}</a>
-        </div>
-        <div id="home-video" class="reveal"></div>
-      </div>
-    </section>
-''' + section(head_block("Behind the scenes", "Life on Steel Surge", "Theme songs, ping pong rivalries, and the occasional robot. This is what our meetings actually look like.", f'<a class="link-arrow" href="media.html">All videos {A}</a>') + '\n        <div class="video-grid" id="home-bts"></div>')
-  + section(head_block("Steel Surge Arcade", "Games built by a robotics team", "Six original games you can play in your browser, on a laptop or your phone. Here are three to start.", f'<a class="link-arrow" href="arcade.html">Open the arcade {A}</a>') + '\n        <div class="grid cols-3" id="home-games"></div>')
+  + section(head_block("How we build", "From kickoff to competition", "Every season starts from scratch. Here's how a new robot comes together.") + '\n        <ol class="steps" id="build-steps"></ol>', cls="section alt")
+  + section(head_block("Watch", "Latest from our channel", "Builds, matches, and moments from the build room. New videos appear here as soon as we post them.", f'<a class="link-arrow" href="media.html">All videos {A}</a>') + '\n        <div class="latest-videos" id="latest-videos"></div>')
+  + section(head_block("Steel Surge Arcade", "Games built by a robotics team", "Nine original games you can play in your browser, on a computer or phone. Here are three to start, and every game has trophies to earn.", f'<a class="link-arrow" href="arcade.html">Open the arcade {A}</a>') + '\n        <div class="grid cols-3" id="home-games"></div>')
   + section(f'''        <div id="home-sponsors" style="margin-bottom:40px"></div>
         <div class="cta-band reveal">
           <div><h2>Power the surge</h2><p>Sponsors keep our robot running and our outreach growing. Every tier comes with real visibility for your business.</p></div>
@@ -140,42 +131,72 @@ pages["team.html"] = shell("Team" + T, "Meet the students behind Steel Surge, FT
   page_hero("The team", "Meet the crew", "Students who design, build, code, and promote our robot every season.", "team-lead")
   + section('        <div class="filter-bar" id="team-filter" role="group" aria-label="Filter by department"></div>\n        <div class="team-grid" id="team-grid"></div>')
   + section(head_block("How we work", "What Steel Surge stands for") + '\n        <div class="values-grid" id="values-grid"></div>', attrs=' id="values" hidden')
+  + section(head_block("Made by Steel Surge", "From our CAD to the 3D printer", "Beyond the robot, we design and print our own team gear and shop tools.") + '\n        <div class="projects-grid" id="projects-grid"></div>', attrs=' id="projects" hidden')
   + section(head_block("Mentors", "The people who guide us") + '\n        <div class="grid cols-3" id="mentor-grid"></div>', attrs=' id="mentors" hidden')
   + section(f'''        <div class="cta-band reveal">
           <div><h2>Want to join Steel Surge?</h2><p>Builders, coders, designers, and storytellers welcome. No experience needed, just curiosity and commitment.</p></div>
           <div class="actions"><a class="btn primary" id="join-link" href="#" target="_blank" rel="noopener">Fill out the interest form {A}</a></div>
         </div>'''), path="team.html")
 
-pages["achievements.html"] = shell("Achievements" + T, "Awards, competition results, and milestones for Steel Surge, FTC team 27254, updated live from FTCScout.", "achievements",
-  page_hero("Achievements", "Our record", "Official awards and match results update automatically from FTCScout after every event. No one has to remember to post them.")
+pages["achievements.html"] = shell("Competition" + T, "Steel Surge's competition history: events, awards, and milestones, updated automatically from FTCScout.", "achievements",
+  page_hero("Competition", "Our competition journey", "Every event we've played, every award we've earned, and the milestones along the way. Event data updates automatically from FTCScout.")
   + section('        <div id="ach-next"></div>\n        <div id="ach-stats"></div>\n        <div id="ach-source"></div>')
-  + section(head_block("Trophy shelf", "Awards") + '\n        <div class="trophy-shelf" id="trophy-shelf"></div>')
+  + section(head_block("Awards", "Trophy shelf") + '\n        <div class="trophy-shelf" id="trophy-shelf"></div>')
   + section('''        <div class="section-head">
-          <div><span class="eyebrow">Competition</span><h2>Season results</h2></div>
+          <div><span class="eyebrow">Events</span><h2>Where we've competed</h2></div>
           <div class="season-tabs" id="season-tabs" role="tablist" aria-label="Season"></div>
         </div>
         <div class="events" id="season-results" role="tabpanel"></div>''')
   + section(head_block("Milestones", "The story so far") + '\n        <div class="timeline" id="timeline"></div>'), path="achievements.html")
 
-pages["media.html"] = shell("Media" + T, "Videos and team updates from Steel Surge, FTC team 27254.", "media",
-  page_hero("Media", "Videos &amp; updates", "Our YouTube channel, build-season notes, and where to follow along. New videos appear here automatically.")
+pages["media.html"] = shell("Media" + T, "Videos, highlights, and social media from Steel Surge, FTC team 27254.", "media",
+  page_hero("Media", "Videos &amp; updates", "Our YouTube channel, team favorites, and where to follow along. New videos appear here automatically.")
   + section(f'''        <div id="media-video" class="reveal"></div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px">
           <a class="btn primary" id="yt-link" href="#" target="_blank" rel="noopener">Subscribe on YouTube {A}</a>
+          <span id="ig-link"></span>
         </div>''')
   + section(head_block("Latest uploads", "Recent videos", "Updated automatically every day from our channel.") + '\n        <div class="video-grid" id="video-grid"></div>')
+  + section(head_block("Team favorites", "Our picks", "Hand-picked videos from the team.") + '\n        <div class="video-grid" id="fav-grid"></div>', attrs=' id="favorites" hidden')
   + section(head_block("Build log", "Team updates") + '\n        <div class="grid cols-2" id="updates"></div>')
   + section(head_block("Follow along", "Find us online") + '\n        <div class="grid cols-3" id="socials"></div>'), path="media.html")
 
-pages["arcade.html"] = shell("Arcade" + T, "Six original browser games from Steel Surge, FTC team 27254: Overclock, Gridlock, Echo, Pit Crew, Autonomous, and Signal Lost.", "arcade",
-  page_hero("Steel Surge Arcade", "Play something we built", "Six original robot games starring Surge, our mascot. They run in your browser on desktop or phone and remember your best scores on this device.")
+pages["arcade.html"] = shell("Arcade" + T, "Nine original browser games from Steel Surge, FTC team 27254, each with trophies to earn.", "arcade",
+  page_hero("Steel Surge Arcade", "Play something we built", 'Nine original robot games starring Surge, our mascot. They run in your browser on a computer or phone, remember your best scores on this device, and award <a href="trophies.html">trophies</a> as you play.')
   + section('        <div id="arcade-progress"></div>\n        <div class="grid cols-3" id="arcade-games"></div>'), path="arcade.html")
 
-pages["sponsors.html"] = shell("Sponsors" + T, "Sponsor Steel Surge, FTC team 27254. See sponsorship tiers and the partners who power our season.", "sponsors",
-  page_hero("Sponsorship", "Power the surge", '<span id="pitch"></span>')
+WHY = [
+    ("Reach local families", "Your name travels with us to events, outreach demos, and our online channels all season."),
+    ("Build tomorrow's workforce", "You help students learn engineering, programming, and teamwork through hands-on experience."),
+    ("Show community spirit", "Sponsoring a student robotics team shows you invest in your community and in STEM education."),
+]
+USES = [
+    ("Robot parts", "Motors, sensors, structural kits, and replacement parts for every new game."),
+    ("Competition fees", "Season registration and entry fees for qualifiers and championships."),
+    ("Tools and 3D printing", "Filament, hand tools, and shop equipment for building and prototyping."),
+    ("Outreach and travel", "Demos, STEM events in our community, and getting the team to competitions."),
+]
+pages["sponsors.html"] = shell("Sponsors" + T, "Sponsor Steel Surge, FTC team 27254. See sponsorship tiers, what your support funds, and the partners who power our season.", "sponsors",
+  f'''    <section class="page-hero sponsor-hero">
+      <div class="wrap">
+        <span class="eyebrow">Sponsorship</span>
+        <h1>Power the surge</h1>
+        <p class="lead" id="pitch"></p>
+        <div class="hero-actions" id="sponsor-cta"></div>
+      </div>
+    </section>
+''' + section(head_block("Why sponsor", "Good for students, good for your business") + '\n        <div class="grid cols-3">' + "".join(f'<div class="card reveal"><div class="card-icon">{ICO_CHECK}</div><h3>{t}</h3><p>{d}</p></div>' for t, d in WHY) + '</div>')
   + section(head_block("Your impact", "What your support builds") + '\n        <div id="impact"></div>')
-  + section(head_block("Tiers", "Sponsorship levels", "Pick a tier, or talk to us about a custom or in-kind sponsorship. Parts, tools, and machining time help just as much.", '<div id="packet"></div>') + '\n        <div class="tiers" id="tiers"></div>')
+  + section(head_block("Where it goes", "How we use sponsorships", "Every dollar goes straight into the program.") + '\n        <div class="grid cols-4">' + "".join(f'<div class="use-card reveal"><b>{t}</b><p>{d}</p></div>' for t, d in USES) + '</div>', cls="section alt")
+  + section(head_block("Tiers", "Sponsorship levels", "Pick a tier, or talk to us about an in-kind or custom sponsorship. Parts, tools, and machining time help just as much.") + '\n        <div class="tiers" id="tiers"></div>')
   + section(head_block("Thank you", "Our sponsors &amp; partners") + '\n        <div class="sponsor-wall" id="sponsor-wall"></div>')
+  + section(head_block("Questions", "Sponsor FAQ") + '''
+        <div class="faq">
+          <details><summary>How do I become a sponsor?</summary><p>Send us a message through the contact page or email the team. We'll answer your questions, share details, and handle the paperwork with our school and mentors.</p></details>
+          <details><summary>Can I donate parts, tools, or services instead of money?</summary><p>Yes. In-kind support like parts, tools, machining, printing, or a place to build is incredibly helpful. We'll recognize it just like a financial sponsorship.</p></details>
+          <details><summary>How will my business be recognized?</summary><p>Each tier lists its benefits, such as recognition on social media, logo placement on team shirts, and features on this website. We're happy to talk about what works best for you.</p></details>
+          <details><summary>Does a sponsorship last all season?</summary><p>Yes. Sponsorships cover a full FTC season, from the September kickoff through our last event in the spring.</p></details>
+        </div>''')
   + section(f'''        <div class="cta-band reveal">
           <div><h2>Let's talk</h2><p>Questions about sponsoring, or want our sponsor packet? Send us a note and we'll get back to you.</p></div>
           <div class="actions"><a class="btn primary" href="contact.html?reason=Sponsorship">Contact us about sponsoring {A}</a></div>
@@ -184,24 +205,36 @@ pages["sponsors.html"] = shell("Sponsors" + T, "Sponsor Steel Surge, FTC team 27
 MAIL = I('<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/>')
 USERS = I('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>')
 COPY = I('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>')
-pages["contact.html"] = shell("Contact" + T, "Contact Steel Surge, FTC team 27254, about sponsorship, joining, outreach events, or mentoring.", "contact",
-  page_hero("Contact", "Get in touch", "Sponsorship, joining the team, a demo at your event, or just a question. It all comes to our team inbox.")
+TOPICS = [
+    ("Sponsorship", "Sponsor the team", "Support our season with funding, parts, or services.", "heart", ""),
+    ("Joining the team", "Join Steel Surge", "Students in grades 7–12 who want to build, code, or design.", "users", ""),
+    ("Outreach event / demo", "Book a demo", "Invite our robot to your school, library, or community event.", "bolt", "Hi Steel Surge! We'd love to have your team at our event. Here are the details:\n\nEvent:\nDate:\nLocation:\n"),
+    ("Mentoring", "Become a mentor", "Engineers, programmers, and makers who want to share their skills.", "star", ""),
+]
+TI = {"heart": I('<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/>'), "users": USERS, "bolt": I('<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>'), "star": I('<path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/>')}
+pages["contact.html"] = shell("Contact" + T, "Contact Steel Surge, FTC team 27254, about sponsorship, joining the team, outreach events, or mentoring.", "contact",
+  page_hero("Contact", "Get in touch", "Sponsorship, joining the team, a demo at your event, or just a question. Every message goes straight to our team inbox.")
+  + section('        <div class="topic-grid">' + "".join(f'<a class="topic-card reveal" href="#contact-form" data-topic="{r}" data-prefill="{pre}"><div class="card-icon">{TI[ic]}</div><b>{t}</b><span>{d}</span></a>' for r, t, d, ic, pre in TOPICS) + '</div>')
   + f'''    <section class="section">
       <div class="wrap contact-layout">
         <form class="card form" id="contact-form" novalidate>
+          <div class="form-head"><h2>Send us a message</h2><p class="muted">Fields marked * are required. We usually reply within a few days.</p></div>
           <div class="field">
             <span id="reason-label" style="font-weight:600;font-size:14px">What's this about?</span>
             <div class="reason-chips" id="reason-chips" role="radiogroup" aria-labelledby="reason-label"></div>
           </div>
           <div class="form-row">
-            <div class="field"><label for="name">Your name</label><input class="input" id="name" name="name" autocomplete="name" required><span class="field-error" id="name-err" aria-live="polite"></span></div>
-            <div class="field"><label for="email">Email</label><input class="input" id="email" name="email" type="email" autocomplete="email" required><span class="field-error" id="email-err" aria-live="polite"></span></div>
+            <div class="field"><label for="name">Your name *</label><input class="input" id="name" name="name" autocomplete="name" required maxlength="100"><span class="field-error" id="name-err" aria-live="polite"></span></div>
+            <div class="field"><label for="email">Email *</label><input class="input" id="email" name="email" type="email" autocomplete="email" required maxlength="160"><span class="field-error" id="email-err" aria-live="polite"></span></div>
           </div>
-          <div class="field"><label for="org">Company or school <span class="hint">(optional)</span></label><input class="input" id="org" name="org" autocomplete="organization"></div>
-          <div class="field"><label for="message">Message</label><textarea class="textarea" id="message" name="message" required></textarea><span class="field-error" id="message-err" aria-live="polite"></span></div>
+          <div class="form-row">
+            <div class="field"><label for="org">Company or school <span class="hint">(optional)</span></label><input class="input" id="org" name="org" autocomplete="organization" maxlength="120"></div>
+            <div class="field"><label for="heard">How did you hear about us? <span class="hint">(optional)</span></label><select class="select input" id="heard" name="heard"><option value="">Choose one</option><option>At a competition</option><option>At an outreach event</option><option>School or a friend</option><option>YouTube or social media</option><option>Search engine</option><option>Other</option></select></div>
+          </div>
+          <div class="field"><label for="message">Message *</label><textarea class="textarea" id="message" name="message" required maxlength="2000"></textarea><div class="field-foot"><span class="field-error" id="message-err" aria-live="polite"></span><span class="hint" id="msg-count">0 / 2000</span></div></div>
           <input type="text" name="_honey" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
           <div class="form-status" id="form-status" tabindex="-1" role="status"></div>
-          <div><button class="btn primary" id="send-btn" type="submit">Send message {A}</button></div>
+          <div class="form-actions"><button class="btn primary" id="send-btn" type="submit">Send message {A}</button><span class="hint">We never share your information.</span></div>
         </form>
         <aside class="contact-aside">
           <div class="contact-method">
@@ -214,13 +247,31 @@ pages["contact.html"] = shell("Contact" + T, "Contact Steel Surge, FTC team 2725
             <div><b>Want to join?</b><span>Fill out our student interest form.</span></div>
           </a>
           <div class="card" style="padding:22px">
-            <h3 style="font-size:17px">Good to know</h3>
-            <p style="font-size:14.5px">We're a student team, so replies come from team leads with mentor oversight. We'll never share your details.</p>
+            <h3 style="font-size:17px">Where we're based</h3>
+            <p style="font-size:14.5px">Kennett Square, Pennsylvania, with students from Unionville High School and Charles F. Patton Middle School.</p>
+          </div>
+          <div class="card" style="padding:22px">
+            <h3 style="font-size:17px">Follow us</h3>
+            <div class="social-pills" id="contact-social"></div>
           </div>
         </aside>
       </div>
     </section>
-''', path="contact.html")
+''' + section(head_block("FAQ", "Before you write") + '''
+        <div class="faq">
+          <details><summary>How quickly will you reply?</summary><p>We're a student team, so replies usually come within a few days, a little longer during busy competition weekends. Team leads answer with mentor oversight.</p></details>
+          <details><summary>Can our robot visit my school or event?</summary><p>We love doing demos. Choose "Book a demo" above and tell us the date, location, and what kind of event it is.</p></details>
+          <details><summary>Who can join Steel Surge?</summary><p>Students in grades 7–12 in our area. No experience is needed. Fill out the interest form or send us a message.</p></details>
+          <details><summary>What is FTC?</summary><p>FIRST Tech Challenge is a robotics program for grades 7–12. Our <a href="ftc.html">About FTC page</a> explains everything, including every recent game.</p></details>
+        </div>'''), path="contact.html")
+
+pages["ftc.html"] = shell("About FTC" + T, "New to FIRST Tech Challenge? How FTC seasons and matches work, judged awards, a glossary, and how to get involved.", "ftc",
+  open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ftc_page.html"), encoding="utf-8").read(), path="ftc.html",
+  extra_head='\n  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>\n  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>')
+
+pages["trophies.html"] = shell("Trophies" + T, "Your Steel Surge trophy case: earn bronze, silver, gold, and platinum trophies by exploring the site and playing the arcade.", "trophies",
+  page_hero("Trophy case", "Your trophies", "Earn bronze, silver, gold, and platinum trophies by exploring the site and playing the arcade. Collect every one to unlock the platinum trophy.")
+  + section('        <div id="trophy-case"></div>'), path="trophies.html")
 
 # 404 is served at any path by GitHub Pages, so it sets a <base> pointing at the site root
 # (works at steelsurge1.github.io/SteelSurge/ and on a custom domain).
@@ -246,10 +297,12 @@ ICO = {
     "restart": I('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>'),
     "grid": I('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'),
     "rewind": I('<path d="M11 19 2 12l9-7z"/><path d="M22 19l-9-7 9-7z"/>'),
+    "hint": I('<path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/>'),
+    "decoy": I('<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>'),
     "ping": I('<circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/>'),
     "U": I('<path d="m6 15 6-6 6 6"/>'), "D": I('<path d="m6 9 6 6 6-6"/>'), "L": I('<path d="m15 6-6 6 6 6"/>'), "R": I('<path d="m9 6 6 6-6 6"/>'),
 }
-ALL_GAMES = [("overclock", "Overclock"), ("gridlock", "Gridlock"), ("echo", "Echo"), ("pitcrew", "Pit Crew"), ("autonomous", "Autonomous"), ("signal", "Signal Lost")]
+ALL_GAMES = [("overclock", "Overclock"), ("gridlock", "Gridlock"), ("echo", "Echo"), ("pitcrew", "Pit Crew"), ("autonomous", "Autonomous"), ("signal", "Signal Lost"), ("flywheel", "Flywheel"), ("mecanum", "Mecanum Rush"), ("wireup", "Wire Up")]
 
 
 def game_page(gid, title, genre, desc, stats, buttons, howto, controls, touch, aria, extra_js=()):
@@ -298,16 +351,16 @@ pages["arcade/overclock.html"] = game_page(
     "", "Overclock game: a robot drives through a factory past crushers and lasers")
 
 pages["arcade/gridlock.html"] = game_page(
-    "gridlock", "Gridlock", "Puzzle · 30 levels", "Gridlock: a sliding robot puzzle from Steel Surge, FTC team 27254. Every robot moves at once.",
-    [("level", "Level", "1/30"), ("moves", "Moves", "0"), ("par", "Par", "—")],
-    [("undo", "undo", "Undo (Z)"), ("restart", "restart", "Restart level (R)"), ("levels", "grid", "Levels (L)")],
+    "gridlock", "Gridlock", "Puzzle · 40 levels", "Gridlock: a sliding robot puzzle from Steel Surge, FTC team 27254. Every robot moves at once.",
+    [("level", "Level", "1/40"), ("moves", "Moves", "0"), ("par", "Par", "—")],
+    [("hint", "hint", "Hint (H)"), ("undo", "undo", "Undo (Z)"), ("restart", "restart", "Restart level (R)"), ("levels", "grid", "Levels (L)")],
     ["Every robot moves in the same direction at the same time.", "Robots slide until they hit a wall, the edge, or another robot. Use each other as stoppers.", "Get every robot onto the pad that matches its color.", "Finish in <b>par</b> moves for 3 stars. Par is the true minimum; a computer checked every level."],
-    [("Move", ["←", "↑", "↓", "→"]), ("Move on touch", ["Swipe"]), ("Undo", ["Z"]), ("Restart", ["R"]), ("Level select", ["L"])],
+    [("Move", ["←", "↑", "↓", "→"]), ("Move on touch", ["Swipe"]), ("Undo", ["Z"]), ("Restart", ["R"]), ("Hint", ["H"]), ("Level select", ["L"])],
     f'<div class="touch-pad">{dpad()}</div>', "Gridlock puzzle board with sliding robots and charging pads")
 
 pages["arcade/echo.html"] = game_page(
     "echo", "Echo", "Puzzle · Time loop", "Echo: a time-loop puzzle from Steel Surge, FTC team 27254. Team up with recordings of yourself.",
-    [("level", "Level", "1/7"), ("loop", "Loop", "1"), ("echoes", "Echoes", "0/1")],
+    [("level", "Level", "1/9"), ("loop", "Loop", "1"), ("echoes", "Echoes", "0/1")],
     [("undo", "undo", "Undo step (Z)"), ("rewind", "rewind", "Rewind and record echo (R)"), ("restart", "restart", "Restart level (Shift+R)"), ("levels", "grid", "Levels (L)")],
     ["Each loop has a battery: a limited number of ticks. Every move or wait uses one.", "Press <b>Rewind</b> and your loop becomes an <b>echo</b>, a ghost that replays exactly what you did, step for step.", "Plates open doors of the same color while anyone (you or an echo) stands on them.", "Red striped barriers do the opposite: they <b>close</b> while their plate is pressed.", "Reach the green exit. Each level limits how many echoes you can keep."],
     [("Move", ["←", "↑", "↓", "→"]), ("Wait one tick", ["Space"]), ("Rewind (record echo)", ["R"]), ("Undo a step", ["Z"]), ("Restart level", ["Shift", "R"])],
@@ -323,18 +376,40 @@ pages["arcade/pitcrew.html"] = game_page(
 
 pages["arcade/autonomous.html"] = game_page(
     "autonomous", "Autonomous", "Puzzle · Coding", "Autonomous: a coding puzzle from Steel Surge, FTC team 27254. Program a robot with command blocks to score every sample.",
-    [("level", "Level", "1/12"), ("blocks", "Blocks", "0"), ("par", "Par", "—")],
-    [("restart", "restart", "Clear program (R)"), ("levels", "grid", "Levels (L)")],
+    [("level", "Level", "1/18"), ("blocks", "Blocks", "0"), ("par", "Par", "—")],
+    [("hint", "hint", "Hint (H)"), ("restart", "restart", "Clear program (R)"), ("levels", "grid", "Levels (L)")],
     ["In FTC, the first 30 seconds of a match are <b>autonomous</b>: the robot runs code with no driver.", "Build a program from command blocks, then press <b>Run</b> to watch your robot follow it exactly.", "Drive onto a yellow sample and <b>Grab</b> it. Carry it to the green basket and <b>Score</b>. The robot holds one sample at a time.", "Score every sample to clear the level. Use as few blocks as par for 3 stars.", "Later levels add a <b>Repeat</b> block: it runs the block after it 2 or 3 times."],
-    [("Add a block", ["Click", "Tap"]), ("Remove a block", ["Click it in the program"]), ("Run / stop", ["Enter"]), ("Undo last block", ["Backspace"])],
+    [("Add a block", ["Click", "Tap"]), ("Remove a block", ["Click it in the program"]), ("Run / stop", ["Enter"]), ("Undo last block", ["Backspace"]), ("Hint", ["H"])],
     '<div class="code-ui" id="code-ui"></div>', "Autonomous field grid with a robot, samples, and a scoring basket", extra_js=("arcade/autonomous-levels.js",))
 
 pages["arcade/signal.html"] = game_page(
     "signal", "Signal Lost", "Stealth · Endless", "Signal Lost: a stealth maze game from Steel Surge, FTC team 27254. Ping to see, but drones are listening.",
-    [("floor", "Floor", "1"), ("cores", "Cores", "0/3"), ("score", "Score", "0")], [("pause", "pause", "Pause (Esc)")],
-    ["You're lost in a dark factory. Your robot can only see right around itself.", "Press <b>Ping</b> to send out a pulse that briefly lights up the walls around you.", "Every ping can be heard: security drones nearby turn and hunt the spot you pinged from.", "Collect all the data cores, then reach the glowing exit to go down a floor.", "Mazes get bigger and drones get faster. Getting caught ends the run."],
-    [("Move", ["←", "↑", "↓", "→"]), ("Ping", ["Space"]), ("Move on touch", ["Drag on the game"]), ("Ping on touch", ["Ping button"]), ("Pause", ["Esc"])],
-    f'<div class="touch-pad"><button class="pad-btn" type="button" data-act="ping">{ICO["ping"]}Ping</button></div>', "Signal Lost: a dark maze with drones and data cores")
+    [("floor", "Floor", "1"), ("cores", "Cores", "0/3"), ("decoys", "Decoys", "2"), ("score", "Score", "0")], [("pause", "pause", "Pause (Esc)")],
+    ["You're lost in a dark factory. Your robot can only see right around itself.", "Press <b>Ping</b> to send out a pulse that briefly lights up the walls around you.", "Every ping can be heard: security drones nearby turn and hunt the spot you pinged from.", "Collect all the data cores, then reach the glowing exit to go down a floor.", "In a tight spot? Drop a <b>decoy</b>. It beeps after a moment and pulls nearby drones toward it. You get 2 per floor.", "Mazes get bigger and drones get faster. Getting caught ends the run."],
+    [("Move", ["←", "↑", "↓", "→"]), ("Ping", ["Space"]), ("Move on touch", ["Drag on the game"]), ("Ping on touch", ["Tap"]), ("Drop a decoy", ["E"]), ("Pause", ["Esc"])],
+    f'<div class="touch-pad"><button class="pad-btn" type="button" data-act="ping">{ICO["ping"]}Ping</button><button class="pad-btn" type="button" data-act="decoy">{ICO["decoy"]}Decoy</button></div>', "Signal Lost: a dark maze with drones and data cores")
+
+pages["arcade/flywheel.html"] = game_page(
+    "flywheel", "Flywheel", "Arcade · Aim", "Flywheel: a shooting game from Steel Surge, FTC team 27254. Tune your hood angle and flywheel speed to score pollen.",
+    [("score", "Score", "0"), ("streak", "Streak", "0"), ("balls", "Pollen", "10")], [("pause", "pause", "Pause (Esc)")],
+    ["Just like our real robot, you launch balls with a spinning flywheel and an adjustable hood.", "Set the <b>hood angle</b> and <b>flywheel speed</b>, then fire. Watch the wind meter: wind pushes your shot.", "Land pollen in the hive to score. The glowing center ring is worth more.", "Score shots in a row to build a streak multiplier. Each round gives you 10 pollen.", "Targets start moving and the wind gets stronger as your score climbs."],
+    [("Hood angle", ["↑", "↓"]), ("Flywheel speed", ["←", "→"]), ("Fire", ["Space"]), ("Aim on touch", ["Sliders"]), ("Pause", ["Esc"])],
+    '<div class="aim-ui" id="aim-ui"></div>', "Flywheel: a robot launching pollen balls at a hive target")
+
+pages["arcade/mecanum.html"] = game_page(
+    "mecanum", "Mecanum Rush", "Racing · Time trial", "Mecanum Rush: a top-down time trial from Steel Surge, FTC team 27254. Drive, strafe, and spin through the gates.",
+    [("course", "Course", "1/8"), ("time", "Time", "0.00"), ("gates", "Gates", "0/0")], [("pause", "pause", "Pause (Esc)"), ("restart", "restart", "Restart course (R)")],
+    ["Mecanum wheels let a robot drive in any direction, including sideways, without turning.", "Drive through every gate in order, then cross the finish line. The next gate glows.", "Touching a cone adds a 1-second penalty.", "Beat the gold time for a gold medal. Your best run races alongside you as a ghost."],
+    [("Drive", ["W", "A", "S", "D"]), ("Turn", ["←", "→"]), ("Switch drive mode", ["V"]), ("Restart", ["R"]), ("Drive on touch", ["Drag"]), ("Turn on touch", ["Buttons"])],
+    '<div class="touch-pad"><div class="pad-col" style="grid-auto-flow:column"><button class="pad-btn" type="button" data-turn="-1" aria-label="Turn left">⟲ Turn</button><button class="pad-btn" type="button" data-turn="1" aria-label="Turn right">Turn ⟳</button></div></div>',
+    "Mecanum Rush: a top-down course with gates and cones")
+
+pages["arcade/wireup.html"] = game_page(
+    "wireup", "Wire Up", "Puzzle · Endless", "Wire Up: a wiring puzzle from Steel Surge, FTC team 27254. Rotate the tiles to power every motor.",
+    [("solved", "Solved", "0"), ("moves", "Moves", "0"), ("size", "Board", "Easy")], [("restart", "restart", "New circuit (N)")],
+    ["Every robot needs wiring. Connect the battery to every motor and sensor on the board.", "Click or tap a tile to rotate it. Powered wires light up blue.", "The puzzle is solved when every part has power. Every circuit is guaranteed to have a solution.", "Pick Easy, Medium, or Hard. Harder boards are bigger, and on Hard the wires can wrap around the edges."],
+    [("Rotate a tile", ["Click", "Tap"]), ("Rotate backward", ["Right-click"]), ("New circuit", ["N"])],
+    '<div class="diff-pick" id="diff-pick"></div>', "Wire Up: a grid of wire tiles connecting a battery to motors")
 
 pages["editor.html"] = head("Team editor · Steel Surge", "Team-only content editor.", "editor", noindex=True, css=("editor.css",), js=("editor.js",)) + '''  <div id="app"><div class="ed-lock"><p class="muted">Loading editor…</p></div></div>
 </body>

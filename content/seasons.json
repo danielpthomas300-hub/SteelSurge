@@ -1,0 +1,311 @@
+{
+  "_about": "FTC game library for the About FTC page. Seasons are keyed by the year they start (2026 = 2026–27). The page automatically opens the current season. To add a new season, copy the latest entry, update it, and add a matching field builder in assets/js/fields3d.js (see README).",
+  "seasons": [
+    {
+      "year": 2026,
+      "name": "BIOBUZZ",
+      "presenter": "presented by RTX",
+      "theme": "FIRST CANOPY",
+      "tagline": "Collect pollen and nectar, tip the hive, and claim the flowers.",
+      "summary": "BIOBUZZ celebrates the natural world. Robots collect yellow POLLEN and alliance-colored NECTAR, launch them into their alliance's HIVE to make it tip, and race to claim the FLOWERS around the field in the final minute.",
+      "objective": "Score more points than the other alliance by tipping your HIVE as many times as possible, filling FLOWERS, stocking your GARDEN, and parking in your LOADING ZONE.",
+      "periods": {
+        "auto": "Robots start touching four preloaded POLLEN. They can collect POLLEN from the FLOWERS and launch into the upward-facing CELL of their HIVE. A HIVE TIP completed before driver control starts is scored as an autonomous achievement, and robots earn points for leaving the wall and parking.",
+        "teleop": "Drivers keep launching POLLEN and NECTAR into their HIVE. Every TIP flips the HIVE so the other CELL faces up, earns points, and unlocks one more NECTAR from the alliance's supply. Robots also move POLLEN and NECTAR into their alliance's GARDEN.",
+        "endgame": "With one minute left, FLOWER scoring opens. Alliances race to place their NECTAR on top of each FLOWER to own it, and every POLLEN and NECTAR inside an owned FLOWER scores for the owner. Robots finish by parking in their LOADING ZONE."
+      },
+      "elements": [
+        { "name": "HIVE structure", "detail": "A frame in the center of the field holds a red HIVE and a blue HIVE on pivots about 44 in. above the tiles. Each HIVE has two CELLS (openings about 20 × 14 in.) and rests with one CELL facing up." },
+        { "name": "FLOWERS", "detail": "Four FLOWERS mounted on the perimeter walls. Each has a 4 in. opening about 21.5 in. above the tiles and a retrieval opening at the bottom." },
+        { "name": "POLLEN", "detail": "40 yellow balls about 2.8 in. across, shared by both alliances." },
+        { "name": "NECTAR", "detail": "Larger alliance-colored balls about 3.6 in. across: 8 red and 8 blue per match." },
+        { "name": "GARDENS and LOADING ZONES", "detail": "Each alliance has a GARDEN strip in a far corner and a LOADING ZONE against its own wall." }
+      ],
+      "scoring": [
+        ["HIVE TIP (auto or teleop)", "20 points"],
+        ["POLLEN or NECTAR left in an upward CELL", "2 points each"],
+        ["Element in an owned FLOWER", "2 points each"],
+        ["Bottom NECTAR bonus in a FLOWER", "5 points"],
+        ["Element in your GARDEN", "1 point each"],
+        ["LEAVE in auto", "3 points"],
+        ["PARK in the LOADING ZONE", "5 points (auto and end of match)"]
+      ],
+      "unique": "The HIVE is bi-stable: it only tips when enough elements land in the upward CELL, so both alliances need accurate shooters. Ranking points reward reaching 4 and 7 HIVE TIPS and combining LEAVE and PARK points."
+    },
+    {
+      "year": 2025,
+      "name": "DECODE",
+      "presenter": "presented by RTX",
+      "theme": "FIRST AGE",
+      "tagline": "Crack the motif, sort the artifacts, and score in your goal.",
+      "summary": "In DECODE, robots score purple and green ARTIFACTS into their alliance's GOAL. Scored artifacts roll down a RAMP, and alliances earn bonus points when the color order on their ramp matches the randomized MOTIF shown on the OBELISK.",
+      "objective": "Outscore the other alliance by launching ARTIFACTS into your GOAL, building PATTERNS that match the MOTIF, and returning both robots to your BASE before time runs out.",
+      "periods": {
+        "auto": "Just before the match, the OBELISK is randomized to one of three MOTIFS. Robots use sensors (often AprilTags) to read it, then score ARTIFACTS and try to build a matching PATTERN on their RAMP. Moving off the LAUNCH LINE earns points.",
+        "teleop": "Drivers collect ARTIFACTS from the floor and from human players at the LOADING ZONE, then launch them through the top of their GOAL. Artifacts that pass through the CLASSIFIER score more than overflow, and a GATE lets teams clear the ramp to keep sorting.",
+        "endgame": "Both robots race back to their BASE. Partially returning earns points, fully returning earns more, and an extra bonus applies when both alliance robots are fully inside. PATTERNS that match the MOTIF score again at the end."
+      },
+      "elements": [
+        { "name": "GOALS", "detail": "Tall alliance-colored structures in the two rear corners. Robots launch ARTIFACTS through an opening at the top." },
+        { "name": "RAMP and CLASSIFIER", "detail": "Scored ARTIFACTS roll down a ramp along each side wall, where their color order forms the alliance's PATTERN." },
+        { "name": "GATE", "detail": "A lever at the bottom of each ramp that robots open to release ARTIFACTS." },
+        { "name": "OBELISK", "detail": "A three-sided marker outside the rear wall. Its randomized face shows the MOTIF for the match." },
+        { "name": "ARTIFACTS", "detail": "Purple and green balls, staged in rows of three on each side of the field and in the corners." },
+        { "name": "BASE ZONES", "detail": "An alliance-colored square near the audience side where robots finish the match." }
+      ],
+      "scoring": [
+        ["LEAVE in auto", "3 points"],
+        ["ARTIFACT classified", "3 points"],
+        ["ARTIFACT overflow", "1 point"],
+        ["ARTIFACT in the DEPOT", "1 point"],
+        ["PATTERN artifact matching the MOTIF", "2 points each"],
+        ["BASE: partially / fully returned", "5 / 10 points"],
+        ["Both robots fully in BASE", "10 bonus points"]
+      ],
+      "unique": "The randomized MOTIF rewarded teams that could sort colors and read AprilTags. Ranking points came from movement, the number of goals scored, and pattern points."
+    },
+    {
+      "year": 2024,
+      "name": "INTO THE DEEP",
+      "presenter": "presented by RTX",
+      "theme": "FIRST DIVE",
+      "tagline": "Dive into the submersible for samples, hang specimens, and ascend.",
+      "summary": "INTO THE DEEP takes place under the sea. Robots collect SAMPLES from the SUBMERSIBLE in the center of the field. Yellow samples score in high or low BASKETS, while alliance-colored samples go to human players, who clip them into SPECIMENS for robots to hang on the CHAMBERS.",
+      "objective": "Score more points than the other alliance by scoring SAMPLES in BASKETS and the NET ZONE, hanging SPECIMENS on the CHAMBERS, and ASCENDING the SUBMERSIBLE's rungs at the end.",
+      "periods": {
+        "auto": "Robots score preloaded SAMPLES in their BASKETS or NET ZONE, or hang a preloaded SPECIMEN on a CHAMBER, then collect more from the SPIKE MARKS. Robots can park in the OBSERVATION ZONE or touch the low rung for an ascent.",
+        "teleop": "Drivers reach into the SUBMERSIBLE to collect SAMPLES. Yellow samples go to the BASKETS. Alliance-colored samples are delivered to the OBSERVATION ZONE, where human players add a clip to make a SPECIMEN for robots to hang on the CHAMBERS.",
+        "endgame": "Robots ASCEND the SUBMERSIBLE: level 1 by touching the low rung, level 2 by hanging from the low rung, and level 3 by climbing to the high rung. Robots can also park in the OBSERVATION ZONE."
+      },
+      "elements": [
+        { "name": "SUBMERSIBLE", "detail": "The center structure. Its zone is 27.5 × 42.75 in. HIGH and LOW CHAMBERS face each alliance, and LOW and HIGH RUNGS run along the other two sides." },
+        { "name": "BASKETS", "detail": "A low basket (lip 25.75 in. high) and high basket (lip 43 in. high) in each NET ZONE corner." },
+        { "name": "SAMPLES", "detail": "Small blocks in yellow (neutral), red, and blue." },
+        { "name": "SPECIMENS", "detail": "Alliance-colored samples with a clip attached by a human player." },
+        { "name": "NET and OBSERVATION ZONES", "detail": "Each alliance has a triangular NET ZONE in one corner and an OBSERVATION ZONE along its side wall." }
+      ],
+      "scoring": [
+        ["SAMPLE in NET ZONE", "2 points"],
+        ["SAMPLE in LOW / HIGH BASKET", "4 / 8 points"],
+        ["SPECIMEN on LOW / HIGH CHAMBER", "6 / 10 points"],
+        ["Level 1 ascent / park in OBSERVATION ZONE", "3 points"],
+        ["Level 2 ascent (low rung)", "15 points"],
+        ["Level 3 ascent (high rung)", "30 points"]
+      ],
+      "unique": "Teams chose between a sample (basket) strategy and a specimen (chamber) strategy, and alliances often split the work. Steel Surge competed for the first time this season.",
+      "steelSurge": true
+    },
+    {
+      "year": 2023,
+      "name": "CENTERSTAGE",
+      "presenter": "presented by RTX",
+      "theme": "FIRST IN SHOW",
+      "tagline": "Build mosaics on the backdrop, then hang, park, or launch a drone.",
+      "summary": "CENTERSTAGE has an arts and performance theme. Robots pick up hexagonal PIXELS from the WINGS and stacks, cross under the TRUSSES, and place them on their alliance's angled BACKDROP to make rows and colorful MOSAICS.",
+      "objective": "Outscore the other alliance by placing PIXELS on your BACKDROP, completing MOSAICS and SET LINES, and finishing with a hang, a park, or a paper-airplane DRONE launch.",
+      "periods": {
+        "auto": "A randomized position is marked by a white pixel or a team's own TEAM PROP. Robots detect it, place a purple PIXEL on the matching SPIKE MARK and a yellow PIXEL on the matching spot of the BACKDROP, then park BACKSTAGE.",
+        "teleop": "Human players feed PIXELS into the WING. Robots carry them across the field, under the TRUSSES or through the STAGE DOOR, and place them on the BACKDROP. Rows of pixels crossing a SET LINE earn bonus points, and MOSAICS of three colored pixels score extra.",
+        "endgame": "Robots can suspend from the RIGGING, park BACKSTAGE, or launch a paper DRONE over the TRUSS into LANDING ZONES 1, 2, or 3 outside the field."
+      },
+      "elements": [
+        { "name": "BACKDROPS", "detail": "Two angled pegboards (about 60° from the floor) on the back wall, one per alliance." },
+        { "name": "TRUSSES and STAGE DOOR", "detail": "Low trusses span the field with a hinged STAGE DOOR in the middle, separating the front of the field from the BACKSTAGE." },
+        { "name": "RIGGING", "detail": "The bars robots grab to hang during the End Game." },
+        { "name": "PIXELS", "detail": "Hexagonal foam pieces in white, yellow, green, and purple." },
+        { "name": "WINGS and SPIKE MARKS", "detail": "WINGS are taped triangles in the front corners where pixels are loaded. SPIKE MARKS show the randomized positions." },
+        { "name": "LANDING ZONES", "detail": "Three numbered zones beyond the audience wall where drones land." }
+      ],
+      "scoring": [
+        ["Park BACKSTAGE (auto)", "5 points"],
+        ["PIXEL on the BACKDROP (auto / teleop)", "5 / 3 points"],
+        ["PIXEL in BACKSTAGE (auto / teleop)", "3 / 1 points"],
+        ["Randomized purple/yellow pixel (white pixel / team prop)", "10 / 20 points each"],
+        ["MOSAIC / SET LINE bonus", "10 points each"],
+        ["Suspended from RIGGING", "20 points"],
+        ["DRONE in zone 1 / 2 / 3", "30 / 20 / 10 points"]
+      ],
+      "unique": "Team props and AprilTags on the backdrop pushed teams toward smart autonomous routines, and the paper drone made the End Game a crowd favorite."
+    },
+    {
+      "year": 2022,
+      "name": "POWERPLAY",
+      "presenter": "presented by Raytheon Technologies",
+      "theme": "FIRST ENERGIZE",
+      "tagline": "Stack cones on junctions to own the grid and build a circuit.",
+      "summary": "POWERPLAY is about energy. Robots pick up red and blue CONES and place them on a 5 × 5 grid of JUNCTIONS of different heights. The alliance whose cone is on top of a junction owns it, and connecting owned junctions from one terminal to another completes a CIRCUIT.",
+      "objective": "Outscore the other alliance by placing CONES on JUNCTIONS, owning junctions at the end, capping one with your BEACON, and completing a CIRCUIT.",
+      "periods": {
+        "auto": "Robots read a randomized SIGNAL (or their own team-designed sleeve) to learn which zone to park in, while scoring their preloaded CONE and grabbing more from the five-cone stacks.",
+        "teleop": "Human players feed CONES through the SUBSTATIONS. Robots place them on ground, low, medium, and high JUNCTIONS. Higher junctions are worth more, and stacking on top takes ownership from the other alliance.",
+        "endgame": "Each alliance can cap a junction with its BEACON, which locks ownership. Owned junctions forming an unbroken path between that alliance's TERMINALS complete a CIRCUIT for a big bonus."
+      },
+      "elements": [
+        { "name": "JUNCTIONS", "detail": "25 junctions at the tile intersections: 9 ground junctions, 8 low poles, 4 medium poles, and 4 high poles in the middle." },
+        { "name": "CONES", "detail": "Red and blue cones, staged on the field and supplied by human players." },
+        { "name": "BEACONS", "detail": "Team-made caps that secure ownership of a junction." },
+        { "name": "SIGNALS", "detail": "Cones with images that tell robots where to park in autonomous." },
+        { "name": "TERMINALS and SUBSTATIONS", "detail": "Taped corner triangles and a taped V on each side wall where cones come in." }
+      ],
+      "scoring": [
+        ["Cone on ground / low / medium / high junction", "2 / 3 / 4 / 5 points"],
+        ["Cone in a TERMINAL", "1 point"],
+        ["Park in the SIGNAL zone (signal / team sleeve)", "10 / 20 points"],
+        ["Junction owned by a cone / by a BEACON", "3 / 10 points"],
+        ["Completed CIRCUIT", "20 points"]
+      ],
+      "unique": "Ownership changed constantly, so alliances had to balance offense with defending key high junctions."
+    },
+    {
+      "year": 2021,
+      "name": "FREIGHT FRENZY",
+      "presenter": "presented by Raytheon Technologies",
+      "theme": "FIRST FORWARD",
+      "tagline": "Move freight from the warehouse to the shipping hubs, and spin the ducks.",
+      "summary": "FREIGHT FRENZY is about transportation and getting supplies where they are needed. Robots collect boxes, balls, and ducks from the WAREHOUSE, cross the BARRIERS, and load them onto their alliance's three-level SHIPPING HUB.",
+      "objective": "Outscore the other alliance by delivering FREIGHT to shipping hubs, spinning DUCKS off the CAROUSEL, balancing hubs, and parking in the warehouse.",
+      "periods": {
+        "auto": "A randomized BARCODE (a duck or team shipping element) tells robots which hub level to score their preloaded box on. Robots can also deliver a duck from the CAROUSEL and park in the warehouse or storage unit.",
+        "teleop": "Robots shuttle FREIGHT from the WAREHOUSE to their alliance SHIPPING HUB. Higher levels are worth more. The SHARED SHIPPING HUB in the warehouse is open to both alliances.",
+        "endgame": "Robots spin DUCKS off the CAROUSEL, try to keep their alliance hub balanced, tip the shared hub toward their side, cap their hub with a team shipping element, and park in the WAREHOUSE."
+      },
+      "elements": [
+        { "name": "SHIPPING HUBS", "detail": "A red hub and a blue hub with three levels each, plus a SHARED SHIPPING HUB inside the warehouse that tips toward the heavier side." },
+        { "name": "WAREHOUSE and BARRIERS", "detail": "The back of the field is the warehouse, separated by low BARRIERS robots must drive over or around." },
+        { "name": "FREIGHT", "detail": "Light and heavy boxes, balls, and rubber ducks." },
+        { "name": "CAROUSELS", "detail": "Turntables in the front corners holding ducks." },
+        { "name": "STORAGE UNITS", "detail": "Taped squares near the audience wall where robots can park and store freight." }
+      ],
+      "scoring": [
+        ["Duck delivered from the CAROUSEL", "10 points (auto); 6 points (End Game)"],
+        ["Preloaded box on the randomized level (duck / team element)", "10 / 20 points"],
+        ["Freight on hub level 1 / 2 / 3", "2 / 4 / 6 points"],
+        ["Freight on the SHARED hub", "4 points"],
+        ["Park completely in the WAREHOUSE (auto)", "10 points"]
+      ],
+      "unique": "The carousel and the tipping shared hub gave the game lots of strategy, and the barcode pushed many teams to build their first vision systems."
+    },
+    {
+      "year": 2020,
+      "name": "ULTIMATE GOAL",
+      "presenter": "",
+      "theme": "FIRST GAME CHANGERS powered by Star Wars: Force for Change",
+      "tagline": "Launch rings into the tower goal, knock down power shots, and deliver wobble goals.",
+      "summary": "ULTIMATE GOAL was a shooting game played during the pandemic, with many events held remotely. Robots launch foam RINGS into a three-level TOWER GOAL, knock over POWER SHOT targets, and carry WOBBLE GOALS to target zones.",
+      "objective": "Outscore the other alliance by scoring RINGS in the TOWER GOAL, hitting POWER SHOTS, and delivering WOBBLE GOALS.",
+      "periods": {
+        "auto": "The number of rings in the STARTER STACK (0, 1, or 4) is randomized, telling robots which TARGET ZONE (A, B, or C) to deliver their WOBBLE GOAL to. Robots also launch rings, shoot power shots, and park on the LAUNCH LINE.",
+        "teleop": "Human players return rings to the field. Robots collect them and launch them into the low, middle, and high goals from behind the LAUNCH LINE.",
+        "endgame": "Robots knock over the three POWER SHOT targets, carry WOBBLE GOALS over the start line or the outer wall into the DROP ZONE, and score rings on the wobble goals."
+      },
+      "elements": [
+        { "name": "TOWER GOALS", "detail": "One tower per alliance on the back wall, with low, middle, and high goals." },
+        { "name": "POWER SHOT targets", "detail": "Three spinning targets per alliance mounted between the towers." },
+        { "name": "RINGS", "detail": "Orange foam rings about 5 in. across." },
+        { "name": "WOBBLE GOALS", "detail": "Tall alliance-colored posts on a weighted base that robots grab and carry." },
+        { "name": "TARGET ZONES and LAUNCH LINE", "detail": "Three taped squares (A, B, C) per alliance and a white line across the field." }
+      ],
+      "scoring": [
+        ["Ring in the low / middle / high goal (auto)", "3 / 6 / 12 points"],
+        ["Ring in the low / middle / high goal (teleop)", "2 / 4 / 6 points"],
+        ["POWER SHOT target knocked back", "15 points"],
+        ["WOBBLE GOAL in the target zone (auto)", "15 points"],
+        ["WOBBLE GOAL in the DROP ZONE / over the start line", "20 / 5 points"],
+        ["Ring on a wobble goal", "5 points"]
+      ],
+      "unique": "Because of COVID-19, many teams played remote events on a half field at home and were scored against other teams' results."
+    },
+    {
+      "year": 2019,
+      "name": "SKYSTONE",
+      "presenter": "",
+      "theme": "FIRST RISE powered by Star Wars: Force for Change",
+      "tagline": "Build skyscrapers from stones, then cap them.",
+      "summary": "SKYSTONE is a building game. Robots carry STONES from the QUARRY across the SKYBRIDGE and stack them on their alliance's FOUNDATION to build the tallest SKYSCRAPER they can.",
+      "objective": "Outscore the other alliance by delivering and placing STONES, building tall SKYSCRAPERS, capping them, and moving your FOUNDATION back to the building site.",
+      "periods": {
+        "auto": "Robots find the SKYSTONES (stones with a dark image) in the quarry and deliver them for bonus points, reposition the FOUNDATION, place stones on it, and park under the SKYBRIDGE.",
+        "teleop": "Robots deliver STONES under the SKYBRIDGE to the building zone and stack them on the FOUNDATION. The height of the tallest skyscraper earns a bonus.",
+        "endgame": "Robots place their CAPSTONE on top of a skyscraper, move the FOUNDATION out of the building site, and park under the SKYBRIDGE."
+      },
+      "elements": [
+        { "name": "STONES and SKYSTONES", "detail": "LEGO-style yellow blocks. Each quarry line includes two SKYSTONES marked with a black face." },
+        { "name": "FOUNDATIONS", "detail": "Red and blue plastic bases that robots drag around and build on." },
+        { "name": "SKYBRIDGE", "detail": "A bridge across the middle of the field with an alliance lane under each side and a neutral lane in the center." },
+        { "name": "QUARRY and DEPOTS", "detail": "Two lines of stones on the loading side, and taped depots in the front corners." },
+        { "name": "CAPSTONES", "detail": "Team-made markers placed on top of a finished skyscraper." }
+      ],
+      "scoring": [
+        ["SKYSTONE delivered in auto (first two)", "10 points"],
+        ["Other stones delivered in auto", "2 points"],
+        ["FOUNDATION repositioned (auto)", "10 points"],
+        ["Stone placed on the foundation (auto / teleop)", "4 / 1 points"],
+        ["Tallest skyscraper bonus", "2 points per level"],
+        ["Capping / capping bonus", "5 points + 1 point per level"],
+        ["FOUNDATION moved out of the building site", "15 points"]
+      ],
+      "unique": "Teams built tall, stable stackers, and the most famous robots could build skyscrapers taller than the robots themselves."
+    },
+    {
+      "year": 2018,
+      "name": "ROVER RUCKUS",
+      "presenter": "",
+      "theme": "FIRST DESTINATION: DEEP SPACE",
+      "tagline": "Land, sample, and sort minerals into the lander.",
+      "summary": "ROVER RUCKUS takes place on a distant planet. Robots start hanging from the LANDER, lower themselves to the surface, collect gold and silver MINERALS from the CRATERS, and sort them into the lander's CARGO HOLDS.",
+      "objective": "Outscore the other alliance by landing, sampling the gold mineral, claiming your depot with a team marker, scoring minerals in the cargo holds, and latching back onto the lander.",
+      "periods": {
+        "auto": "Robots LAND by lowering themselves from the lander, SAMPLE by finding and moving the single gold mineral, CLAIM by dropping a team marker in their DEPOT, and PARK in a crater.",
+        "teleop": "Robots collect MINERALS from the craters and sort them: gold cubes in the gold cargo hold and silver balls in the silver hold.",
+        "endgame": "Robots LATCH back onto the lander or park in or completely in a CRATER."
+      },
+      "elements": [
+        { "name": "LANDER", "detail": "The structure at the center of the field with two cargo holds and latch points." },
+        { "name": "CRATERS", "detail": "Two curved rims in opposite corners filled with minerals." },
+        { "name": "MINERALS", "detail": "90 gold cubes and 60 silver balls." },
+        { "name": "SAMPLE FIELDS", "detail": "Three minerals in front of each lander side; one is gold." },
+        { "name": "DEPOTS", "detail": "Taped squares in opposite corners where team markers are claimed." }
+      ],
+      "scoring": [
+        ["Landing", "30 points"],
+        ["Sampling the gold mineral", "25 points"],
+        ["Claiming the depot", "15 points"],
+        ["Parking in a crater (auto)", "10 points"],
+        ["Mineral in the correct cargo hold", "5 points"],
+        ["Mineral in the depot", "2 points"],
+        ["Latched / in crater / completely in crater (End Game)", "50 / 15 / 25 points"]
+      ],
+      "unique": "Hanging robots had to support their own weight from the lander at the start and end of every match."
+    },
+    {
+      "year": 2017,
+      "name": "RELIC RECOVERY",
+      "presenter": "",
+      "theme": "",
+      "tagline": "Fill the cryptobox with glyphs and rescue the relics.",
+      "summary": "RELIC RECOVERY is an archaeology adventure. Robots stack GLYPHS (brown and gray cubes) into four-column CRYPTOBOXES, knock off the right JEWEL, carry RELICS over the wall into recovery zones, and balance on stones at the end.",
+      "objective": "Outscore the other alliance by scoring GLYPHS, completing rows, columns, and ciphers in the CRYPTOBOX, recovering RELICS, and balancing.",
+      "periods": {
+        "auto": "Robots knock the opposing alliance's JEWEL off the platform, read a pictograph to learn the correct cryptobox column (the key), score a glyph there, and park in the SAFE ZONE.",
+        "teleop": "Robots collect GLYPHS from the GLYPH PIT and stack them into the CRYPTOBOX. Completed rows, columns, and cipher patterns earn bonuses.",
+        "endgame": "Robots carry RELICS over the wall into recovery zones 1, 2, or 3 (upright for a bonus) and balance on their BALANCING STONE."
+      },
+      "elements": [
+        { "name": "CRYPTOBOXES", "detail": "Four-column, three-row boxes on the side and audience walls." },
+        { "name": "GLYPHS", "detail": "48 six-inch cubes in brown and gray." },
+        { "name": "RELICS", "detail": "Figurines that robots lift over the perimeter wall into the recovery zones." },
+        { "name": "JEWELS", "detail": "Red and blue balls on a platform; robots must knock off the opponent's color." },
+        { "name": "BALANCING STONES", "detail": "Raised alliance-colored platforms where robots start and balance at the end." }
+      ],
+      "scoring": [
+        ["Jewel removed", "30 points"],
+        ["Glyph scored (auto) / correct key bonus", "15 / 30 points"],
+        ["Glyph scored (teleop)", "2 points"],
+        ["Completed row / column / cipher", "10 / 20 / 30 points"],
+        ["Relic in zone 1 / 2 / 3 (+ upright bonus)", "10 / 20 / 40 (+15) points"],
+        ["Balanced robot", "20 points"]
+      ],
+      "unique": "Relic recovery required long arms that reached over the wall, one of the most dramatic mechanisms of its era."
+    }
+  ]
+}

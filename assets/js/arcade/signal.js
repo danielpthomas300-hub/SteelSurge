@@ -54,12 +54,12 @@
     const cores = [];
     for (const c of candidates) { if (cores.length >= 3) break; if (cores.every((k) => Math.abs(k[0] - c[0]) + Math.abs(k[1] - c[1]) > 6)) cores.push(c); }
     while (cores.length < 3) cores.push(candidates[cores.length * 3] || far[1 + cores.length]);
-    const droneCount = Math.min(1 + f, 7);
+    const D = window.Arcade.diff(), droneCount = Math.max(1, Math.min(1 + f + (D > 1.2 ? 1 : D < 0.9 ? -1 : 0), 8));
     const spots = cells.filter((c) => c[2] > 10).sort(() => Math.random() - 0.5).slice(0, droneCount);
     s.maze = m; s.reveal = Array.from({ length: m.th }, () => Array(m.tw).fill(-99)); s.seen = Array.from({ length: m.th }, () => Array(m.tw).fill(false));
     s.px = 1.5; s.py = 1.5; s.exit = exit; s.cores = cores.map(([x, y]) => ({ x, y, got: false })); s.got = 0;
-    s.drones = spots.map(([x, y]) => ({ x: x + 0.5, y: y + 0.5, path: [], mode: "patrol", prev: null, revealT: -99, searchT: 0, speedK: 1 + f * 0.06 }));
-    s.ping = null; s.cool = 0; s.floorT = 0;
+    s.drones = spots.map(([x, y]) => ({ x: x + 0.5, y: y + 0.5, path: [], mode: "patrol", prev: null, revealT: -99, searchT: 0, speedK: (1 + f * 0.06) * D }));
+    s.ping = null; s.cool = 0; s.floorT = 0; s.decoys = 2; s.decoy = null; s.pings = 0; game.setHud("decoys", "2");
     game.setHud("floor", String(f)); updateCores();
     game.setMessage(f === 1 ? "Press Space (or Ping) to light up the walls. Find 3 data cores, then the exit." : `Floor ${f}: ${droneCount} drone${droneCount > 1 ? "s" : ""} on patrol.`);
   }
@@ -79,7 +79,7 @@
 
   function ping() {
     if (!game.running || game.paused || !s || s.dead || s.cool > 0) return;
-    s.ping = { x: s.px, y: s.py, t: 0, hit: new Set() }; s.cool = PING_COOLDOWN;
+    s.ping = { x: s.px, y: s.py, t: 0, hit: new Set() }; s.cool = PING_COOLDOWN; s.pings = (s.pings || 0) + 1; game.trophy("sl-ping");
     Sound.tone({ f: 1400, f2: 700, dur: 0.5, type: "sine", vol: 0.14 }); Sound.tone({ f: 700, f2: 350, dur: 0.6, type: "sine", vol: 0.06, delay: 0.08 });
     // Drones within earshot come to investigate.
     const tx = Math.floor(s.px), ty = Math.floor(s.py);
@@ -144,7 +144,8 @@
     if (s.got === 3 && Math.hypot(s.exit[0] + 0.5 - s.px, s.exit[1] + 0.5 - s.py) < 0.6) {
       const bonus = 300 + s.floor * 50 + Math.max(0, Math.round(120 - s.floorT) * 2);
       s.score += bonus; Sound.win(); game.floaters.add(`FLOOR CLEAR +${bonus}`, W / 2, H / 2 - 40, C.ok, 26); game.shake(4);
-      s.floor++; newFloor();
+      if ((s.pings || 0) <= 3) game.trophy("sl-quiet");
+      s.floor++; game.trophy("sl-floor"); if (s.floor >= 5) game.trophy("sl-5"); newFloor();
     }
     game.setHud("score", s.score.toLocaleString());
   };
@@ -201,6 +202,8 @@
     { const open = s.got === 3, [sx, sy] = beacon(s.exit[0], s.exit[1], open ? "rgba(61,220,151,0.9)" : "rgba(103,118,138,0.5)", 12, open ? Math.sin(game.time * 5) : 0);
       ctx.strokeStyle = open ? C.ok : C.dim; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(sx, sy, 13 + (open ? Math.sin(game.time * 4) * 2 : 0), 0, Math.PI * 2); ctx.stroke();
       if (!open) { ctx.font = '600 10px "JetBrains Mono", monospace'; ctx.textAlign = "center"; ctx.fillStyle = C.dim; ctx.fillText("LOCKED", sx, sy + 30); } }
+    // decoy
+    if (s.decoy) { s.decoy.t += 1 / 60; const [dx, dy] = toScreen(s.decoy.x, s.decoy.y), on = Math.sin(game.time * 14) > 0; ctx.fillStyle = on ? C.amber : "#6b4a14"; ctx.beginPath(); ctx.arc(dx, dy, 7, 0, Math.PI * 2); ctx.fill(); if (on) { ctx.strokeStyle = "rgba(255,181,71,0.5)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(dx, dy, 14 + (game.time * 30) % 20, 0, Math.PI * 2); ctx.stroke(); } }
     // ping ring
     if (s.ping) { const r = Math.min(s.ping.t * PING_SPEED, PING_MAX), [sx, sy] = toScreen(s.ping.x, s.ping.y); ctx.strokeStyle = `rgba(132,205,255,${clamp(1 - r / PING_MAX, 0, 1) * 0.8})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(sx, sy, r * TS, 0, Math.PI * 2); ctx.stroke(); }
     // drones
@@ -232,7 +235,21 @@
   };
 
   /* ---------------- Input ---------------- */
-  game.onKey = (e) => { if (e.key === " " || e.key === "Shift") { e.preventDefault(); ping(); } };
+  /** Decoy: drop a beeping lure. Nearby drones go investigate it instead of you. */
+  function decoy() {
+    if (!game.running || game.paused || !s || s.dead || s.decoys <= 0) return;
+    s.decoys--; game.setHud("decoys", String(s.decoys));
+    s.decoy = { x: s.px, y: s.py, t: 0 };
+    const tx = Math.floor(s.px), ty = Math.floor(s.py);
+    Sound.tone({ f: 600, f2: 900, dur: 0.2, type: "square", vol: 0.07 });
+    setTimeout(() => {
+      if (!s?.decoy) return;
+      Sound.tone({ f: 1200, f2: 600, dur: 0.4, type: "square", vol: 0.08 });
+      s.drones.forEach((d) => { if (Math.hypot(d.x - s.decoy.x, d.y - s.decoy.y) < 11) { d.mode = "hunt"; d.path = pathTo(s.maze, Math.floor(d.x), Math.floor(d.y), tx, ty); } });
+    }, 1200);
+  }
+  game.onKey = (e) => { if (e.key === " " || e.key === "Shift") { e.preventDefault(); ping(); } else if (e.key === "e" || e.key === "E" || e.key === "x" || e.key === "X") decoy(); };
+  document.querySelectorAll("[data-act=decoy]").forEach((b) => b.addEventListener("pointerdown", (e) => { e.preventDefault(); Sound.ensure(); decoy(); }));
   document.querySelectorAll("[data-act=ping]").forEach((b) => b.addEventListener("pointerdown", (e) => { e.preventDefault(); Sound.ensure(); ping(); }));
   const stage = game.stage;
   const toLocal = (e) => { const r = stage.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; };

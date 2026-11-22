@@ -143,3 +143,49 @@
   #game.side .code-palette { grid-template-columns: 1fr 1fr; }
   #game.side .code-program { grid-template-columns: 1fr 1fr; max-height: 300px; }
 }
+
+/* Flywheel aim controls */
+.aim-ui { display: grid; grid-template-columns: 1fr 1fr auto; gap: 14px; align-items: end; margin-top: 14px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+@media (max-width: 620px) { .aim-ui { grid-template-columns: 1fr; } }
+.aim-slider { display: grid; gap: 8px; font-size: 14px; font-weight: 600; }
+.aim-slider span { display: flex; justify-content: space-between; gap: 10px; }
+.aim-slider b { font: 600 13px/1 var(--font-mono); color: var(--surge); }
+.aim-slider input { width: 100%; accent-color: var(--surge); height: 28px; }
+.aim-fire { min-height: 52px; min-width: 140px; }
+
+/* Wire Up difficulty */
+.diff-pick { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
+.diff-pick .chip { padding: 10px 16px; }
+
+/* Arcade settings panel */
+.settings-layer { z-index: 8; }
+.overlay-card.settings { width: min(440px, 100%); max-height: 100%; overflow-y: auto; text-align: left; background: #10161e; border: 1px solid #2d3b4c; border-radius: 18px; padding: 22px; }
+.settings h2 { font-size: 26px !important; margin-bottom: 4px; }
+.settings fieldset { border: 0; margin: 14px 0 0; padding: 0; }
+.settings legend { font: 600 11px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: #67768a; margin-bottom: 8px; }
+.settings .opts { display: flex; gap: 6px; }
+.settings .opt { flex: 1; }
+.settings .opt input, .settings .toggle input { position: absolute; opacity: 0; pointer-events: none; }
+.settings .opt span { display: block; text-align: center; padding: 9px 8px; border-radius: 10px; border: 1px solid #2d3b4c; color: #c9d3de; font-weight: 600; font-size: 14px; cursor: pointer; }
+.settings .opt input:checked + span { background: rgba(59,168,255,.15); border-color: #3ba8ff; color: #fff; }
+.settings .opt input:focus-visible + span, .settings .toggle input:focus-visible + .sw { outline: 2px solid #3ba8ff; outline-offset: 2px; }
+.settings .set-note { font-size: 12.5px !important; color: #7b8a9e !important; margin-top: 8px !important; }
+.settings .toggle { display: flex; align-items: center; gap: 12px; padding: 7px 0; cursor: pointer; color: #e9eef4; }
+.settings .toggle b { display: block; font-size: 14px; font-weight: 600; }
+.settings .toggle small { display: block; font-size: 12px; color: #7b8a9e; }
+.settings .sw { position: relative; width: 38px; height: 22px; flex: none; border-radius: 999px; background: #1e2935; border: 1px solid #2d3b4c; transition: background .15s; }
+.settings .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #97a4b4; transition: transform .18s, background .15s; }
+.settings .toggle input:checked + .sw { background: #3ba8ff; border-color: #3ba8ff; }
+.settings .toggle input:checked + .sw::after { transform: translateX(16px); background: #fff; }
+.settings .range { display: flex; align-items: center; gap: 12px; padding: 6px 0; color: #e9eef4; font-size: 14px; font-weight: 600; }
+.settings .range input { flex: 1; accent-color: #3ba8ff; }
+.settings .overlay-actions { justify-content: flex-start; margin-top: 18px; }
+
+/* Accessibility looks */
+#game.hc .stage canvas { filter: contrast(1.22) saturate(1.3) brightness(1.08); }
+#game.bigtext .overlay-card { font-size: 1.12em; }
+#game.bigtext .overlay-card h2 { font-size: clamp(36px, 6vw, 54px); }
+#game.bigtext .overlay-card p { font-size: 17px; }
+#game.bigtext .hud-stat b { font-size: 20px; }
+#game.bigtext .game-msg { font-size: 18px; }
+#game.bigtext .code-block, #game.bigtext .tool-btn { font-size: 16px; }

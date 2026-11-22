@@ -27,12 +27,14 @@
       fields: [
         { k: "name", label: "Team name", type: "text", required: true },
         { k: "number", label: "FTC team number", type: "number", required: true, hint: "Live stats and awards are pulled from FTCScout using this number." },
+        { k: "motto", label: "Team motto", type: "text", hint: "e.g. Surge Ahead" },
         { k: "intro", label: "Intro paragraph", type: "textarea", hint: "Shown on the home page under the big title." },
         { k: "location", label: "Location", type: "text" },
         { k: "school", label: "Schools", type: "text" },
         { k: "rookieYear", label: "Rookie year", type: "number" },
         { k: "email", label: "Team email", type: "email", required: true, hint: "Public. Contact-form messages are delivered here." },
         { k: "joinFormUrl", label: "Join-the-team form link", type: "url" },
+        { k: "instagram", label: "Instagram handle", type: "text", hint: "e.g. @steelsurge27254. Leave empty to hide. When set, Instagram appears on the Media and Contact pages and in the footer." },
         { k: "youtubeChannelId", label: "YouTube channel ID", type: "text", hint: "Starts with UC… — find it in your channel's URL. Videos update automatically." },
         { k: "socials", label: "Social links", type: "list", itemLabel: "link", summary: (i) => i.label || "New link", fields: [{ k: "label", label: "Label", type: "text" }, { k: "url", label: "Link", type: "url" }] },
       ] },
@@ -49,21 +51,18 @@
     { id: "values", title: "Team values", icon: "heart", desc: "The 'What Steel Surge stands for' cards on the team page.",
       get: (c) => c.values || [], set: (c, v) => (c.values = v), list: true, itemLabel: "value", summary: (v) => v.title || "New value",
       fields: [{ k: "title", label: "Title", type: "text", required: true }, { k: "body", label: "Description", type: "textarea" }] },
-    { id: "robot", title: "Our robot", icon: "gear", desc: "Shows a robot spotlight on the home page once a name is filled in. Leave the name empty to hide it.",
-      get: (c) => c.robot || {}, set: (c, v) => (c.robot = v),
-      fields: [
-        { k: "name", label: "Robot name", type: "text" },
-        { k: "season", label: "Season", type: "text", hint: "e.g. 2026–27" },
-        { k: "summary", label: "Summary", type: "textarea", hint: "What it does and what makes it special." },
-        { k: "photo", label: "Photo", type: "image", folder: "assets/img/robot", square: false },
-        { k: "specs", label: "Specs", type: "list", itemLabel: "spec", summary: (s) => `${s.label || "New spec"}${s.value ? ": " + s.value : ""}`, fields: [{ k: "label", label: "Label", type: "text", hint: "e.g. Drivetrain" }, { k: "value", label: "Value", type: "text", hint: "e.g. Mecanum, 312 RPM" }] },
-      ] },
+    { id: "projects", title: "Team projects", icon: "gear", desc: "The 'Made by Steel Surge' gallery on the team page: things you've designed and built besides the robot.",
+      get: (c) => c.projects || [], set: (c, v) => (c.projects = v), list: true, itemLabel: "project", summary: (p) => p.title || "New project",
+      fields: [{ k: "title", label: "Title", type: "text", required: true }, { k: "body", label: "Description", type: "textarea" }, { k: "image", label: "Image", type: "image", folder: "assets/img/projects", square: false }] },
     { id: "outreach", title: "Outreach", icon: "users", desc: "Outreach hours shown on the home and sponsor pages.",
       get: (c) => c.outreach || {}, set: (c, v) => (c.outreach = v),
       fields: [{ k: "hours", label: "Outreach hours", type: "text", hint: "e.g. 40+ (leave empty to hide)" }, { k: "label", label: "Caption", type: "text", hint: "e.g. outreach hours in 2025–26" }] },
     { id: "mentors", title: "Mentors", icon: "star", desc: "Shown on the team page only when at least one mentor is listed.",
       get: (c) => c.mentors || [], set: (c, v) => (c.mentors = v), list: true, itemLabel: "mentor", summary: (m) => m.name || "New mentor", sub: (m) => m.role,
       fields: [{ k: "name", label: "Name", type: "text", required: true }, { k: "role", label: "What they help with", type: "text" }] },
+    { id: "competition", title: "Competition page", icon: "chart", desc: "Events, matches, and awards update automatically from FTCScout. Choose whether event rows show your rank and win-loss record.",
+      get: (c) => ({ showRecords: !!c.showRecords }), set: (c, v) => (c.showRecords = !!v.showRecords),
+      fields: [{ k: "showRecords", label: "Show rank and win-loss record for each event", type: "bool" }] },
     { id: "achievements", title: "Milestones & awards", icon: "trophy", desc: "Official FTC awards and match results appear automatically from FTCScout. Add anything else worth celebrating here.",
       get: (c) => c.achievements, set: (c, v) => (c.achievements = v), list: true, itemLabel: "milestone", summary: (a) => a.title || "New milestone", sub: (a) => a.date,
       fields: [
@@ -159,7 +158,7 @@
     const d = store.get(DRAFT_KEY);
     draft = d?.content ? d.content : clone(published);
     savedAt = d?.savedAt || null;
-    for (const k of ["mentors", "achievements", "updates", "sponsors", "sponsorTiers", "members", "values", "featuredVideos"]) if (!Array.isArray(draft[k])) draft[k] = [];
+    for (const k of ["mentors", "achievements", "updates", "sponsors", "sponsorTiers", "members", "values", "featuredVideos", "projects"]) if (!Array.isArray(draft[k])) draft[k] = [];
     current = (location.hash.slice(1) && SECTIONS.some((s) => s.id === location.hash.slice(1))) ? location.hash.slice(1) : "team";
     $("#app").innerHTML = `
       <div class="ed">

@@ -20,7 +20,7 @@
   let s;
 
   function newRun() {
-    s = { score: 0, fixed: 0, combo: 1, bestCombo: 1, strikes: 0, t: 0, bot: null, queue: [], over: false, flash: 0, toolHit: -1, toolHitT: 0 };
+    s = { D: window.Arcade.diff(), score: 0, fixed: 0, combo: 1, bestCombo: 1, strikes: 0, t: 0, bot: null, queue: [], over: false, flash: 0, toolHit: -1, toolHitT: 0 };
     s.queue = [makeBot(), makeBot(), makeBot()];
     nextBot();
     updateHud();
@@ -33,7 +33,7 @@
     const color = [C.surge, C.amber, C.violet, C.ok, "#ff8fb1"][(Math.random() * 5) | 0];
     return {
       faults: spots.map((sp) => ({ spot: sp, tool: (Math.random() * 4) | 0, fixed: false, fixT: 0 })),
-      time: lerp(7.5, 3.2, clamp(n / 40, 0, 1)) + faults * lerp(1.1, 0.55, clamp(n / 40, 0, 1)),
+      time: (lerp(7.5, 3.2, clamp(n / 40, 0, 1)) + faults * lerp(1.1, 0.55, clamp(n / 40, 0, 1))) / (s ? s.D : 1),
       golden: n > 3 && Math.random() < 0.1,
       color,
     };
@@ -56,7 +56,7 @@
     if (f) {
       f.fixed = true; f.fixT = 0;
       const pts = 10 * s.combo * (b.golden ? 2 : 1);
-      s.score += pts; s.combo = Math.min(8, s.combo + 1); s.bestCombo = Math.max(s.bestCombo, s.combo);
+      s.score += pts; s.combo = Math.min(8, s.combo + 1); s.bestCombo = Math.max(s.bestCombo, s.combo); if (s.combo >= 6) game.trophy("pc-combo");
       Sound.tone({ f: 520 + s.combo * 60, f2: 900 + s.combo * 60, dur: 0.09, type: "triangle", vol: 0.1 });
       game.particles.burst(px, py, { n: 16, color: TOOLS[i].color, speed: 240, life: 0.5, gravity: 400, size: 3 });
       game.floaters.add(`+${pts}`, px, py - 10, TOOLS[i].color, 20);
@@ -73,6 +73,8 @@
     const b = s.bot; b.state = "out"; b.stateT = 0;
     const bonus = Math.round(b.time * 10) * (b.golden ? 2 : 1);
     s.score += bonus; s.fixed++;
+    if (s.fixed >= 5) game.trophy("pc-5"); if (s.fixed >= 30) game.trophy("pc-30"); if (s.D > 1.2 && s.fixed >= 15) game.trophy("pc-hard");
+    if (s.fixed % 10 === 0) game.floaters.add("Rush hour! Robots are coming faster.", STAND_X, STAND_Y - 200, C.amber, 18);
     Sound.win();
     game.floaters.add(`Back on the field! +${bonus}`, STAND_X, STAND_Y - 170, C.ok, 22);
     updateHud();

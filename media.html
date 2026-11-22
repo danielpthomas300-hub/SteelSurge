@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Media · Steel Surge FTC 27254</title>
-  <meta name="description" content="Videos and team updates from Steel Surge, FTC team 27254.">
+  <meta name="description" content="Videos, highlights, and social media from Steel Surge, FTC team 27254.">
   <meta name="theme-color" content="#090c11">
   <link rel="canonical" href="https://steelsurge1.github.io/SteelSurge/media.html">
   <meta property="og:url" content="https://steelsurge1.github.io/SteelSurge/media.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Steel Surge FTC 27254">
   <meta property="og:title" content="Media · Steel Surge FTC 27254">
-  <meta property="og:description" content="Videos and team updates from Steel Surge, FTC team 27254.">
+  <meta property="og:description" content="Videos, highlights, and social media from Steel Surge, FTC team 27254.">
   <meta property="og:image" content="https://steelsurge1.github.io/SteelSurge/assets/img/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="./assets/img/favicon.svg" type="image/svg+xml">
@@ -20,9 +20,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap">
-  <link rel="stylesheet" href="./assets/css/site.css?v=d053b608">
+  <link rel="stylesheet" href="./assets/css/site.css?v=b26e1591">
   <script>try{var t=JSON.parse(localStorage.getItem("ss-theme"));document.documentElement.dataset.theme=t==="light"?"light":"dark"}catch(e){document.documentElement.dataset.theme="dark"}</script>
-  <script src="./assets/js/site.js?v=d053b608" defer></script>
+  <script src="./assets/js/site.js?v=b26e1591" defer></script>
+  <script src="./assets/js/trophies.js?v=b26e1591" defer></script>
 </head>
 <body data-page="media">
   <noscript><div class="noscript">This site needs JavaScript for live stats and games. You can still reach us at <a href="mailto:surgesteel1@gmail.com">surgesteel1@gmail.com</a>.</div></noscript>
@@ -33,7 +34,7 @@
       <div class="wrap">
         <span class="eyebrow">Media</span>
         <h1>Videos &amp; updates</h1>
-        <p class="lead">Our YouTube channel, build-season notes, and where to follow along. New videos appear here automatically.</p>
+        <p class="lead">Our YouTube channel, team favorites, and where to follow along. New videos appear here automatically.</p>
       </div>
     </section>
     <section class="section">
@@ -41,6 +42,7 @@
         <div id="media-video" class="reveal"></div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px">
           <a class="btn primary" id="yt-link" href="#" target="_blank" rel="noopener">Subscribe on YouTube <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <span id="ig-link"></span>
         </div>
       </div>
     </section>
@@ -48,6 +50,12 @@
       <div class="wrap">
         <div class="section-head"><div><span class="eyebrow">Latest uploads</span><h2>Recent videos</h2><p>Updated automatically every day from our channel.</p></div></div>
         <div class="video-grid" id="video-grid"></div>
+      </div>
+    </section>
+    <section class="section" id="favorites" hidden>
+      <div class="wrap">
+        <div class="section-head"><div><span class="eyebrow">Team favorites</span><h2>Our picks</h2><p>Hand-picked videos from the team.</p></div></div>
+        <div class="video-grid" id="fav-grid"></div>
       </div>
     </section>
     <section class="section">

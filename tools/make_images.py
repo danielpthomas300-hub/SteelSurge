@@ -18,16 +18,17 @@ def font(names, size):
     return ImageFont.load_default()
 
 
-def mark(draw, cx, cy, s):
-    """Hex nut + lightning bolt, matching logo.svg (s = size of the 40-unit viewBox)."""
-    k = s / 40
-    P = lambda pts: [(cx + (x - 20) * k, cy + (y - 20) * k) for x, y in pts]
-    hexp = P([(20, 1.8), (36.2, 11), (36.2, 29), (20, 38.2), (3.8, 29), (3.8, 11)])
-    draw.polygon(hexp, fill=STEEL_LO, outline=LINE, width=max(1, int(1.4 * k)))
-    inner = P([(20, 4.5), (33.8, 12.4), (33.8, 18), (20, 10), (6.2, 18), (6.2, 12.4)])
-    draw.polygon(inner, fill=STEEL_HI)
-    bolt = P([(23.2, 7.5), (12.4, 22.2), (19.3, 22.2), (16.8, 32.6), (27.6, 17.6), (20.6, 17.6)])
-    draw.polygon(bolt, fill=SURGE, outline=INK, width=max(1, int(0.8 * k)))
+BOLT = [(34.76, 9.00), (43.73, 9.00), (35.45, 28.17), (44.42, 28.17), (25.45, 55.00), (33.03, 33.53), (24.07, 33.53)]
+
+
+def mark(draw, cx, cy, s, box=True):
+    """The Steel Surge bolt (same points as assets/img/logo.svg, 64-unit box) centered at (cx, cy), s px wide."""
+    k = s / 64
+    P = [(cx + (x - 32) * k, cy + (y - 32) * k) for x, y in BOLT]
+    if box:
+        draw.rounded_rectangle([cx - 30.5 * k, cy - 30.5 * k, cx + 30.5 * k, cy + 30.5 * k], radius=14 * k, fill=(20, 25, 31), outline=(58, 71, 87), width=max(1, int(2 * k)))
+    draw.line(P + [P[0]], fill=(30, 111, 224), width=max(2, int(5 * k)), joint="curve")
+    draw.polygon(P, fill=SURGE)
 
 
 def icon(size, maskable=False):
@@ -50,13 +51,16 @@ for y in range(0, H, 48):
     d.line([(0, y), (W, y)], fill=(19, 27, 37))
 for i, (x0, y0, pts) in enumerate([(0, 0, [(0, 560), (240, 560), (288, 600), (640, 600)]), (0, 0, [(1104, 96), (960, 96), (960, 240)])]):
     d.line(pts, fill=SURGE if i == 0 else (255, 181, 71), width=4)
-mark(d, 170, 240, 200)
-big = font(["segoeuib.ttf", "DejaVuSans-Bold.ttf"], 120)
-mid = font(["segoeui.ttf", "DejaVuSans.ttf"], 40)
+mark(d, 170, 250, 230, box=False)
+big = font(["bahnschrift.ttf", "segoeuib.ttf", "DejaVuSans-Bold.ttf"], 124)
+if hasattr(big, "set_variation_by_name"):
+    try: big.set_variation_by_name("Bold")
+    except Exception: pass
+mid = font(["bahnschrift.ttf", "segoeui.ttf", "DejaVuSans.ttf"], 40)
 mono = font(["consolab.ttf", "DejaVuSansMono-Bold.ttf"], 26)
-d.text((300, 150), "Steel", font=big, fill=(233, 238, 244))
-d.text((300, 270), "Surge", font=big, fill=SURGE)
-d.text((306, 420), "FIRST Tech Challenge Team 27254", font=mid, fill=(151, 164, 180))
-d.text((306, 476), "KENNETT SQUARE, PA  ·  LIVE STATS  ·  ARCADE", font=mono, fill=SURGE2)
+d.text((300, 150), "STEEL", font=mid, fill=(185, 195, 207))
+d.text((294, 196), "SURGE", font=big, fill=(233, 238, 244))
+d.text((306, 340), "FIRST Tech Challenge Team 27254", font=mid, fill=(151, 164, 180))
+d.text((306, 396), "SURGE AHEAD  ·  KENNETT SQUARE, PA", font=mono, fill=SURGE2)
 img.save(os.path.join(OUT, "og-image.png"), optimize=True)
 print("icons + og-image written")

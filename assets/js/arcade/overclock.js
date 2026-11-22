@@ -13,7 +13,7 @@
 
   function newRun() {
     s = {
-      x: 0, v: 0, heat: 0, stall: 0, dead: false, deadT: 0, score: 0, bonus: 0, t: 0, wheel: 0,
+      D: window.Arcade.diff(), x: 0, v: 0, heat: 0, stall: 0, dead: false, deadT: 0, score: 0, bonus: 0, t: 0, wheel: 0,
       hazards: [], zones: [], nextX: 700, warnT: 0, tutorial: !game.best(), hints: [], lastSlamSound: 0,
     };
     // Gentle, hand-placed opening so the first seconds teach the rules.
@@ -30,7 +30,7 @@
   function addHazard(h) { s.hazards.push({ ...h, awarded: false, exitT: -1 }); }
   function addZone(type, x, w) { s.zones.push({ type, x, w }); }
 
-  function difficulty() { return clamp(s.x / 9000, 0, 1); }
+  function difficulty() { return clamp(s.x * s.D / 9000, 0, 1); }
 
   function generate() {
     while (s.nextX < s.x + W * 1.6) {
@@ -94,7 +94,7 @@
     const vent = inZone("vent"), furnace = inZone("furnace");
     if (s.stall > 0) { s.stall -= dt; s.heat = Math.max(0.5, s.heat - dt * 0.35); if (s.stall <= 0) { s.heat = 0.5; Sound.tone({ f: 300, f2: 600, dur: 0.15, type: "triangle", vol: 0.1 }); } }
     else {
-      s.heat += (boosting ? 0.36 : -0.3) * dt + (furnace ? 0.42 * dt : 0) - (vent ? 0.75 * dt : 0);
+      s.heat += (boosting ? 0.36 * s.D : -0.3 / s.D) * dt + (furnace ? 0.42 * s.D * dt : 0) - (vent ? 0.75 * dt : 0);
       s.heat = clamp(s.heat, 0, 1);
       if (s.heat >= 1) overheat();
     }
@@ -111,7 +111,7 @@
       if (overlap && deadly(h, s.t)) return die(h);
       if (!overlap && left >= h.x + h.w && h.exitT < 0) h.exitT = s.t;
       if (h.exitT > 0 && !h.awarded && s.t - h.exitT < 0.22 && deadly(h, s.t)) {
-        h.awarded = true; s.bonus += 25; game.floaters.add("CLOSE CALL +25", CAM_X + 10, GROUND - 90, C.amber, 18); Sound.pickup();
+        h.awarded = true; s.bonus += 25; game.trophy("oc-close"); game.floaters.add("CLOSE CALL +25", CAM_X + 10, GROUND - 90, C.amber, 18); Sound.pickup();
       }
       if (h.type === "crusher") {
         const c = crusher(h, s.t), sx = h.x - s.x + CAM_X;
@@ -122,6 +122,10 @@
       }
     }
     s.score = Math.floor(s.x / PX_PER_M) + s.bonus;
+    if (s.score >= 1000) game.trophy("oc-1000");
+    if (s.D > 1.2 && s.score >= 750) game.trophy("oc-hard");
+    const m = Math.floor(s.x / PX_PER_M / 100);
+    if (m > (s.milestone || 0)) { s.milestone = m; game.floaters.add(`${m * 100} m!`, CAM_X + 40, GROUND - 120, C.surge2, 22); Sound.tone({ f: 880, f2: 1320, dur: 0.12, type: "triangle", vol: 0.08 }); }
     game.setHud("score", s.score.toLocaleString());
     game.setHud("dist", `${Math.floor(s.x / PX_PER_M)} m`);
     generate();
@@ -141,7 +145,9 @@
     game.particles.burst(CAM_X, GROUND - BOT / 2, { n: 26, color: C.amber, speed: 300, life: 0.9, size: 4 });
     game.particles.burst(CAM_X, GROUND - BOT / 2, { n: 12, color: C.steelHi, speed: 260, life: 1.4, size: 8, glow: false, gravity: 900 });
     const meters = Math.floor(s.x / PX_PER_M);
+    game.trophy("oc-first");
     const isRecord = game.submitBest(s.score, `${s.score.toLocaleString()} pts`);
+    if (isRecord) { const b = game.best(); window.Arcade.store.set("ss-arcade-overclock", { ...b, dist: meters }); }
     const reason = h.type === "crusher" ? "Flattened by a crusher." : "Zapped by a laser gate.";
     setTimeout(() => {
       game.stop();
@@ -219,6 +225,9 @@
         if (h.type === "crusher") drawCrusher(ctx, x, h, crusher(h, s.t), t);
         else drawLaser(ctx, x, h, laser(h, s.t), t);
       }
+      // Personal-best marker
+      const best = game.best();
+      if (best?.dist) { const bx = best.dist * PX_PER_M - cam; if (bx > -20 && bx < W + 20) { ctx.strokeStyle = "rgba(255,181,71,0.6)"; ctx.setLineDash([6, 6]); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(bx, 70); ctx.lineTo(bx, GROUND); ctx.stroke(); ctx.setLineDash([]); label(ctx, `BEST ${best.dist} m`, bx, 90, C.amber); } }
       // Tutorial hints
       for (const hn of s.hints) { const x = hn.x - cam; if (x > -200 && x < W + 200) label(ctx, hn.text, x, 120, C.muted, 15, true); }
       // Robot

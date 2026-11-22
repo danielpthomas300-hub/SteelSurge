@@ -28,6 +28,10 @@
       map: ["###############", "#S..A..x..B..E#", "#.#############", "#.#############", "#a....b########", "###############"], solution: "DDDRRRRR|RRWRRRRRRRRRR" },
     { name: "Echo Chamber", T: 18, echoes: 2, hint: "Everything you've learned. Watch the barrier.",
       map: ["###############", "#S....y....B.E#", "#.#.###########", "#.#.A.....b####", "#a#############", "###############"], solution: "DDD|RRDDRRRRRRR|RRRRRRRRRWWRRR" },
+    { name: "Two Shifts", T: 18, echoes: 2, hint: "Doors and barriers take turns. Time when each echo arrives.",
+      map: ["##############", "#S...A.y.B..E#", "#.############", "#a.......b####", "##############"], solution: "DD|DDRRRRRRRR|RRRRRWWWRRRRRR" },
+    { name: "Crossing Guards", T: 20, echoes: 2, hint: "Four gates in a row. Each echo has to be in the right place at the right moment.",
+      map: ["###############", "#S..A.y.B.x..E#", "#.#############", "#a.........b###", "###############"], solution: "DDWU|DDRRRRRRRRRR|RRRRRRRWWWWWRRRRRR" },
   ];
   const DIRS = { U: [0, -1], D: [0, 1], L: [-1, 0], R: [1, 0], W: [0, 0] };
 
@@ -96,6 +100,7 @@
   const W = 960, H = 620, TICK = 0.13;
   const KEY_COLORS = { a: C.surge, b: C.amber, c: C.violet };
   const game = new Game({ id: "echo", width: W, height: H, pausable: false });
+  game.puzzle = true;
   const prog = store.get("ss-echo-progress", { done: {}, last: 0 });
   const saveProg = () => {
     store.set("ss-echo-progress", prog);
@@ -145,7 +150,7 @@
     if (won || !L) return;
     if (!auto && t === 0) { game.setMessage("Move first — an echo copies what you do."); return; }
     anim = null; queue = [];
-    ghosts.push(trail);
+    ghosts.push(trail); game.trophy("ec-first");
     let dropped = false;
     if (ghosts.length > L.echoes) { ghosts.shift(); dropped = true; }
     loopCount++;
@@ -167,6 +172,8 @@
     game.particles.burst(cx, cy, { n: 50, color: C.ok, speed: 340, life: 1, size: 4, gravity: 0 });
     const prev = prog.done[li]; const used = ghosts.length;
     if (prev == null || used < prev) prog.done[li] = used;
+    const cleared = Object.keys(prog.done).length;
+    if (cleared >= 5) game.trophy("ec-half"); if (cleared >= LEVELS.length) game.trophy("ec-all");
     saveProg();
     const last = li === LEVELS.length - 1;
     setTimeout(() => {
@@ -184,7 +191,7 @@
   function showLevels() {
     let top = 0; while (prog.done[top] != null && top < LEVELS.length - 1) top++;
     const btns = LEVELS.map((lv, i) => `<button class="level-btn${prog.done[i] != null ? " done" : ""}${i === li ? " current" : ""}" data-level="${i}" ${i > top ? "disabled" : ""} aria-label="Level ${i + 1}: ${lv.name}">${i + 1}<small>${prog.done[i] != null ? "✓" : ""}</small></button>`).join("");
-    game.showOverlay(`<span class="kicker">Echo</span><h2>Choose a level</h2><div class="level-grid" style="grid-template-columns:repeat(7,1fr)">${btns}</div>
+    game.showOverlay(`<span class="kicker">Echo</span><h2>Choose a level</h2><div class="level-grid" style="grid-template-columns:repeat(5,1fr)">${btns}</div>
       <div class="overlay-actions"><button class="btn primary" data-primary>Play level ${top + 1}</button></div>`, { onPrimary: () => load(top) });
     game.overlay.querySelectorAll("[data-level]").forEach((b) => b.addEventListener("click", () => { Sound.select(); load(+b.dataset.level); }));
   }
