@@ -40,9 +40,18 @@
     { id: "weather", label: "weather in its name", words: "storm storms thunder lightning tornado tornadoes hurricane hurricanes blizzard cyclone typhoon rain snow snowflake hail frost ice icy wind winds cloud clouds fog thunderstorm tempest avalanche" },
     { id: "myth", label: "a mythical creature or legend in its name", words: "dragon dragons phoenix griffin griffins gryphon unicorn unicorns titan titans kraken hydra pegasus centaur minotaur cyclops yeti sasquatch golem golems wizard wizards wizardz sorcerer valkyrie valkyries dino dinos dinosaur dinosaurs mermaid troll trolls goblin goblins ogre ogres elf elves dwarf dwarves zeus thor odin loki athena hermes poseidon hades atlas olympus" },
     { id: "metal", label: "a metal in its name", words: "steel iron titanium copper bronze tin zinc nickel cobalt chrome chromium aluminum aluminium platinum tungsten metal metals metallic alloy lead mercury" },
+    { id: "ocean", label: "something from the ocean in its name", words: "ocean oceans sea seas wave waves tide tides shark sharks whale whales dolphin dolphins octopus kraken squid coral reef pirate pirates anchor anchors ship ships sail sails submarine sub subs marine navy fish fishes crab crabs lobster lobsters turtle turtles orca orcas jellyfish seal seals deep abyss atlantis trident poseidon neptune harbor port" },
+    { id: "music", label: "something musical in its name", words: "rock roll rocker rockers band bands music musical jazz blues beat beats rhythm melody harmony symphony tempo bass drum drums guitar piano note notes tune tunes song songs sonic sound sounds echo echoes chorus disco funk punk pop opera" },
+    { id: "speed", label: "speed in its name", words: "fast faster turbo rapid rapids sonic swift velocity zoom rush speed speedy hyper quick quicksilver nitro blitz dash racer racers racing sprint jet jets warp flash momentum" },
+    { id: "computer", label: "something from computers or coding in its name", words: "byte bytes bit bits code coders coding coder pixel pixels binary java python cpu data algorithm algorithms debug bug bugs glitch glitches hack hackers hacker cyber software hardware kernel syntax compile compiler loop loops boolean null error errors overflow cache cloud server servers firewall network matrix digital virtual ai" },
+    { id: "royal", label: "royalty in its name", words: "king kings queen queens royal royals royalty crown crowns prince princes princess throne castle castles empire emperor kingdom regal duke lord lords monarch monarchs majesty" },
+    { id: "nature", label: "something from nature in its name", words: "tree trees forest forests leaf leaves oak pine maple wood woods root roots flower flowers rose roses river rivers mountain mountains rock rocks stone stones canyon desert volcano volcanoes island islands earth terra garden gardens seed seeds bloom" },
+    { id: "numword", label: "a number word in its name", words: "zero one two three four five six seven eight nine ten eleven twelve hundred thousand million billion infinity infinite first second third prime" },
+    { id: "feeling", label: "a feeling or mood in its name", words: "happy mad crazy chaos chaotic panic confused clueless angry calm wild fearless brave bold savage silly lucky lost curious awesome epic insane frantic frenzy determined relentless unstoppable" },
+    { id: "light", label: "light or fire in its name", words: "light lights fire fires flame flames blaze blazing spark sparks ember embers inferno glow neon laser lasers solar sunshine bright flash flare torch shine shining radiant lumen lumens" },
     { id: "job", label: "a job or role in its name", words: "knight knights pirate pirates ninja ninjas viking vikings spartan spartans warrior warriors samurai engineer engineers mechanic mechanics wizard wizards captain captains pilot pilots ranger rangers guardian guardians sentinel sentinels hunter hunters builder builders explorer explorers raider raiders crusader crusaders gladiator gladiators scout scouts soldier soldiers agent agents chef chefs doctor doctors king kings queen queens prince princess" },
   ];
-  const KEYWORDS = ["bot", "robo", "tech", "gear", "byte", "bolt", "cyber", "mech", "circuit", "code", "quantum", "atomic", "nerd", "droid", "machine", "chaos", "error", "android", "logic", "binary", "pixel", "wired", "volt", "electric", "spark", "surge", "power", "fusion", "matrix", "techno", "engine", "crew", "squad", "lab", "factory", "robot", "titan", "dragon", "knight", "storm"];
+  const KEYWORDS = ["bot", "robo", "tech", "gear", "byte", "bolt", "cyber", "mech", "circuit", "code", "quantum", "atomic", "nerd", "droid", "machine", "chaos", "error", "android", "logic", "binary", "pixel", "wired", "volt", "electric", "spark", "surge", "power", "fusion", "matrix", "techno", "engine", "crew", "squad", "lab", "factory", "robot", "titan", "dragon", "knight", "storm", "eagle", "hawk", "fire", "ice", "star", "lion", "tiger", "bear", "shark", "panther", "falcon", "phoenix", "viking", "pirate", "ninja", "spartan", "thunder", "lightning", "blue", "red", "green", "black", "gold", "iron", "steel", "metal", "rocket", "space", "galaxy", "atom", "wolf", "pack", "force", "max", "nova", "bit", "brain", "mind", "girl", "united", "alpha", "omega", "infinity", "zero", "hive", "bee", "rover", "drive", "motor", "wheel", "build", "maker", "inventor", "dynamic", "kinetic", "mechanical", "electro", "digital", "smart", "auto"];
 
   /* ---------------- Data ---------------- */
   let TEAMS = [], BY_NUM = new Map(), INDEX = new Map(), CATS = [], META = null;
@@ -55,7 +64,8 @@
   async function loadData() {
     const res = await fetch("../content/teams.json", { cache: "no-cache" });
     const d = await res.json(); META = d;
-    TEAMS = d.teams.map(([number, name, rookie, city, state, country, fame, seasons]) => ({ number, name, rookie, city, state, country, fame, seasons, words: words(name), k1: key1(name), k2: key2(name) }));
+    const COUNTRY_ALIAS = { "Chinese Taipei": "Taiwan", Independent: "" };
+    TEAMS = d.teams.map(([number, name, rookie, city, state, country, fame, seasons]) => ({ number, name, rookie, city, state, country: COUNTRY_ALIAS[country] ?? country, fame, seasons, words: words(name), k1: key1(name), k2: key2(name) }));
     for (const t of TEAMS) {
       BY_NUM.set(t.number, t);
       for (const k of new Set([t.k1, t.k2])) { if (!k) continue; if (!INDEX.has(k)) INDEX.set(k, []); INDEX.get(k).push(t); }
@@ -70,7 +80,8 @@
     for (const [st, list] of group((t) => (t.country === "USA" && US[t.state] ? t.state : null))) if (list.length >= 60) cats.push({ type: "place", id: `us-${st}`, text: `Name an FTC team from ${US[st]}.`, test: (t) => t.country === "USA" && t.state === st });
     for (const [pr, list] of group((t) => (t.country === "Canada" && CA[t.state] ? t.state : null))) if (list.length >= 30) cats.push({ type: "place", id: `ca-${pr}`, text: `Name an FTC team from ${CA[pr]}, Canada.`, test: (t) => t.country === "Canada" && t.state === pr });
     for (const [c, list] of group((t) => (t.country && t.country !== "USA" ? t.country : null))) if (list.length >= 35) cats.push({ type: "country", id: `c-${c}`, text: `Name an FTC team from ${c === "USA" ? "the United States" : /^(United|Netherlands|Philippines)/.test(c) ? "the " + c : c}.`, test: (t) => t.country === c });
-    for (const [k, list] of group((t) => (t.city ? `${t.city}|${t.state}|${t.country}` : null))) {
+    // Skip military mail addresses (APO/FPO/DPO), which aren't real cities
+    for (const [k, list] of group((t) => (t.city && !/^(APO|FPO|DPO)$/i.test(t.city) && !["AA", "AE", "AP"].includes(t.state) ? `${t.city}|${t.state}|${t.country}` : null))) {
       if (list.length < 18) continue;
       const [city, st, co] = k.split("|"), where = co === "USA" ? US[st] || st : co === "Canada" ? CA[st] || st : co;
       cats.push({ type: "city", id: `city-${k}`, text: `Name an FTC team from ${city}, ${where}.`, test: (t) => t.city === city && t.state === st && t.country === co });
@@ -92,6 +103,82 @@
       { id: "sp-new", text: `Name an FTC team in its first or second season (rookie year ${seasonName(META.season - 1)} or later).`, test: (t) => t.rookie >= META.season - 1 },
     ];
     for (const s of special) if (TEAMS.filter(s.test).length >= 25) cats.push({ type: "special", ...s });
+
+    // US regions and continents
+    const REGIONS = {
+      "New England": "CT ME MA NH RI VT", "the Mid-Atlantic": "NY NJ PA DE MD DC", "the Southeast": "VA WV NC SC GA FL AL MS TN KY", "the Midwest": "OH IN IL MI WI MN IA MO ND SD NE KS",
+      "the Southwest": "AZ NM TX OK", "the Mountain West": "MT ID WY CO UT NV", "the Pacific Northwest": "WA OR AK", "the Great Lakes region": "MI OH IN IL WI MN NY PA",
+    };
+    for (const [name, list] of Object.entries(REGIONS)) { const set = new Set(list.split(" ")), test = (t) => t.country === "USA" && set.has(t.state); if (TEAMS.filter(test).length >= 60) cats.push({ type: "region", id: `r-${name}`, text: `Name an FTC team from ${name} in the U.S.`, test }); }
+    const CONT = {
+      Europe: "United Kingdom,Romania,France,Netherlands,Greece,Moldova,Cyprus,Lithuania,Germany,Italy,Ukraine,Hungary,Poland,Belgium,Czech Republic,Spain,Switzerland,Norway,Macedonia,Slovenia,Albania,San Marino,Portugal,Montenegro,Serbia,Sweden,Russia",
+      Asia: "Kazakhstan,China,South Korea,Thailand,India,Vietnam,Taiwan,Indonesia,Malaysia,Uzbekistan,Kyrgyzstan,Japan,Sri Lanka,Laos,Turkmenistan,Philippines,Azerbaijan",
+      Africa: "Libya,South Africa,Nigeria,Morocco,Eswatini,Lesotho,Zimbabwe,Egypt",
+      "the Middle East": "Israel,Saudi Arabia,Qatar,Türkiye,United Arab Emirates,Jordan,Kuwait",
+      "Latin America or the Caribbean": "Mexico,Brazil,Jamaica,Paraguay,Argentina,Venezuela,Ecuador,Trinidad and Tobago,Haiti,Colombia,Bermuda",
+      Oceania: "Australia,New Zealand",
+    };
+    for (const [name, list] of Object.entries(CONT)) { const set = new Set(list.split(",")), test = (t) => set.has(t.country); if (TEAMS.filter(test).length >= 40) cats.push({ type: "region", id: `cont-${name}`, text: `Name an FTC team from ${name}.`, test }); }
+
+    // State + era combinations
+    const bigStates = [...group((t) => (t.country === "USA" && US[t.state] ? t.state : null))].filter(([, l]) => l.length >= 200).map(([st]) => st);
+    for (const st of bigStates) {
+      const combos = [
+        [`that started in ${seasonName(2020)} or later`, (t) => t.rookie >= 2020], [`that started before ${seasonName(2015)}`, (t) => t.rookie && t.rookie < 2015],
+        ["that has competed in 5 or more seasons since 2019", (t) => t.seasons >= 5], ["with a one-word name", (t) => norm(t.name).split(" ").length === 1],
+      ];
+      combos.forEach(([txt, f], i) => { const test = (t) => t.country === "USA" && t.state === st && f(t); if (TEAMS.filter(test).length >= 35) cats.push({ type: "combo", id: `combo-${st}-${i}`, text: `Name an FTC team from ${US[st]} ${txt}.`, test }); });
+    }
+    for (const [lo, hi] of [[2007, 2011], [2012, 2015], [2016, 2018], [2019, 2021], [2022, 2024]]) cats.push({ type: "rookie", id: `rr-${lo}`, text: `Name an FTC team whose rookie season was between ${seasonName(lo)} and ${seasonName(hi)}.`, test: (t) => t.rookie >= lo && t.rookie <= hi });
+
+    // First letters
+    for (const L of "ABCDEFGHIJKLMNOPRSTVWXYZ") {
+      const test = (t) => { const w = norm(t.name).split(" ").filter((x) => x !== "the"); return (w[0] || "")[0] === L.toLowerCase(); };
+      if (TEAMS.filter(test).length >= 40) cats.push({ type: "letter", id: `l-${L}`, text: `Name an FTC team whose name starts with the letter ${L} (not counting “The”).`, test });
+    }
+
+    // Name styles
+    const styles = [
+      ["st-two", "Name an FTC team with a name of exactly two words.", (t) => norm(t.name).split(" ").length === 2],
+      ["st-three", "Name an FTC team with a name of exactly three words.", (t) => norm(t.name).split(" ").length === 3],
+      ["st-short", "Name an FTC team whose name is 5 letters or fewer (not counting spaces).", (t) => key1(t.name).length <= 5],
+      ["st-long", "Name an FTC team whose name has 25 or more letters.", (t) => key1(t.name).length >= 25],
+      ["st-caps", "Name an FTC team whose name is written in ALL CAPS.", (t) => /[A-Z]{3,}/.test(t.name) && t.name === t.name.toUpperCase()],
+      ["st-allit", "Name an FTC team with an alliterative name, where every word starts with the same letter (like “Robo Rangers”).", (t) => { const w = norm(t.name).split(" ").filter((x) => x.length > 1 && !["the", "of", "and"].includes(x)); return w.length >= 2 && w.every((x) => x[0] === w[0][0]); }],
+      ["st-hyphen", "Name an FTC team with a hyphen (-) in its name.", (t) => /\w-\w/.test(t.name)],
+      ["st-punct", "Name an FTC team with an exclamation point, question mark, or period in its name.", (t) => /[!?.]/.test(t.name)],
+      ["st-robotics", "Name an FTC team whose name ends with the word “Robotics”.", (t) => /robotics\s*$/i.test(t.name)],
+      ["st-bots", "Name an FTC team whose name ends in “bots”.", (t) => /bots\s*$/i.test(t.name)],
+      ["st-of", "Name an FTC team with the word “of” in its name.", (t) => t.words.has("of")],
+      ["st-and", "Name an FTC team with “and” or “&” in its name.", (t) => /\band\b|&/i.test(t.name)],
+      ["st-x", "Name an FTC team with the letter X in its name.", (t) => /x/i.test(t.name)],
+      ["st-z", "Name an FTC team with the letter Z in its name.", (t) => /z/i.test(t.name)],
+      ["st-q", "Name an FTC team with the letter Q in its name.", (t) => /q/i.test(t.name)],
+      ["st-double", "Name an FTC team with a double letter in its name (like the “ee” in Steel).", (t) => /([a-z])\1/i.test(t.name.replace(/\s/g, ""))],
+    ];
+    for (const [id, text, test] of styles) if (TEAMS.filter(test).length >= 35) cats.push({ type: "style", id, text, test });
+
+    // Team numbers (you still answer with the name, so this is real trivia)
+    const nums = [
+      ["n-1k", "Name an FTC team whose team number is under 1000.", (t) => t.number < 1000],
+      ["n-5k", "Name an FTC team whose team number is between 1000 and 4999.", (t) => t.number >= 1000 && t.number < 5000],
+      ["n-10k", "Name an FTC team whose team number is between 5000 and 9999.", (t) => t.number >= 5000 && t.number < 10000],
+      ["n-15k", "Name an FTC team whose team number is between 10000 and 14999.", (t) => t.number >= 10000 && t.number < 15000],
+      ["n-20k", "Name an FTC team whose team number is between 15000 and 19999.", (t) => t.number >= 15000 && t.number < 20000],
+      ["n-zero", "Name an FTC team whose team number ends in 0.", (t) => t.number % 10 === 0],
+      ["n-7", "Name an FTC team whose team number has a 7 in it.", (t) => String(t.number).includes("7")],
+      ["n-pal", "Name an FTC team whose team number is a palindrome, reading the same backward (like 12321).", (t) => { const x = String(t.number); return x.length > 1 && x === [...x].reverse().join(""); }],
+      ["n-same", "Name an FTC team whose team number has the same digit twice in a row (like 4455 or 27754).", (t) => /(\d)\1/.test(String(t.number))],
+      ["n-odd", "Name an FTC team whose team number is odd and under 5000.", (t) => t.number % 2 === 1 && t.number < 5000],
+    ];
+    for (const [id, text, test] of nums) if (TEAMS.filter(test).length >= 35) cats.push({ type: "number", id, text, test });
+
+    // Seasons played
+    for (const [id, text, test] of [
+      ["s-one", "Name an FTC team that has competed in exactly one season since 2019.", (t) => t.seasons === 1],
+      ["s-five", "Name an FTC team that has competed in 5 or more seasons since 2019.", (t) => t.seasons >= 5],
+      ["s-three", "Name an FTC team that has competed in exactly 3 seasons since 2019.", (t) => t.seasons === 3],
+    ]) if (TEAMS.filter(test).length >= 35) cats.push({ type: "special", id, text, test });
     CATS = cats.map((c) => ({ ...c, valid: null }));
   }
   function validFor(cat) { if (!cat.valid) { cat.valid = TEAMS.filter(cat.test).sort((a, b) => b.fame - a.fame); cat.rankOf = new Map(cat.valid.map((t, i) => [t.number, i])); } return cat.valid; }
@@ -105,10 +192,12 @@
   /* ---------------- Seeded prompts ---------------- */
   function rng(seed) { let s = seed >>> 0; return () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
   // A good round mixes kinds of prompts
-  const PLAN = ["place", "word", "rookie", "theme", "country", "special", "city"];
+  // Each round draws 7 different kinds of prompt; places, keywords, and themes come up a little more often
+  const PLAN = ["place", "place", "word", "word", "theme", "theme", "rookie", "country", "region", "city", "letter", "style", "number", "combo", "special"];
   function makeRound(seed) {
     const r = rng(seed), used = new Set(), out = [];
-    const plan = PLAN.slice().sort(() => r() - 0.5);
+    const shuffled = PLAN.slice().sort(() => r() - 0.5), plan = [];
+    for (const t of shuffled) if (!plan.includes(t) && CATS.some((c) => c.type === t)) plan.push(t);
     for (const type of plan) {
       let pool = CATS.filter((c) => c.type === type && !used.has(c.id));
       if (!pool.length) pool = CATS.filter((c) => !used.has(c.id));
@@ -116,6 +205,8 @@
     }
     return out.slice(0, ROUND);
   }
+  /** For testing: every prompt and how many teams fit it. */
+  window.KilovoltPrompts = () => CATS.map((c) => [c.type, c.text, validFor(c).length]);
   const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
   const EPOCH = Date.UTC(2026, 10, 22); // Kilovolt #1
   const dayNumber = () => { const d = new Date(); return Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - EPOCH) / 86400000) + 1; };

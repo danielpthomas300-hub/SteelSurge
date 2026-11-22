@@ -194,6 +194,7 @@
       gear.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>';
       mute?.before(gear);
       gear.addEventListener("click", () => this.openSettings());
+      addEventListener("resize", () => { if (this.overlayOpen()) this._fitOverlay(); });
       // Difficulty badge: always shows the current level; click to change it
       const badge = document.createElement("button");
       badge.className = "diff-badge"; badge.type = "button"; badge.dataset.act = "difficulty"; badge.title = "Change difficulty";
@@ -244,11 +245,63 @@
     shake(n) { if (!Settings.shake) return; this.shakeAmt = Math.max(this.shakeAmt, n); if (navigator.vibrate && n > 6 && navigator.userActivation?.hasBeenActive) try { navigator.vibrate(Math.min(60, n * 4)); } catch {} }
 
     showOverlay(html, { onPrimary, primarySelector = "[data-primary]" } = {}) {
-      this.overlay.innerHTML = `<div class="overlay-card">${html}</div>`;
+      // A game's title screen (it starts with the "Steel Surge Arcade" kicker) becomes the full game menu
+      const isMenu = html.includes('class="kicker">Steel Surge Arcade<');
+      this.overlay.innerHTML = isMenu ? this._menuHtml(html) : `<div class="overlay-card">${html}</div>`;
+      this.overlay.classList.toggle("is-menu", isMenu);
       this.overlay.hidden = false; this.overlay.classList.remove("out");
       const btn = $(primarySelector, this.overlay);
       if (btn && onPrimary) { btn.addEventListener("click", (e) => { e.stopPropagation(); Sound.select(); onPrimary(); }); setTimeout(() => btn.focus({ preventScroll: true }), 50); }
+      if (isMenu) this._wireMenu();
+      this._fitOverlay();
       return this.overlay;
+    }
+
+    /* ---------- Game menu: art, play buttons, difficulty, your record, and this game's trophies ---------- */
+    _menuHtml(inner) {
+      const SS = window.SS || {}, genre = document.querySelector(".game-title span")?.textContent || "";
+      const art = SS.gameArt ? SS.gameArt(this.id).replace("<svg ", '<svg preserveAspectRatio="xMidYMid slice" ') : "";
+      return `<div class="overlay-card game-menu">
+        ${art ? `<div class="menu-art" aria-hidden="true">${art}${genre ? `<span class="menu-genre">${genre}</span>` : ""}</div>` : ""}
+        <div class="menu-grid">
+          <div class="menu-main">${inner}</div>
+          <div class="menu-side">${this._menuSide()}</div>
+        </div></div>`;
+    }
+    _menuSide() {
+      const SS = window.SS || {}, earned = store.get("ss-trophies", {}), list = (SS.TROPHIES || []).filter((t) => t.group === this.id);
+      const got = list.filter((t) => earned[t.id]).length, plays = store.get("ss-arcade-plays", {})[this.id] || 0, best = this.best();
+      const cup = (tier) => (SS.trophyCup ? SS.trophyCup(tier, 22) : "");
+      const lv = level();
+      return `
+        <section class="menu-sec"><h3>Difficulty</h3>
+          <div class="menu-diff" role="radiogroup" aria-label="Difficulty">${LEVELS.map((l, i) => `<button type="button" role="radio" aria-checked="${i === lv}" data-level="${l.key}" class="lv-${i}">${l.label}</button>`).join("")}</div>
+          <p class="menu-note">${this.difficultyNote || "Higher levels are faster and less forgiving."}</p></section>
+        <section class="menu-sec menu-record"><h3>Your record</h3>
+          <div><span>Best</span><b>${best ? best.label : "—"}</b></div><div><span>Plays</span><b>${plays.toLocaleString()}</b></div><div><span>Trophies</span><b>${got}/${list.length}</b></div></section>
+        ${list.length ? `<section class="menu-sec"><h3>Trophies</h3><ul class="menu-trophies">${list.map((t) => {
+          const have = !!earned[t.id], secret = t.hidden && !have;
+          return `<li class="${have ? "have" : ""}">${cup(t.tier)}<span><b>${secret ? "Hidden trophy" : t.name}</b><small>${secret ? "Keep playing to find it." : t.desc}</small></span></li>`; }).join("")}</ul></section>` : ""}
+        <div class="menu-links"><button type="button" class="btn sm" data-menu-settings>Settings</button><button type="button" class="btn sm" data-menu-howto>How to play</button><a class="btn sm ghost" href="../trophies.html">All trophies</a></div>`;
+    }
+    _wireMenu() {
+      const o = this.overlay;
+      o.querySelectorAll(".menu-diff [data-level]").forEach((b) => b.addEventListener("click", (e) => {
+        e.stopPropagation(); Settings.difficulty = b.dataset.level; saveSettings(); Sound.blip(); window.SS?.trophy?.("tinkerer");
+        this._syncBadge?.(); this.onDifficulty?.();
+        o.querySelectorAll(".menu-diff [data-level]").forEach((x) => x.setAttribute("aria-checked", String(x === b)));
+      }));
+      o.querySelector("[data-menu-settings]")?.addEventListener("click", (e) => { e.stopPropagation(); this.openSettings(); });
+      o.querySelector("[data-menu-howto]")?.addEventListener("click", (e) => { e.stopPropagation(); document.querySelector(".game-info")?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" }); });
+    }
+    /** Lets the stage grow while an overlay needs more room than the game's shape allows (phones). */
+    _fitOverlay() {
+      const card = this.overlay.firstElementChild; if (!card) return;
+      this.stage.classList.remove("grown"); this.stage.style.minHeight = this._baseMinH ?? (this._baseMinH = this.stage.style.minHeight || "");
+      requestAnimationFrame(() => {
+        const need = card.scrollHeight + 36;
+        if (need > this.stage.clientHeight + 1) { this.stage.classList.add("grown"); this.stage.style.minHeight = `${need}px`; }
+      });
     }
     /** True while an overlay is showing (false as soon as it starts fading out). */
     overlayOpen() { return !this.overlay.hidden && !this.overlay.classList.contains("out"); }
@@ -256,9 +309,12 @@
       if (!this.overlayOpen()) return;
       this.overlay.classList.add("out");
       clearTimeout(this._hideT);
-      this._hideT = setTimeout(() => { if (this.overlay.classList.contains("out")) { this.overlay.hidden = true; this.overlay.classList.remove("out"); } }, 180);
+      this._hideT = setTimeout(() => { if (this.overlay.classList.contains("out")) { this.overlay.hidden = true; this.overlay.classList.remove("out"); this.stage.classList.remove("grown"); this.stage.style.minHeight = this._baseMinH ?? ""; } }, 180);
     }
-    start() { this.running = true; this.paused = false; this.hideOverlay(); this._setPauseBtn(); window.SS?.track?.("play", this.id); }
+    start() {
+      if (!this.running) { const p = store.get("ss-arcade-plays", {}); p[this.id] = (p[this.id] || 0) + 1; store.set("ss-arcade-plays", p); }
+      this.running = true; this.paused = false; this.hideOverlay(); this._setPauseBtn(); window.SS?.track?.("play", this.id);
+    }
     /** Awards a site trophy (see assets/js/trophies.js). */
     trophy(id) { window.SS?.trophy?.(id); }
     stop() { this.running = false; this._setPauseBtn(); }
@@ -295,7 +351,7 @@
       layer.querySelectorAll("input").forEach((el) => el.addEventListener("input", () => {
         if (el.type === "radio") Settings[el.name] = el.value; else if (el.type === "checkbox") Settings[el.name] = el.checked; else Settings[el.name] = +el.value;
         saveSettings(); Sound.blip(); window.SS?.trophy?.("tinkerer");
-        if (el.name === "difficulty") { this._syncBadge?.(); this.onDifficulty?.(); }
+        if (el.name === "difficulty") { this._syncBadge?.(); this.onDifficulty?.(); this.overlay.querySelectorAll(".menu-diff [data-level]").forEach((x) => x.setAttribute("aria-checked", String(x.dataset.level === el.value))); }
       }));
     }
 

@@ -1,5 +1,5 @@
 /* Steel Surge Arcade — game page styles (loaded after site.css) */
-.game-page { padding: clamp(20px, 3vw, 32px) 0 clamp(48px, 7vw, 80px); }
+.game-page { padding-top: clamp(20px, 3vw, 32px); padding-bottom: clamp(48px, 7vw, 80px); }
 .game-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
 .game-top .back { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-weight: 500; font-size: 14px; }
 .game-top .back:hover { color: var(--text); }
@@ -263,3 +263,52 @@
   .kv-legend { grid-template-columns: repeat(2, 1fr); }
 }
 .kv-hint.warn { color: #ff9a9e; }
+
+/* ---------- Game menu (title screen for every game) ---------- */
+.stage.grown { aspect-ratio: auto !important; }
+.overlay.is-menu { place-items: safe center; overflow-y: auto; padding: clamp(12px, 2.4vw, 24px); background: rgba(5, 8, 12, .9); }
+.overlay-card.game-menu { width: min(900px, 100%); max-width: none; text-align: left; background: #0d131b; border: 1px solid #243142; border-radius: 22px; overflow: hidden; box-shadow: 0 30px 80px -30px rgba(0, 0, 0, .9); }
+.menu-art { position: relative; height: clamp(96px, 18vw, 150px); overflow: hidden; border-bottom: 1px solid #1d2a39; }
+.menu-art svg { width: 100%; height: 100%; display: block; object-fit: cover; transform: scale(1.02); }
+.menu-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, #0d131b); }
+.menu-genre { position: absolute; left: 22px; bottom: 12px; z-index: 1; font: 600 11px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: #84cdff; background: rgba(7, 10, 14, .75); padding: 6px 10px; border-radius: 999px; border: 1px solid #243142; }
+.menu-grid { display: grid; grid-template-columns: 1.15fr 1fr; }
+.menu-main { padding: 22px 26px 24px; }
+.menu-main .kicker { margin-bottom: 8px !important; }
+.menu-main h2 { font-size: clamp(30px, 4.4vw, 44px) !important; }
+.menu-main p { font-size: 15px; }
+.menu-main .keys { justify-content: flex-start; }
+.menu-main .overlay-actions { justify-content: flex-start; margin-top: 20px; }
+.menu-side { padding: 20px 22px 22px; background: #0a0f15; border-left: 1px solid #1d2a39; display: grid; gap: 16px; align-content: start; }
+.menu-sec h3 { font: 600 11px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: #67768a; margin: 0 0 9px; }
+.menu-diff { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.menu-diff button { padding: 8px 2px; border-radius: 9px; border: 1px solid #2d3b4c; background: #10161e; color: #b9c4d1; font: 600 11.5px/1.15 var(--font-body, inherit); cursor: pointer; }
+.menu-diff button:hover { border-color: #4a5b70; color: #fff; }
+.menu-diff button[aria-checked="true"] { color: #fff; border-color: #3ba8ff; background: rgba(59, 168, 255, .16); }
+.menu-diff .lv-0[aria-checked="true"] { border-color: #3ddc97; background: rgba(61, 220, 151, .14); }
+.menu-diff .lv-3[aria-checked="true"] { border-color: #ffb547; background: rgba(255, 181, 71, .14); }
+.menu-diff .lv-4[aria-checked="true"] { border-color: #ff5d5d; background: rgba(255, 93, 93, .14); }
+.menu-note { font-size: 12.5px !important; color: #7b8a9e !important; margin: 8px 0 0 !important; line-height: 1.45; }
+.menu-record { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.menu-record h3 { grid-column: 1 / -1; }
+.menu-record div { background: #10161e; border: 1px solid #1d2a39; border-radius: 10px; padding: 9px 10px; }
+.menu-record span { display: block; font: 600 10px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: #67768a; }
+.menu-record b { display: block; margin-top: 6px; font: 700 15px/1.1 var(--font-display); color: #e9eef4; overflow-wrap: anywhere; }
+.menu-trophies { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 196px; overflow-y: auto; }
+.menu-trophies li { display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 10px; background: #10161e; opacity: .55; }
+.menu-trophies li.have { opacity: 1; }
+.menu-trophies li svg { flex: none; filter: grayscale(1); }
+.menu-trophies li.have svg { filter: none; }
+.menu-trophies b { display: block; font-size: 13px; color: #e9eef4; }
+.menu-trophies small { display: block; font-size: 12px; color: #7b8a9e; line-height: 1.35; }
+.menu-links { display: flex; gap: 6px; flex-wrap: wrap; }
+@media (max-width: 760px) {
+  .menu-grid { grid-template-columns: 1fr; }
+  .menu-side { border-left: 0; border-top: 1px solid #1d2a39; }
+  .menu-main { padding: 18px 18px 20px; }
+  .menu-side { padding: 18px; }
+  .menu-diff { grid-template-columns: repeat(3, 1fr); }
+}
+/* Game header: keep "All games" on screen on narrow phones */
+.game-top { justify-content: space-between; }
+.game-top .back { white-space: nowrap; }

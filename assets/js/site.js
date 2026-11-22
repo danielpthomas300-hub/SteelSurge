@@ -1075,6 +1075,6 @@
     document.dispatchEvent(new CustomEvent("ss:ready", { detail: c }));
   }
 
-  window.SS = Object.assign(window.SS || {}, { ICON, LOGO, esc, store, toast, url, loadContent, loadFTC, theme, GAMES, seasonLabel, currentSeason, DRAFT_KEY, PREVIEW_KEY });
+  window.SS = Object.assign(window.SS || {}, { ICON, LOGO, esc, store, toast, url, loadContent, loadFTC, theme, GAMES, gameArt, seasonLabel, currentSeason, DRAFT_KEY, PREVIEW_KEY });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })();
