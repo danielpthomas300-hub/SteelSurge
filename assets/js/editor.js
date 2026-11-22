@@ -55,7 +55,7 @@
       get: (c) => c.members, set: (c, v) => (c.members = v), list: true, itemLabel: "member", summary: (m) => m.name || "New member", sub: (m) => m.role,
       fields: [
         { k: "name", label: "Full name", type: "text", required: true },
-        { k: "role", label: "Role", type: "text", hint: "e.g. Head of Programming" },
+        { k: "role", label: "Role", type: "text", hint: "e.g. Programming Lead" },
         { k: "dept", label: "Department", type: "select", options: DEPTS, hint: "Used for the filter buttons on the team page." },
         { k: "photo", label: "Photo", type: "image", folder: "assets/img/team" },
         { k: "bio", label: "Short bio", type: "textarea", hint: "2–3 sentences. Avoid grade levels so it doesn't go out of date." },

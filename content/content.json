@@ -28,52 +28,52 @@
   "members": [
     {
       "name": "Daniel Thomas",
-      "role": "Head of Outreach & Business",
+      "role": "Team Captain",
       "dept": "Outreach",
       "photo": "assets/img/team/danielthomas.jpg",
-      "bio": "Daniel runs Steel Surge's communication, social media, and outreach, and also helps out as an assistant programmer. Outside of robotics, Daniel is involved in debate, tutoring, Tech Olympics, and student government."
+      "bio": "Daniel is Steel Surge's team captain. Daniel keeps the whole team working together, from planning the season to making sure every crew has what it needs, and also helps out as an assistant programmer. Outside of robotics, Daniel is involved in debate, tutoring, Tech Olympics, and student government."
     },
     {
       "name": "Idris Bhatti",
-      "role": "Head of Mechanical",
+      "role": "Mechanical Lead",
       "dept": "Mechanical",
       "photo": "assets/img/team/idrisbhatti.jpg",
-      "bio": "Idris oversees the CAD, design, and build teams and makes sure the robot actually comes together. Off the field, Idris plays tennis."
+      "bio": "Idris leads the mechanical team, overseeing design and build and making sure the robot actually comes together. Off the field, Idris plays tennis."
     },
     {
       "name": "Nathan Thomas",
-      "role": "Head of Programming",
+      "role": "Programming Lead",
       "dept": "Programming",
       "photo": "assets/img/team/nathanthomas.jpg",
-      "bio": "Nathan leads the code that makes the robot move, from autonomous routines to driver controls. This is Nathan's second season with Steel Surge."
+      "bio": "Nathan leads programming, writing the code that makes the robot move, from autonomous routines to driver controls. This is Nathan's second season with Steel Surge."
     },
     {
       "name": "Nikhil Kaza",
-      "role": "Head of CAD",
+      "role": "Mechanical/CAD Lead",
       "dept": "Mechanical",
       "photo": "assets/img/team/nikhilkaza.jpg",
-      "bio": "Nikhil turns ideas into 3D models before a single part is cut. Nikhil is passionate about STEM education and pitches in across the team."
+      "bio": "Nikhil leads CAD and mechanical design, turning ideas into 3D models before a single part is cut. Nikhil is passionate about STEM education and pitches in across the team."
     },
     {
       "name": "Siru Panchomarthi",
-      "role": "Lead Driver & Mechanical",
+      "role": "Driver & Mechanical Lead",
       "dept": "Mechanical",
       "photo": "assets/img/team/sirupanchomarthi.jpg",
-      "bio": "Siru is our lead driver, behind the controller at every match, and is also part of the mechanical design and build crew."
+      "bio": "Siru is our lead driver, behind the controller at every match, and a lead on the mechanical team, helping design and build the robot."
     },
     {
       "name": "Thomas Binder",
-      "role": "Assistant CAD Designer",
-      "dept": "Mechanical",
+      "role": "Outreach Lead",
+      "dept": "Outreach",
       "photo": "assets/img/team/thomasbinder.jpg",
-      "bio": "Thomas supports CAD, outreach, and programming. As a true all-rounder, Thomas helps wherever the team needs it."
+      "bio": "Thomas co-leads outreach, sharing Steel Surge with the community. A true all-rounder, Thomas also supports CAD and programming wherever the team needs it."
     },
     {
       "name": "Rithwik Aluru",
-      "role": "Outreach",
+      "role": "Outreach Lead",
       "dept": "Outreach",
       "photo": "assets/img/team/rithwikaluru.jpg",
-      "bio": "Rithwik reaches out to local businesses to find the sponsors who keep the team running, and is getting ready to join the build team."
+      "bio": "Rithwik co-leads outreach and reaches out to local businesses to find the sponsors who keep the team running. Rithwik is also getting ready to join the build team."
     }
   ],
   "mentors": [],

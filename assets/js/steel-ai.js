@@ -336,8 +336,8 @@
     const byName = M.filter((m) => { const [f, ...r] = m.name.toLowerCase().split(" "); return new RegExp(`\\b(${f}|${m.name.toLowerCase()})\\b`).test(ql) || r.some((x) => x.length > 3 && new RegExp(`\\b${x}\\b`).test(ql) && ql.includes(f)); });
     const card = (m) => `<div class="ai-person"><img src="${esc(u(m.photo))}" alt="" loading="lazy" onerror="this.remove()"><div><b>${esc(m.name)}</b><span>${esc(m.role)}</span></div></div>`;
     if (byName.length) return A(byName.map((m) => `${card(m)}<p>${esc(m.bio)}</p>`).join(""), { src: [["team.html", "Meet the whole team"]] });
-    const roles = [["driv", /driv/], ["programm", /program|code|coder|software/], ["cad", /\bcad\b|design/], ["mechanical", /mechanic|build/], ["outreach", /outreach|business|social media/]];
-    const want = /\bwho\b|\blead|\bhead|\bin charge|\brun/.test(ql) ? roles.find(([, re]) => re.test(ql)) : null;
+    const roles = [["captain", /captain|leader of (the )?team|team leader|runs the team|in charge of the team/], ["driv", /driv/], ["programm", /program|code|coder|software/], ["cad", /\bcad\b|design/], ["mechanical", /mechanic|build/], ["outreach", /outreach|business|social media/]];
+    const want = /\bwho\b|\blead|\bhead|\bcaptain|\bin charge|\brun/.test(ql) ? roles.find(([, re]) => re.test(ql)) : null;
     if (want) {
       const byRole = M.filter((m) => new RegExp(want[0], "i").test(m.role));
       const hits = (byRole.length ? byRole : M.filter((m) => new RegExp(want[0], "i").test(m.bio))).sort((a, b) => (/head|lead/i.test(b.role) ? 1 : 0) - (/head|lead/i.test(a.role) ? 1 : 0));
