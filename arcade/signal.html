@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" data-root="..">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signal Lost · Steel Surge Arcade</title>
+  <meta name="description" content="Signal Lost: a stealth maze game from Steel Surge, FTC team 27254. Ping to see, but drones are listening.">
+  <meta name="theme-color" content="#090c11">
+  <link rel="canonical" href="https://steelsurge1.github.io/SteelSurge/arcade/signal.html">
+  <meta property="og:url" content="https://steelsurge1.github.io/SteelSurge/arcade/signal.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Steel Surge FTC 27254">
+  <meta property="og:title" content="Signal Lost · Steel Surge Arcade">
+  <meta property="og:description" content="Signal Lost: a stealth maze game from Steel Surge, FTC team 27254. Ping to see, but drones are listening.">
+  <meta property="og:image" content="https://steelsurge1.github.io/SteelSurge/assets/img/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../assets/img/icon-180.png">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap">
+  <link rel="stylesheet" href="../assets/css/site.css?v=d053b608">
+  <link rel="stylesheet" href="../assets/css/game.css?v=d053b608">
+  <script>try{var t=JSON.parse(localStorage.getItem("ss-theme"));document.documentElement.dataset.theme=t==="light"?"light":"dark"}catch(e){document.documentElement.dataset.theme="dark"}</script>
+  <script src="../assets/js/site.js?v=d053b608" defer></script>
+  <script src="../assets/js/arcade/kit.js?v=d053b608" defer></script>
+  <script src="../assets/js/arcade/signal.js?v=d053b608" defer></script>
+</head>
+<body data-page="game-signal">
+  <noscript><div class="noscript">This site needs JavaScript for live stats and games. You can still reach us at <a href="mailto:surgesteel1@gmail.com">surgesteel1@gmail.com</a>.</div></noscript>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header id="site-header"></header>
+  <main id="main">
+    <div class="wrap game-page">
+      <div class="game-top">
+        <div class="game-title"><h1>Signal Lost</h1><span>Stealth · Endless</span></div>
+        <a class="back" href="../arcade.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M5 12h14M13 6l6 6-6 6"/></svg> All games</a>
+      </div>
+      <div id="game">
+        <div class="hud">
+          <div class="hud-stat"><span>Floor</span><b data-hud="floor">1</b></div><div class="hud-stat"><span>Cores</span><b data-hud="cores">0/3</b></div><div class="hud-stat"><span>Score</span><b data-hud="score">0</b></div>
+          <div class="hud-stat"><span>Best</span><b data-hud="best">—</b></div>
+          <div class="hud-spacer"></div>
+          <button class="icon-btn" type="button" data-act="pause" aria-label="Pause (Esc)" title="Pause (Esc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="i-pause"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="i-play"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
+          <button class="icon-btn" type="button" data-act="mute" aria-label="Mute sound" title="Sound (M)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="i-on"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="i-off"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></svg></button>
+          <button class="icon-btn" type="button" data-act="fullscreen" aria-label="Fullscreen" title="Fullscreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
+        </div>
+        <p class="game-msg" data-msg aria-live="polite"></p>
+        <div class="stage"><canvas role="img" aria-label="Signal Lost: a dark maze with drones and data cores"></canvas><div class="overlay" hidden></div></div>
+        <div class="touch-pad"><button class="pad-btn" type="button" data-act="ping"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/></svg>Ping</button></div>
+      </div>
+      <div class="game-info">
+        <div class="card"><h2>How to play</h2><ul><li>You're lost in a dark factory. Your robot can only see right around itself.</li><li>Press <b>Ping</b> to send out a pulse that briefly lights up the walls around you.</li><li>Every ping can be heard: security drones nearby turn and hunt the spot you pinged from.</li><li>Collect all the data cores, then reach the glowing exit to go down a floor.</li><li>Mazes get bigger and drones get faster. Getting caught ends the run.</li></ul></div>
+        <div class="card"><h2>Controls</h2><ul class="controls-list"><li><span>Move</span><span><span class=kbd>←</span> <span class=kbd>↑</span> <span class=kbd>↓</span> <span class=kbd>→</span> </span></li><li><span>Ping</span><span><span class=kbd>Space</span> </span></li><li><span>Move on touch</span><span><span class=kbd>Drag on the game</span> </span></li><li><span>Ping on touch</span><span><span class=kbd>Ping button</span> </span></li><li><span>Pause</span><span><span class=kbd>Esc</span> </span></li></ul><h2 style="margin-top:22px;font-size:16px">More games</h2><div class="more-games"><a class="btn sm" href="overclock.html">Overclock</a><a class="btn sm" href="gridlock.html">Gridlock</a><a class="btn sm" href="echo.html">Echo</a><a class="btn sm" href="pitcrew.html">Pit Crew</a><a class="btn sm" href="autonomous.html">Autonomous</a></div></div>
+      </div>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

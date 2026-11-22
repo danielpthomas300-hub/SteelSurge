@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://steelsurge1.github.io/SteelSurge/sitemap.xml

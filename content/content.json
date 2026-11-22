@@ -1,0 +1,229 @@
+{
+  "team": {
+    "name": "Steel Surge",
+    "number": 27254,
+    "program": "FIRST Tech Challenge",
+    "intro": "We're a FIRST Tech Challenge team of middle and high school students from the Unionville-Chadds Ford School District. Every season we design, build, and program a robot from scratch — and share what we learn with our community.",
+    "location": "Kennett Square, PA",
+    "school": "Unionville High School & Charles F. Patton Middle School",
+    "rookieYear": 2024,
+    "email": "surgesteel1@gmail.com",
+    "joinFormUrl": "https://docs.google.com/forms/d/e/1FAIpQLSdQC0YLkmq89Ugf4htuhMzqHI2Yuu2PHIH78LA3hpsxYCE9UA/viewform",
+    "youtubeChannelId": "UCEGxm1OMPQkqc5-hVhdEY4A",
+    "socials": [
+      {
+        "label": "YouTube",
+        "url": "https://www.youtube.com/channel/UCEGxm1OMPQkqc5-hVhdEY4A"
+      },
+      {
+        "label": "FTCScout",
+        "url": "https://ftcscout.org/teams/27254"
+      }
+    ],
+    "mascot": "Surge",
+    "siteUrl": "https://steelsurge1.github.io/SteelSurge/"
+  },
+  "members": [
+    {
+      "name": "Daniel Thomas",
+      "role": "Head of Outreach & Business",
+      "dept": "Outreach",
+      "photo": "assets/img/team/danielthomas.jpg",
+      "bio": "Runs Steel Surge's communication, socials, and outreach, and helps out as an assistant programmer. Also into debate, tutoring, Tech Olympics, and student government."
+    },
+    {
+      "name": "Idris Bhatti",
+      "role": "Head of Mechanical",
+      "dept": "Mechanical",
+      "photo": "assets/img/team/idrisbhatti.jpg",
+      "bio": "Oversees the CAD, design, and build departments, and makes sure the robot actually comes together. Off the field, plays tennis."
+    },
+    {
+      "name": "Nathan Thomas",
+      "role": "Head of Programming",
+      "dept": "Programming",
+      "photo": "assets/img/team/nathanthomas.jpg",
+      "bio": "Leads the code that makes the robot move — from autonomous routines to driver controls. Second season with Steel Surge."
+    },
+    {
+      "name": "Nikhil Kaza",
+      "role": "Head of CAD",
+      "dept": "Mechanical",
+      "photo": "assets/img/team/nikhilkaza.jpg",
+      "bio": "Turns ideas into 3D models before a single part is cut. Passionate about STEM education and helps across the team."
+    },
+    {
+      "name": "Siru Panchomarthi",
+      "role": "Lead Driver & Mechanical",
+      "dept": "Mechanical",
+      "photo": "assets/img/team/sirupanchomarthi.jpg",
+      "bio": "Our first driver, behind the controller at every match, and part of the mechanical design and build crew."
+    },
+    {
+      "name": "Ethan Harris",
+      "role": "Mechanical & Outreach",
+      "dept": "Mechanical",
+      "photo": "assets/img/team/ethanharris.jpg",
+      "bio": "Brings prior mechanical experience to the team and is up for anything. Wants to take on more complex builds."
+    },
+    {
+      "name": "Thomas Binder",
+      "role": "Assistant CAD Designer",
+      "dept": "Mechanical",
+      "photo": "assets/img/team/thomasbinder.jpg",
+      "bio": "Supports CAD, outreach, and programming — a true all-rounder who helps wherever the team needs it."
+    },
+    {
+      "name": "Rithwik Aluru",
+      "role": "Outreach",
+      "dept": "Outreach",
+      "photo": "assets/img/team/rithwikaluru.jpg",
+      "bio": "Connects with businesses to find sponsors who help keep the team running, and is gearing up to join the build."
+    }
+  ],
+  "mentors": [],
+  "values": [
+    {
+      "title": "Gracious Professionalism",
+      "body": "We compete hard and help harder. Lending a part or a hand to another team is part of how we play."
+    },
+    {
+      "title": "Build, break, rebuild",
+      "body": "Every prototype teaches us something. We test early, fail fast, and keep iterating until it works under match pressure."
+    },
+    {
+      "title": "Share what we learn",
+      "body": "From Intro to Robotics sessions to outreach events, we bring the next group of students into STEM."
+    }
+  ],
+  "robot": {
+    "name": "",
+    "season": "",
+    "summary": "",
+    "photo": "",
+    "specs": []
+  },
+  "outreach": {
+    "hours": "40+",
+    "label": "outreach hours in 2024–25",
+    "events": []
+  },
+  "achievements": [
+    {
+      "date": "2024-10",
+      "title": "Team founded",
+      "detail": "Steel Surge registers as FTC Team 27254 for its rookie season.",
+      "icon": "milestone"
+    },
+    {
+      "date": "2024-11",
+      "title": "First competition",
+      "detail": "Debuted our first robot at the Longhorn Roundup Scrimmage, finishing 2–2.",
+      "icon": "milestone"
+    },
+    {
+      "date": "2026-01",
+      "title": "4–1 qualifier run",
+      "detail": "Our best qualification record yet at the Southeastern Pennsylvania Qualifier.",
+      "icon": "milestone"
+    }
+  ],
+  "updates": [
+    {
+      "date": "",
+      "title": "Season kickoff",
+      "body": "We kicked off the new FTC season with a full-team brainstorm and strategy session, broke down this year's game, and started mapping out our robot."
+    },
+    {
+      "date": "",
+      "title": "Build week 1",
+      "body": "Drivetrain testing is underway. Our new gear setup should give us more torque without giving up the speed we need to score."
+    }
+  ],
+  "featuredVideos": [
+    {
+      "id": "IZyD3Pkvvr4",
+      "title": "Steel Surge theme song"
+    },
+    {
+      "id": "Y49eJtHWkXs",
+      "title": "When ping pong gets too intense"
+    },
+    {
+      "id": "898VsTdlHjY",
+      "title": "Outreach with Steel Surge"
+    },
+    {
+      "id": "G7XKZ31Kun8",
+      "title": "Another meeting"
+    }
+  ],
+  "sponsorPitch": "Running a robotics team takes real resources: parts, tools, competition fees, travel, and outreach events. Your support keeps students building, learning, and sharing STEM with the community — and puts your name in front of families, schools, and the FIRST community all season long.",
+  "sponsorPacketUrl": "",
+  "sponsorTiers": [
+    {
+      "name": "Bronze",
+      "amount": 500,
+      "perks": [
+        "Recognition on social media"
+      ]
+    },
+    {
+      "name": "Silver",
+      "amount": 1000,
+      "perks": [
+        "Logo placement on team shirts",
+        "Recognition on social media"
+      ]
+    },
+    {
+      "name": "Gold",
+      "amount": 5000,
+      "perks": [
+        "Logo placement on team shirts",
+        "Recognition on social media",
+        "Shout-out on our website"
+      ]
+    },
+    {
+      "name": "Platinum",
+      "amount": 10000,
+      "featured": true,
+      "perks": [
+        "Logo placement on team shirts",
+        "Recognition on social media and website",
+        "Company banner at events",
+        "Featured on our website"
+      ]
+    }
+  ],
+  "sponsors": [
+    {
+      "name": "Unionville High School",
+      "tier": "Partner",
+      "url": "",
+      "logo": ""
+    },
+    {
+      "name": "Charles F. Patton Middle School",
+      "tier": "Partner",
+      "url": "",
+      "logo": ""
+    }
+  ],
+  "contact": {
+    "formEndpoint": "https://formsubmit.co/ajax/surgesteel1@gmail.com",
+    "reasons": [
+      "Sponsorship",
+      "Joining the team",
+      "Outreach event / demo",
+      "Mentoring",
+      "Something else"
+    ]
+  },
+  "dev": {
+    "passcodeHash": "80a78f7f581838d9ef7e421e713af0f24c70bb09f2535b8b38e5f7cfc91f8c21",
+    "repo": "SteelSurge1/SteelSurge",
+    "branch": "main"
+  }
+}

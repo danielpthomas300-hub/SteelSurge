@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" data-root="..">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gridlock · Steel Surge Arcade</title>
+  <meta name="description" content="Gridlock: a sliding robot puzzle from Steel Surge, FTC team 27254. Every robot moves at once.">
+  <meta name="theme-color" content="#090c11">
+  <link rel="canonical" href="https://steelsurge1.github.io/SteelSurge/arcade/gridlock.html">
+  <meta property="og:url" content="https://steelsurge1.github.io/SteelSurge/arcade/gridlock.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Steel Surge FTC 27254">
+  <meta property="og:title" content="Gridlock · Steel Surge Arcade">
+  <meta property="og:description" content="Gridlock: a sliding robot puzzle from Steel Surge, FTC team 27254. Every robot moves at once.">
+  <meta property="og:image" content="https://steelsurge1.github.io/SteelSurge/assets/img/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../assets/img/icon-180.png">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap">
+  <link rel="stylesheet" href="../assets/css/site.css?v=d053b608">
+  <link rel="stylesheet" href="../assets/css/game.css?v=d053b608">
+  <script>try{var t=JSON.parse(localStorage.getItem("ss-theme"));document.documentElement.dataset.theme=t==="light"?"light":"dark"}catch(e){document.documentElement.dataset.theme="dark"}</script>
+  <script src="../assets/js/site.js?v=d053b608" defer></script>
+  <script src="../assets/js/arcade/kit.js?v=d053b608" defer></script>
+  <script src="../assets/js/arcade/gridlock.js?v=d053b608" defer></script>
+</head>
+<body data-page="game-gridlock">
+  <noscript><div class="noscript">This site needs JavaScript for live stats and games. You can still reach us at <a href="mailto:surgesteel1@gmail.com">surgesteel1@gmail.com</a>.</div></noscript>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header id="site-header"></header>
+  <main id="main">
+    <div class="wrap game-page">
+      <div class="game-top">
+        <div class="game-title"><h1>Gridlock</h1><span>Puzzle · 30 levels</span></div>
+        <a class="back" href="../arcade.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M5 12h14M13 6l6 6-6 6"/></svg> All games</a>
+      </div>
+      <div id="game">
+        <div class="hud">
+          <div class="hud-stat"><span>Level</span><b data-hud="level">1/30</b></div><div class="hud-stat"><span>Moves</span><b data-hud="moves">0</b></div><div class="hud-stat"><span>Par</span><b data-hud="par">—</b></div>
+          <div class="hud-stat"><span>Best</span><b data-hud="best">—</b></div>
+          <div class="hud-spacer"></div>
+          <button class="icon-btn" type="button" data-act="undo" aria-label="Undo (Z)" title="Undo (Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg></button><button class="icon-btn" type="button" data-act="restart" aria-label="Restart level (R)" title="Restart level (R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button><button class="icon-btn" type="button" data-act="levels" aria-label="Levels (L)" title="Levels (L)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
+          <button class="icon-btn" type="button" data-act="mute" aria-label="Mute sound" title="Sound (M)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="i-on"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="i-off"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></svg></button>
+          <button class="icon-btn" type="button" data-act="fullscreen" aria-label="Fullscreen" title="Fullscreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
+        </div>
+        <p class="game-msg" data-msg aria-live="polite"></p>
+        <div class="stage"><canvas role="img" aria-label="Gridlock puzzle board with sliding robots and charging pads"></canvas><div class="overlay" hidden></div></div>
+        <div class="touch-pad"><div class="dpad"><button type="button" data-dir="U" aria-label="Up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="m6 15 6-6 6 6"/></svg></button><button type="button" data-dir="L" aria-label="Left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="m15 6-6 6 6 6"/></svg></button><button type="button" data-dir="R" aria-label="Right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="m9 6 6 6-6 6"/></svg></button><button type="button" data-dir="D" aria-label="Down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="m6 9 6 6 6-6"/></svg></button></div></div>
+      </div>
+      <div class="game-info">
+        <div class="card"><h2>How to play</h2><ul><li>Every robot moves in the same direction at the same time.</li><li>Robots slide until they hit a wall, the edge, or another robot. Use each other as stoppers.</li><li>Get every robot onto the pad that matches its color.</li><li>Finish in <b>par</b> moves for 3 stars. Par is the true minimum; a computer checked every level.</li></ul></div>
+        <div class="card"><h2>Controls</h2><ul class="controls-list"><li><span>Move</span><span><span class=kbd>←</span> <span class=kbd>↑</span> <span class=kbd>↓</span> <span class=kbd>→</span> </span></li><li><span>Move on touch</span><span><span class=kbd>Swipe</span> </span></li><li><span>Undo</span><span><span class=kbd>Z</span> </span></li><li><span>Restart</span><span><span class=kbd>R</span> </span></li><li><span>Level select</span><span><span class=kbd>L</span> </span></li></ul><h2 style="margin-top:22px;font-size:16px">More games</h2><div class="more-games"><a class="btn sm" href="overclock.html">Overclock</a><a class="btn sm" href="echo.html">Echo</a><a class="btn sm" href="pitcrew.html">Pit Crew</a><a class="btn sm" href="autonomous.html">Autonomous</a><a class="btn sm" href="signal.html">Signal Lost</a></div></div>
+      </div>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>
