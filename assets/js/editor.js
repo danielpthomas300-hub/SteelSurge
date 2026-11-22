@@ -19,6 +19,19 @@
   const sha256 = async (s) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map((b) => b.toString(16).padStart(2, "0")).join("");
   const icon = (n) => window.SS?.ICON?.[n] || "";
 
+  /* ---------------- Sidebar groups and "view on site" links ---------------- */
+  const GROUPS = [
+    ["Team", ["team", "members", "values", "projects", "mentors"]],
+    ["Season", ["competition", "achievements", "outreach"]],
+    ["Media", ["featuredVideos", "updates"]],
+    ["Sponsors & contact", ["sponsors", "tiers", "contact"]],
+    ["Settings", ["settings"]],
+  ];
+  const PAGE_FOR = { team: "index.html", members: "team.html", values: "team.html", projects: "team.html", mentors: "team.html", outreach: "index.html", competition: "achievements.html", achievements: "achievements.html", featuredVideos: "media.html", updates: "media.html", sponsors: "sponsors.html", tiers: "sponsors.html", contact: "contact.html" };
+  const eye = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const lockIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+  const undoIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>';
+
   /* ---------------- Schema: what can be edited, in plain words ---------------- */
   const DEPTS = ["Mechanical", "Programming", "Outreach", "Leadership", "Other"];
   const SECTIONS = [
@@ -38,7 +51,7 @@
         { k: "youtubeChannelId", label: "YouTube channel ID", type: "text", hint: "Starts with UC… — find it in your channel's URL. Videos update automatically." },
         { k: "socials", label: "Social links", type: "list", itemLabel: "link", summary: (i) => i.label || "New link", fields: [{ k: "label", label: "Label", type: "text" }, { k: "url", label: "Link", type: "url" }] },
       ] },
-    { id: "members", title: "Team members", icon: "users", desc: "Everyone on the team page. Drag order with the arrows. No personal phone numbers or emails, please.",
+    { id: "members", title: "Team members", icon: "users", desc: "Everyone on the team page. Use the arrows to change the order. No personal phone numbers or emails, please.",
       get: (c) => c.members, set: (c, v) => (c.members = v), list: true, itemLabel: "member", summary: (m) => m.name || "New member", sub: (m) => m.role,
       fields: [
         { k: "name", label: "Full name", type: "text", required: true },
@@ -71,10 +84,10 @@
         { k: "detail", label: "Details", type: "textarea" },
         { k: "icon", label: "Type", type: "select", options: [["milestone", "Milestone (timeline only)"], ["award", "Award (also on the trophy shelf)"]] },
       ] },
-    { id: "featuredVideos", title: "Featured videos", icon: "play", desc: "The 'Life on Steel Surge' videos on the home page. The Media page's video list updates by itself every day.",
+    { id: "featuredVideos", title: "Featured videos", icon: "play", desc: "Your team's favorite videos, pinned on the Media page. The rest of the Media page's video list updates by itself every day.",
       get: (c) => c.featuredVideos || [], set: (c, v) => (c.featuredVideos = v), list: true, itemLabel: "video", summary: (v) => v.title || "New video",
       fields: [{ k: "id", label: "YouTube link or video ID", type: "text", required: true, hint: "Paste the video's link, e.g. https://youtu.be/IZyD3Pkvvr4" }, { k: "title", label: "Title", type: "text" }] },
-    { id: "updates", title: "Team updates", icon: "pencil", desc: "Short build-log posts on the home and media pages. Newest first automatically.",
+    { id: "updates", title: "Team updates", icon: "pencil", desc: "Short build-log posts on the Media page. Dated posts are shown newest first.",
       get: (c) => c.updates, set: (c, v) => (c.updates = v), list: true, itemLabel: "update", summary: (u) => u.title || "New update", sub: (u) => u.date,
       fields: [{ k: "date", label: "Date", type: "date", hint: "Optional. Dated posts are shown newest first." }, { k: "title", label: "Title", type: "text", required: true }, { k: "body", label: "Text", type: "textarea" }] },
     { id: "sponsors", title: "Sponsors", icon: "heart", desc: "The sponsor wall and the scrolling sponsor strip on the home page.",
@@ -136,21 +149,31 @@
   function lockScreen() {
     $("#app").innerHTML = `
       <div class="ed-lock">
-        <form class="card" id="lock-form">
-          <div class="card-icon">${icon("pencil")}</div>
-          <h1>Team editor</h1>
-          <p class="muted">Update the website without touching code. Enter the team passcode to continue.</p>
-          <div class="field"><label for="pass">Passcode</label><input class="input" id="pass" type="password" autocomplete="current-password" autofocus></div>
-          <p class="field-error" id="lock-err" aria-live="polite"></p>
-          <button class="btn primary" type="submit">Unlock editor ${icon("arrow")}</button>
-          <p class="ed-fine">The passcode just keeps visitors out of this page. Changes only go live when a team member publishes them on GitHub.</p>
+        <form class="ed-lock-card" id="lock-form">
+          <div class="ed-lock-art"><img src="assets/img/logo-hero.webp" alt="Steel Surge logo" width="220" height="220"></div>
+          <div class="ed-lock-body">
+            <span class="ed-kicker">Steel Surge · FTC 27254</span>
+            <h1>Team editor</h1>
+            <p class="muted">Update the website without touching code. Enter the team passcode to continue.</p>
+            <div class="field"><label for="pass">Passcode</label>
+              <div class="ed-pass"><input class="input" id="pass" type="password" autocomplete="current-password" autofocus>
+                <button type="button" class="ed-pass-toggle" aria-label="Show passcode" aria-pressed="false">${eye}</button></div></div>
+            <p class="field-error" id="lock-err" aria-live="polite"></p>
+            <button class="btn primary ed-unlock" type="submit">Unlock editor ${icon("arrow")}</button>
+            <p class="ed-fine">${lockIco} The passcode keeps visitors out of this page. Changes only go live when a team member publishes them on GitHub.</p>
+            <a class="ed-back" href="index.html">← Back to the website</a>
+          </div>
         </form>
       </div>`;
+    $(".ed-pass-toggle").addEventListener("click", (e) => {
+      const inp = $("#pass"), show = inp.type === "password"; inp.type = show ? "text" : "password";
+      e.currentTarget.setAttribute("aria-pressed", String(show)); e.currentTarget.setAttribute("aria-label", show ? "Hide passcode" : "Show passcode"); inp.focus();
+    });
     $("#lock-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const h = await sha256($("#pass").value.trim());
       if (h === published.dev?.passcodeHash) { try { sessionStorage.setItem(UNLOCK_KEY, h); } catch {} openEditor(); }
-      else { $("#lock-err").textContent = "That passcode isn't right."; $("#pass").select(); }
+      else { $("#lock-err").textContent = "That passcode isn't right."; $("#pass").select(); const card = $(".ed-lock-card"); card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake"); }
     });
   }
 
@@ -163,21 +186,25 @@
     $("#app").innerHTML = `
       <div class="ed">
         <header class="ed-bar">
-          <a class="brand" href="index.html">${window.SS?.LOGO || ""}<span>Team editor<small>STEEL SURGE</small></span></a>
+          <a class="brand" href="index.html" title="Back to the website">${window.SS?.LOGO || ""}<span>Steel Surge<small>TEAM EDITOR</small></span></a>
           <div class="ed-status" id="status" aria-live="polite"></div>
           <div class="ed-actions">
-            <button class="btn ghost sm" id="discard" type="button">Discard draft</button>
-            <a class="btn sm" id="preview" href="index.html?preview=1" target="_blank" rel="noopener">${icon("ext")} Preview site</a>
-            <button class="btn primary sm" id="publish" type="button">Publish…</button>
+            <button class="btn ghost sm" id="discard" type="button">${undoIco} Discard draft</button>
+            <a class="btn sm" id="preview" href="index.html?preview=1" target="_blank" rel="noopener">${eye} Preview site</a>
+            <button class="btn primary sm" id="publish" type="button">Publish<span class="ed-count" id="pub-count"></span></button>
           </div>
         </header>
         <div class="ed-body">
-          <nav class="ed-nav" id="nav" aria-label="Sections"></nav>
+          <aside class="ed-side">
+            <nav class="ed-nav" id="nav" aria-label="Sections"></nav>
+            <div class="ed-side-foot"><button type="button" class="btn ghost sm" id="lock">${lockIco} Lock editor</button></div>
+          </aside>
           <main class="ed-main" id="panel"></main>
         </div>
       </div>
       <dialog class="ed-dialog" id="publish-dialog"></dialog>`;
     $("#discard").addEventListener("click", discard);
+    $("#lock").addEventListener("click", () => { save(true); try { sessionStorage.removeItem(UNLOCK_KEY); } catch {} lockScreen(); window.SS?.toast("Editor locked. Your draft is saved on this device."); });
     $("#publish").addEventListener("click", openPublish);
     $("#preview").addEventListener("click", () => save(true));
     renderNav(); renderPanel(); updateStatus();
@@ -185,7 +212,28 @@
 
   /* ---------------- Saving ---------------- */
   let saveTimer;
-  function changed() { clearTimeout(saveTimer); saveTimer = setTimeout(() => save(), 350); updateStatus(true); }
+  function changed() { clearTimeout(saveTimer); saveTimer = setTimeout(() => { save(); refreshHead(); }, 350); updateStatus(true); }
+  /** Updates the section header's "Changed" badge and item count without rebuilding the form. */
+  function refreshHead() {
+    const sec = SECTIONS.find((x) => x.id === current); if (!sec || sec.custom) return;
+    const head = $(".ed-head"); if (!head) return;
+    const dirty = JSON.stringify(sec.get(draft)) !== JSON.stringify(sec.get(published));
+    const had = !!$(".ed-badge", head), hadUndo = !!$("#undo-sec", head);
+    const pill = $(".ed-pill", head); if (pill && sec.list) { const n = (sec.get(draft) || []).length; pill.textContent = `${n} ${sec.itemLabel}${n === 1 ? "" : "s"}`; }
+    if (dirty !== had || dirty !== hadUndo) renderPanelHeadOnly(sec, dirty);
+  }
+  function renderPanelHeadOnly(sec, dirty) {
+    const h1 = $(".ed-head h1"); if (!h1) return;
+    $(".ed-badge", h1)?.remove(); if (dirty) h1.insertAdjacentHTML("beforeend", '<span class="ed-badge">Changed</span>');
+    const tools = $(".ed-head-tools"); $("#undo-sec", tools)?.remove();
+    if (dirty) {
+      tools.insertAdjacentHTML("afterbegin", `<button type="button" class="btn ghost sm" id="undo-sec">${undoIco} Undo changes</button>`);
+      $("#undo-sec", tools).addEventListener("click", () => {
+        if (!confirm(`Undo your unpublished changes to “${sec.title}”?`)) return;
+        sec.set(draft, clone(sec.get(published))); save(); renderNav(); renderPanel(); window.SS?.toast(`${sec.title} restored`);
+      });
+    }
+  }
   function save(now = false) {
     clearTimeout(saveTimer);
     const dirty = JSON.stringify(draft) !== JSON.stringify(published);
@@ -198,8 +246,10 @@
   function updateStatus(saving = false) {
     const el = $("#status"); if (!el) return;
     const n = dirtySections().length;
-    el.innerHTML = saving ? `<span class="dot saving"></span>Saving…` : n ? `<span class="dot draft"></span>Draft saved on this device · ${n} section${n === 1 ? "" : "s"} changed` : `<span class="dot ok"></span>Matches the live site`;
+    el.className = `ed-status ${saving ? "is-saving" : n ? "is-draft" : "is-live"}`;
+    el.innerHTML = saving ? `<span class="dot saving"></span>Saving…` : n ? `<span class="dot draft"></span>Draft saved on this device · ${n} section${n === 1 ? "" : "s"} changed` : `<span class="dot ok"></span>Everything matches the live site`;
     $("#publish").disabled = !n; $("#discard").disabled = !n;
+    const c = $("#pub-count"); if (c) { c.textContent = n || ""; c.hidden = !n; }
   }
   function discard() {
     if (!confirm("Throw away all unpublished changes on this device?")) return;
@@ -209,14 +259,31 @@
   /* ---------------- Nav & panel ---------------- */
   function renderNav() {
     const dirty = new Set(dirtySections().map((s) => s.id));
-    $("#nav").innerHTML = SECTIONS.map((s) => `<button type="button" class="ed-nav-item${s.id === current ? " active" : ""}" data-sec="${s.id}">${icon(s.icon)}<span>${s.title}</span>${dirty.has(s.id) ? '<i class="ed-dirty" title="Changed"></i>' : ""}</button>`).join("");
+    const item = (s) => `<button type="button" class="ed-nav-item${s.id === current ? " active" : ""}" data-sec="${s.id}"${s.id === current ? ' aria-current="page"' : ""}><i class="ed-nav-ico">${icon(s.icon)}</i><span>${s.title}</span>${dirty.has(s.id) ? '<i class="ed-dirty" title="Changed"></i>' : ""}</button>`;
+    const byId = Object.fromEntries(SECTIONS.map((s) => [s.id, s]));
+    const grouped = new Set(GROUPS.flatMap(([, ids]) => ids));
+    $("#nav").innerHTML = GROUPS.map(([label, ids]) => `<div class="ed-nav-group"><span class="ed-nav-label">${label}</span>${ids.filter((id) => byId[id]).map((id) => item(byId[id])).join("")}</div>`).join("")
+      + SECTIONS.filter((s) => !grouped.has(s.id)).map(item).join("");
     $$("[data-sec]", $("#nav")).forEach((b) => b.addEventListener("click", () => { current = b.dataset.sec; history.replaceState(null, "", "#" + current); renderNav(); renderPanel(); $("#panel").scrollTo?.(0, 0); scrollTo(0, 0); }));
   }
 
   function renderPanel() {
     const sec = SECTIONS.find((s) => s.id === current);
     const panel = $("#panel");
-    panel.innerHTML = `<div class="ed-head"><h1>${sec.title}</h1><p class="muted">${sec.desc}</p></div><div id="form"></div>`;
+    const isDirty = !sec.custom && JSON.stringify(sec.get(draft)) !== JSON.stringify(sec.get(published));
+    const count = sec.list ? (sec.get(draft) || []).length : null;
+    panel.innerHTML = `<div class="ed-head">
+        <div class="ed-head-ico">${icon(sec.icon)}</div>
+        <div class="ed-head-text"><h1>${sec.title}${isDirty ? '<span class="ed-badge">Changed</span>' : ""}</h1><p class="muted">${sec.desc}</p></div>
+        <div class="ed-head-tools">
+          ${count != null ? `<span class="ed-pill">${count} ${sec.itemLabel}${count === 1 ? "" : "s"}</span>` : ""}
+          ${isDirty ? `<button type="button" class="btn ghost sm" id="undo-sec">${undoIco} Undo changes</button>` : ""}
+          ${PAGE_FOR[sec.id] ? `<a class="btn sm" href="${PAGE_FOR[sec.id]}?preview=1" target="_blank" rel="noopener">${eye} View on site</a>` : ""}
+        </div></div><div id="form" class="${sec.list ? "" : "ed-card"}"></div>`;
+    $("#undo-sec", panel)?.addEventListener("click", () => {
+      if (!confirm(`Undo your unpublished changes to “${sec.title}”?`)) return;
+      sec.set(draft, clone(sec.get(published))); save(); renderNav(); renderPanel(); window.SS?.toast(`${sec.title} restored`);
+    });
     const host = $("#form", panel);
     if (sec.custom) {
       settingsPanel(host);
@@ -304,9 +371,11 @@
       items.forEach((it, i) => {
         const card = document.createElement("div"); card.className = `ed-item${open.has(i) ? " open" : ""}`;
         const sub = spec.sub?.(it);
+        const imgField = (spec.fields || []).find((f) => f.type === "image"), img = imgField ? it[imgField.k] : "";
+        const thumb = imgField ? `<span class="ed-item-thumb${imgField.square === false ? " wide" : ""}">${img ? `<img src="${esc(img)}" alt="" loading="lazy" onerror="this.remove()">` : ""}<i>${esc((spec.summary(it) || "?").trim()[0] || "?")}</i></span>` : "";
         card.innerHTML = `
           <div class="ed-item-head">
-            <button type="button" class="ed-item-toggle" aria-expanded="${open.has(i)}"><b>${esc(spec.summary(it))}</b>${sub ? `<span>${esc(sub)}</span>` : ""}</button>
+            <button type="button" class="ed-item-toggle" aria-expanded="${open.has(i)}">${thumb}<span class="ed-item-text"><b>${esc(spec.summary(it))}</b>${sub ? `<span>${esc(sub)}</span>` : ""}</span></button>
             <div class="ed-item-tools">
               <button type="button" class="icon-btn" data-a="up" aria-label="Move up" ${i === 0 ? "disabled" : ""}>${upIcon}</button>
               <button type="button" class="icon-btn" data-a="down" aria-label="Move down" ${i === items.length - 1 ? "disabled" : ""}>${downIcon}</button>
@@ -317,8 +386,8 @@
           const body = document.createElement("div"); body.className = "ed-item-body";
           body.append(fieldsEditor(spec.fields, it, (nv) => {
             items[i] = nv; emit();
-            $(".ed-item-toggle b", card).textContent = spec.summary(nv);
-            const s = $(".ed-item-toggle span", card); if (s) s.textContent = spec.sub?.(nv) || "";
+            $(".ed-item-text b", card).textContent = spec.summary(nv);
+            const s = $(".ed-item-text span", card); if (s) s.textContent = spec.sub?.(nv) || "";
           }));
           card.append(body);
         }
