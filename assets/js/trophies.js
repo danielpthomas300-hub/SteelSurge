@@ -38,6 +38,7 @@
     ["now-playing", "site", "bronze", "Now Playing", "Watch one of our team videos."],
     ["dept", "site", "bronze", "Department Head", "Filter the team page by department."],
     ["time-travel", "site", "bronze", "Time Traveler", "Score a match from a past FTC season in the calculator."],
+    ["curious", "site", "bronze", "Curious Mind", "Ask Steel AI a question."],
     ["night-shift", "site", "bronze", "Night Shift", "Switch between light and dark mode."],
     ["trophy-case", "site", "bronze", "Trophy Case", "Open your trophy case."],
     ["off-field", "site", "bronze", "Off the Field", "Find the page that doesn't exist.", true],

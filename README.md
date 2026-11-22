@@ -35,7 +35,20 @@ Everything editable lives in that one file.
 
 ## Trophies
 
-Visitors earn 85 PlayStation-style trophies (bronze, silver, gold, and a platinum for collecting them all) for exploring the site and playing the arcade. Earned trophies pop up in the corner and are listed on **/trophies.html**. Trophy definitions live in `assets/js/trophies.js`; pages and games award them with `SS.trophy("id")`. Progress is saved per browser.
+Visitors earn 86 PlayStation-style trophies (bronze, silver, gold, and a platinum for collecting them all) for exploring the site and playing the arcade. Earned trophies pop up in the corner and are listed on **/trophies.html**. Trophy definitions live in `assets/js/trophies.js`; pages and games award them with `SS.trophy("id")`. Progress is saved per browser.
+
+### Steel AI (site assistant)
+
+Every page except the editor and the arcade games has an **Ask Steel AI** button in the bottom-right corner. It runs entirely in the visitor's browser: no server, no API key, no cost. Code is in `assets/js/steel-ai.js`.
+
+- **Where answers come from:** `content/content.json` (team, members, sponsors, milestones), `content/seasons.json` (every game since 2017–18), `assets/js/calc-data.js` (point values, fouls, ranking points), the official game manuals (`content/manuals/`), live FTCScout results, the arcade list, trophies, and a short list of FTC basics written into the file.
+- **Game manuals:** every season since 2017–18 is split into its individual rules and sections in `content/manuals/<year>.json`. Rule questions ("how many motors can a robot have?", "what is G417 in DECODE?") get the rule quoted with its number, page, and a link that opens the official PDF at that page. With no season named, it searches the current season's manual. A visitor's browser only downloads a season's manual (about 300 KB) when they ask about it.
+- **Adding a new season's manual:** download the PDF from FIRST, add a line to `SOURCES` in `tools/build_manuals.py`, and run `python tools/build_manuals.py <folder with the PDFs>`. If FIRST releases a team update, rerun it with the new PDF so the rules stay current. Manuals from 2021–22 onward link to FIRST's site; older ones link to an archived copy because FIRST no longer hosts them.
+- **How it answers:** exact questions (points, fouls, ranking points, people, results, joining, sponsoring) get exact answers. Everything else is matched with a small search engine over the same data. It remembers the last season you asked about, so "what about INTO THE DEEP?" works.
+- **Updating it:** edit the content files as usual and Steel AI picks up the changes. To teach it something new, add a line to `BASICS` in `steel-ai.js`.
+- **Limits:** it isn't a full chatbot. It finds and quotes the closest rule, so an oddly worded question can land on a nearby rule; the "Open the manual" link and the FTC Q&A forum have the final word.
+- **Small helpers:** it fixes small typos in long words and shows how it read the question ("motrs" → motors). Rule answers offer the same question for the previous season. Pressing the up arrow in the empty box brings back your last question. Any link or button with `data-ai-ask="question"` opens Steel AI and asks it, like the card on the FTC page.
+- Open it with a question already asked: `index.html?ask=How many points is a HIVE TIP?`
 
 ## The arcade
 

@@ -1,0 +1,150 @@
+[
+ {
+  "year": 2026,
+  "name": "BIOBUZZ",
+  "rules": 171,
+  "sections": 263,
+  "sources": [
+   {
+    "label": "Competition Manual",
+    "url": "https://ftc-resources.firstinspires.org/ftc/game/manual"
+   }
+  ]
+ },
+ {
+  "year": 2025,
+  "name": "DECODE",
+  "rules": 207,
+  "sections": 250,
+  "sources": [
+   {
+    "label": "Competition Manual",
+    "url": "https://ftc-resources.firstinspires.org/ftc/archive/2026/game/manual"
+   }
+  ]
+ },
+ {
+  "year": 2024,
+  "name": "INTO THE DEEP",
+  "rules": 208,
+  "sections": 196,
+  "sources": [
+   {
+    "label": "Competition Manual",
+    "url": "https://ftc-resources.firstinspires.org/ftc/archive/2025/game/manual"
+   }
+  ]
+ },
+ {
+  "year": 2023,
+  "name": "CENTERSTAGE",
+  "rules": 145,
+  "sections": 163,
+  "sources": [
+   {
+    "label": "Game Manual Part 2",
+    "url": "https://ftc-resources.firstinspires.org/ftc/archive/2024/game/gm2"
+   },
+   {
+    "label": "Game Manual Part 1",
+    "url": "https://ftc-resources.firstinspires.org/ftc/archive/2024/game/gm1"
+   }
+  ]
+ },
+ {
+  "year": 2022,
+  "name": "POWERPLAY",
+  "rules": 144,
+  "sections": 155,
+  "sources": [
+   {
+    "label": "Game Manual Part 2",
+    "url": "https://ftc-resources.firstinspires.org/ftc/archive/2023/game/gm2"
+   },
+   {
+    "label": "Game Manual Part 1",
+    "url": "https://ftc-resources.firstinspires.org/ftc/archive/2023/game/gm1"
+   }
+  ]
+ },
+ {
+  "year": 2021,
+  "name": "FREIGHT FRENZY",
+  "rules": 121,
+  "sections": 158,
+  "sources": [
+   {
+    "label": "Game Manual Part 2",
+    "url": "https://ftc-resources.firstinspires.org/ftc/archive/2022/game/gm2"
+   },
+   {
+    "label": "Game Manual Part 1",
+    "url": "https://ftc-resources.firstinspires.org/ftc/archive/2022/game/gm1"
+   }
+  ]
+ },
+ {
+  "year": 2020,
+  "name": "ULTIMATE GOAL",
+  "rules": 120,
+  "sections": 156,
+  "sources": [
+   {
+    "label": "Game Manual Part 2",
+    "url": "https://media.githubusercontent.com/media/abidingabi/ftc-history/main/assets/seasons/2020-2021/game-manual-part-2-traditional-events.pdf"
+   },
+   {
+    "label": "Game Manual Part 1",
+    "url": "https://media.githubusercontent.com/media/abidingabi/ftc-history/main/assets/seasons/2020-2021/game-manual-part-1-traditional-events.pdf"
+   }
+  ]
+ },
+ {
+  "year": 2019,
+  "name": "SKYSTONE",
+  "rules": 131,
+  "sections": 147,
+  "sources": [
+   {
+    "label": "Game Manual Part 2",
+    "url": "https://media.githubusercontent.com/media/abidingabi/ftc-history/main/assets/seasons/2019-2020/game-manual-part-2.pdf"
+   },
+   {
+    "label": "Game Manual Part 1",
+    "url": "https://media.githubusercontent.com/media/abidingabi/ftc-history/main/assets/seasons/2019-2020/game-manual-part-1.pdf"
+   }
+  ]
+ },
+ {
+  "year": 2018,
+  "name": "ROVER RUCKUS",
+  "rules": 127,
+  "sections": 146,
+  "sources": [
+   {
+    "label": "Game Manual Part 2",
+    "url": "https://media.githubusercontent.com/media/abidingabi/ftc-history/main/assets/seasons/2018-2019/game-manual-part-2.pdf"
+   },
+   {
+    "label": "Game Manual Part 1",
+    "url": "https://media.githubusercontent.com/media/abidingabi/ftc-history/main/assets/seasons/2018-2019/game-manual-part-1.pdf"
+   }
+  ]
+ },
+ {
+  "year": 2017,
+  "name": "RELIC RECOVERY",
+  "rules": 123,
+  "sections": 154,
+  "sources": [
+   {
+    "label": "Game Manual Part 2",
+    "url": "https://media.githubusercontent.com/media/abidingabi/ftc-history/main/assets/seasons/2017-2018/game-manual-part-2.pdf"
+   },
+   {
+    "label": "Game Manual Part 1",
+    "url": "https://media.githubusercontent.com/media/abidingabi/ftc-history/main/assets/seasons/2017-2018/game-manual-part-1.pdf"
+   }
+  ]
+ }
+]

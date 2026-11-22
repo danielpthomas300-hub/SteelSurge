@@ -55,7 +55,8 @@ def head(title, desc, page, root=".", noindex=False, path="", css=(), js=(), jso
   <link rel="stylesheet" href="{r}/assets/css/site.css?v={V}">{extra_css}
   <script>try{{var t=JSON.parse(localStorage.getItem("ss-theme"));document.documentElement.dataset.theme=t==="light"?"light":"dark"}}catch(e){{document.documentElement.dataset.theme="dark"}}</script>
   <script src="{r}/assets/js/site.js?v={V}" defer></script>
-  <script src="{r}/assets/js/trophies.js?v={V}" defer></script>{extra_js}{ld}{extra_head}
+  <script src="{r}/assets/js/trophies.js?v={V}" defer></script>
+  <script src="{r}/assets/js/steel-ai.js?v={V}" defer></script>{extra_js}{ld}{extra_head}
 </head>
 <body data-page="{page}">
   <noscript><div class="noscript">This site needs JavaScript for live stats and games. You can still reach us at <a href="mailto:surgesteel1@gmail.com">surgesteel1@gmail.com</a>.</div></noscript>
