@@ -74,6 +74,14 @@ Seven prompts a day, like "Name an FTC team from Ohio." Any real team that fits 
 
 Easter egg: type ↑ ↑ ↓ ↓ ← → ← → B A anywhere on the site.
 
+## Score calculator
+
+**/calculator.html** scores any FTC game since 2017–18. Pick a season, tap what your alliance scored, and see the total, a breakdown by period, fouls, and ranking points (with win or loss if you enter the other alliance's score). Results can be shared as a link, and the last inputs for each season are saved on the device. Each season's About FTC panel links to its calculator.
+
+- **Data:** `assets/js/calc-data.js` holds every season's point values, taken from the official manuals.
+- **Checked against real matches:** for every season since 2019–20, recorded FTCScout match results were run through these point values; about 1,700 alliance scores matched exactly. (Earlier seasons aren't in FTCScout, so they're checked against the manuals only.)
+- **Adding a season:** add an entry at the top of `calc-data.js` with its items (`count`, `robots`, `slots`, or `toggle`), foul values, and any bonus ranking points.
+
 ## About FTC: seasons and 3D fields
 
 The About FTC page has a season explorer covering every game from 2017–18 (RELIC RECOVERY) to the current season. The newest season shows by default; visitors pick others from the menu, and links like `ftc.html?season=2024` open a specific one. Each season has a detailed game description and an interactive 3D field (drag to orbit, scroll to zoom, hover parts for labels).
@@ -97,6 +105,8 @@ assets/js/site.js         Header/footer, content, FTCScout, page renderers, east
 assets/js/editor.js       Team editor (developer mode)
 assets/js/trophies.js     Trophy list, pop-ups, and the trophy case
 content/seasons.json      FTC season descriptions for the About FTC page
+assets/js/calc-data.js    Score calculator point values for every season
+assets/js/calculator.js   Score calculator page
 assets/js/fields3d.js     3D field models (three.js, loaded only when needed)
 assets/img/projects/      Team project photos
 assets/img/brands/        FIRST Tech Challenge and FTCScout logos

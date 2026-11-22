@@ -222,7 +222,7 @@
   /* ---------------- Layout: header / footer ---------------- */
   const NAV = [
     ["index.html", "Home", "home"], ["team.html", "Team", "team"], ["achievements.html", "Competition", "achievements"],
-    ["ftc.html", "About FTC", "ftc"], ["media.html", "Media", "media"], ["arcade.html", "Arcade", "arcade"], ["sponsors.html", "Sponsors", "sponsors"], ["contact.html", "Contact", "contact"],
+    ["ftc.html", "About FTC", "ftc"], ["calculator.html", "Calculator", "calculator"], ["media.html", "Media", "media"], ["arcade.html", "Arcade", "arcade"], ["sponsors.html", "Sponsors", "sponsors"], ["contact.html", "Contact", "contact"],
   ];
   const navSection = () => (PAGE.startsWith("game") ? "arcade" : PAGE);
 
@@ -1014,7 +1014,7 @@
           </aside>
         </div>
         <div class="season-grid two">
-          <div><h3>How scoring works</h3><table class="score-table"><tbody>${s.scoring.map(([a, p]) => `<tr><th scope="row">${esc(a)}</th><td>${esc(p)}</td></tr>`).join("")}</tbody></table><p class="fine">Highlights from the official manual. See the Competition Manual for every rule and penalty.</p></div>
+          <div><h3>How scoring works</h3><table class="score-table"><tbody>${s.scoring.map(([a, p]) => `<tr><th scope="row">${esc(a)}</th><td>${esc(p)}</td></tr>`).join("")}</tbody></table><p class="fine">Highlights from the official manual. See the Competition Manual for every rule and penalty.</p><a class="btn sm calc-link" href="${url(`calculator.html?season=${s.year}`)}">${ICON.chart || ""} Open the ${esc(s.name)} score calculator</a></div>
           <div class="unique"><h3>What made it special</h3><p>${esc(s.unique)}</p>${competed.has(y) ? `<a class="link-arrow" href="${url("achievements.html")}">See how Steel Surge did ${ICON.arrow}</a>` : ""}</div>
         </div>`;
       $("#field-title").textContent = `${s.name} field · ${seasonLabel(s.year)}`;

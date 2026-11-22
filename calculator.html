@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en" data-root=".">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Score calculator · Steel Surge FTC 27254</title>
+  <meta name="description" content="Free FTC score calculator for every FIRST Tech Challenge game since 2017–18, including BIOBUZZ and DECODE. Tap what your alliance scored to see the total, breakdown, and ranking points.">
+  <meta name="theme-color" content="#090c11">
+  <link rel="canonical" href="https://steelsurge1.github.io/SteelSurge/calculator.html">
+  <meta property="og:url" content="https://steelsurge1.github.io/SteelSurge/calculator.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Steel Surge FTC 27254">
+  <meta property="og:title" content="Score calculator · Steel Surge FTC 27254">
+  <meta property="og:description" content="Free FTC score calculator for every FIRST Tech Challenge game since 2017–18, including BIOBUZZ and DECODE. Tap what your alliance scored to see the total, breakdown, and ranking points.">
+  <meta property="og:image" content="https://steelsurge1.github.io/SteelSurge/assets/img/og-image.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="./assets/img/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="./assets/img/icon-180.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap">
+  <link rel="stylesheet" href="./assets/css/site.css?v=cee4c875">
+  <script>try{var t=JSON.parse(localStorage.getItem("ss-theme"));document.documentElement.dataset.theme=t==="light"?"light":"dark"}catch(e){document.documentElement.dataset.theme="dark"}</script>
+  <script src="./assets/js/site.js?v=cee4c875" defer></script>
+  <script src="./assets/js/trophies.js?v=cee4c875" defer></script>
+  <script src="./assets/js/calc-data.js?v=cee4c875" defer></script>
+  <script src="./assets/js/calculator.js?v=cee4c875" defer></script>
+</head>
+<body data-page="calculator">
+  <noscript><div class="noscript">This site needs JavaScript for live stats and games. You can still reach us at <a href="mailto:surgesteel1@gmail.com">surgesteel1@gmail.com</a>.</div></noscript>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header id="site-header"></header>
+  <main id="main">
+    <section class="page-hero">
+      <div class="wrap">
+        <span class="eyebrow">Score calculator</span>
+        <h1>FTC score calculator</h1>
+        <p class="lead">Tap what your alliance scored and watch the total, the breakdown, and ranking points add up. Every FTC game since 2017–18, with point values from the official manuals.</p>
+      </div>
+    </section>
+    <section class="section">
+      <div class="wrap">
+        <div class="calc">
+          <div class="calc-pick">
+            <label class="calc-pick-label" for="calc-select">Season</label>
+            <select id="calc-select" class="input calc-select"></select>
+            <div class="calc-chips" id="calc-chips" aria-label="Seasons"></div>
+          </div>
+          <div class="calc-layout">
+            <div id="calc-periods" class="calc-periods"><p class="muted">Loading the calculator…</p></div>
+            <aside class="calc-summary" id="calc-summary" aria-label="Score summary">
+              <div class="calc-card">
+                <span class="calc-season" id="calc-season-name"></span>
+                <div class="calc-total" aria-live="polite"><b id="calc-total">0</b><span>points</span></div>
+                <div class="calc-bar" id="calc-bar" aria-hidden="true"></div>
+                <ul class="calc-breakdown" id="calc-breakdown"></ul>
+                <div class="calc-rp" id="calc-rp" hidden>
+                  <div class="calc-rp-head"><h3>Ranking points</h3><b id="calc-rp-total">0 RP</b></div>
+                  <ul class="calc-rp-list" id="calc-rp-list"></ul>
+                  <label class="calc-opp"><span>Other alliance's score</span><input id="calc-opp" class="input" type="number" min="0" inputmode="numeric" placeholder="Optional"></label>
+                  <p class="fine" id="calc-rp-note"></p>
+                </div>
+                <div class="calc-actions"><button class="btn primary" type="button" id="calc-share">Share this score</button><button class="btn ghost" type="button" id="calc-reset">Reset</button></div>
+                <p class="fine">Point values come from each season's official game manual. Referees always have the final say. <a id="calc-learn" href="ftc.html#games">How this game works <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></p>
+              </div>
+            </aside>
+          </div>
+        </div>
+        <div class="calc-mobile-bar"><span>Total</span><b id="calc-bar-total">0</b><button class="btn sm" type="button" id="calc-jump">Breakdown</button></div>
+      </div>
+    </section>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

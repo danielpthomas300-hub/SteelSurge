@@ -270,6 +270,36 @@ pages["ftc.html"] = shell("About FTC" + T, "New to FIRST Tech Challenge? How FTC
   open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ftc_page.html"), encoding="utf-8").read(), path="ftc.html",
   extra_head='\n  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>\n  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>')
 
+pages["calculator.html"] = shell("Score calculator" + T, "Free FTC score calculator for every FIRST Tech Challenge game since 2017–18, including BIOBUZZ and DECODE. Tap what your alliance scored to see the total, breakdown, and ranking points.", "calculator",
+  page_hero("Score calculator", "FTC score calculator", "Tap what your alliance scored and watch the total, the breakdown, and ranking points add up. Every FTC game since 2017–18, with point values from the official manuals.")
+  + section(f"""        <div class="calc">
+          <div class="calc-pick">
+            <label class="calc-pick-label" for="calc-select">Season</label>
+            <select id="calc-select" class="input calc-select"></select>
+            <div class="calc-chips" id="calc-chips" aria-label="Seasons"></div>
+          </div>
+          <div class="calc-layout">
+            <div id="calc-periods" class="calc-periods"><p class="muted">Loading the calculator…</p></div>
+            <aside class="calc-summary" id="calc-summary" aria-label="Score summary">
+              <div class="calc-card">
+                <span class="calc-season" id="calc-season-name"></span>
+                <div class="calc-total" aria-live="polite"><b id="calc-total">0</b><span>points</span></div>
+                <div class="calc-bar" id="calc-bar" aria-hidden="true"></div>
+                <ul class="calc-breakdown" id="calc-breakdown"></ul>
+                <div class="calc-rp" id="calc-rp" hidden>
+                  <div class="calc-rp-head"><h3>Ranking points</h3><b id="calc-rp-total">0 RP</b></div>
+                  <ul class="calc-rp-list" id="calc-rp-list"></ul>
+                  <label class="calc-opp"><span>Other alliance's score</span><input id="calc-opp" class="input" type="number" min="0" inputmode="numeric" placeholder="Optional"></label>
+                  <p class="fine" id="calc-rp-note"></p>
+                </div>
+                <div class="calc-actions"><button class="btn primary" type="button" id="calc-share">Share this score</button><button class="btn ghost" type="button" id="calc-reset">Reset</button></div>
+                <p class="fine">Point values come from each season's official game manual. Referees always have the final say. <a id="calc-learn" href="ftc.html#games">How this game works {A}</a></p>
+              </div>
+            </aside>
+          </div>
+        </div>
+        <div class="calc-mobile-bar"><span>Total</span><b id="calc-bar-total">0</b><button class="btn sm" type="button" id="calc-jump">Breakdown</button></div>"""), path="calculator.html", js=("calc-data.js", "calculator.js"))
+
 pages["trophies.html"] = shell("Trophies" + T, "Your Steel Surge trophy case: earn bronze, silver, gold, and platinum trophies by exploring the site and playing the arcade.", "trophies",
   page_hero("Trophy case", "Your trophies", "Earn bronze, silver, gold, and platinum trophies by exploring the site and playing the arcade. Collect every one to unlock the platinum trophy.")
   + section('        <div id="trophy-case"></div>'), path="trophies.html")
