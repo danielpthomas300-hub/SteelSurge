@@ -140,7 +140,7 @@
     const nextOpen = L.doors.map((d) => doorOpen(L, d, robotsAt(t, pos)));
     anim = { t: 0, from: prevGhosts, to: ghosts.map((g) => ghostAt(g, t)), pfrom: prevPos, pto: pos, dir: a, bumped };
     // feedback
-    if (bumped) Sound.tone({ f: 140, dur: 0.06, type: "square", vol: 0.05 });
+    if (bumped) Sound.hit();
     else if (a === "W") Sound.tone({ f: 420, dur: 0.04, type: "sine", vol: 0.05 });
     else Sound.tone({ f: 520, f2: 620, dur: 0.05, type: "triangle", vol: 0.06 });
     nextOpen.forEach((o, i) => { if (o !== prevOpen[i]) { Sound.tone({ f: o ? 700 : 260, f2: o ? 1000 : 180, dur: 0.12, type: "square", vol: 0.06 }); } });
@@ -166,7 +166,7 @@
     resetLoop();
   }
   function outOfLoops() {
-    won = true; anim = null; queue = [];
+    won = true; anim = null; queue = []; Sound.gameOver();
     game.showOverlay(`<span class="kicker">Level ${li + 1} · ${window.Arcade.levelName()}</span><h2>Out of loops</h2>
       <p>${window.Arcade.levelName()} allows ${loopLimit()} loops on this level. Plan each echo before you record it, then try again.</p>
       <div class="overlay-actions"><button class="btn primary" data-primary>Try again</button></div>`, { onPrimary: () => load(li) });

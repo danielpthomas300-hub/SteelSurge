@@ -161,8 +161,10 @@
   }
 
   /* ---------------- Award logic ---------------- */
+  // The team can switch trophies off in the editor's master controls.
+  const trophiesOff = () => window.SS?.content && window.SS.controls?.(window.SS.content).trophies === false;
   function trophy(id) {
-    const t = BY_ID[id]; if (!t) return false;
+    const t = BY_ID[id]; if (!t || trophiesOff()) return false;
     const e = earned(); if (e[id]) return false;
     e[id] = Date.now(); set(KEY, e);
     queue.push(t); if (document.body) pop(); else addEventListener("DOMContentLoaded", pop);
@@ -253,6 +255,6 @@
     if (end && "IntersectionObserver" in window) new IntersectionObserver(([en], io) => { if (en.isIntersecting) { trophy("rookie"); io.disconnect(); } }).observe(end);
     addEventListener("ss:theme", (ev) => { if (ev.detail === "light" || ev.detail === "dark") trophy("night-shift"); });
   }
-  document.addEventListener("ss:ready", () => { updateBadge(); renderCase(); });
+  document.addEventListener("ss:ready", () => { if (trophiesOff()) queue.length = 0; updateBadge(); renderCase(); pop(); });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();

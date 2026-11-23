@@ -90,6 +90,9 @@
     s.v += (target - s.v) * Math.min(1, dt * (s.stall > 0 ? 9 : 6));
     s.x += s.v * dt;
     s.wheel += s.v * dt / 9;
+    // Motor whine follows speed; it gets brighter while boosting
+    if (!motor?.alive) motor = Sound.loop({ f: 60, vol: 0.0001, cutoff: 600 });
+    motor.set({ f: 45 + s.v * 0.3, vol: s.stall > 0 ? 0.0001 : boosting ? 0.04 : 0.016, cutoff: 350 + s.v * 5 });
 
     // Heat
     const vent = inZone("vent"), furnace = inZone("furnace");
@@ -135,13 +138,14 @@
 
   function overheat() {
     s.stall = 1.5; s.heat = 1;
-    Sound.noise({ dur: 0.8, vol: 0.25, f: 5000, type: "highpass" }); Sound.tone({ f: 400, f2: 80, dur: 0.6, type: "sawtooth", vol: 0.12 });
+    Sound.steam();
     game.floaters.add("OVERHEAT!", CAM_X, GROUND - 100, C.danger, 24); game.shake(5);
     for (let i = 0; i < 3; i++) game.particles.burst(CAM_X, GROUND - BOT, { n: 10, color: "#cfd8e3", speed: 90, angle: -Math.PI / 2, spread: 1.2, gravity: -80, life: 1.2, size: 5, glow: false, drag: 0.94 });
   }
 
+  let motor = null;
   function die(h) {
-    s.dead = true; s.deadT = 0; holding = false;
+    s.dead = true; s.deadT = 0; holding = false; Sound.stopLoops();
     Sound.boom(); game.shake(16);
     game.particles.burst(CAM_X, GROUND - BOT / 2, { n: 46, color: C.surge, speed: 420, life: 1.1, size: 5 });
     game.particles.burst(CAM_X, GROUND - BOT / 2, { n: 26, color: C.amber, speed: 300, life: 0.9, size: 4 });
@@ -149,6 +153,7 @@
     const meters = Math.floor(s.x / PX_PER_M);
     game.trophy("oc-first");
     const isRecord = game.submitBest(s.score, `${s.score.toLocaleString()} pts`);
+    setTimeout(() => Sound.gameOver(), 800);
     if (isRecord) { const b = game.best(); window.Arcade.store.set("ss-arcade-overclock", { ...b, dist: meters }); }
     const reason = h.type === "crusher" ? "Flattened by a crusher." : "Zapped by a laser gate.";
     setTimeout(() => {

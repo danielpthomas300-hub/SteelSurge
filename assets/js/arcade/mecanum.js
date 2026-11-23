@@ -92,8 +92,9 @@
   }
   function toggleMode() { prog.mode = prog.mode === "field" ? "robot" : "field"; store.set("ss-mecanum", prog); Sound.select(); if (s) game.setMessage(`Drive mode: ${prog.mode === "field" ? "field-centric (W is always up)" : "robot-centric (W is the robot's front)"}.`); }
 
+  let motor = null;
   game.update = (dt) => {
-    if (!s || s.done) return;
+    if (!s || s.done) { motor?.stop(); return; }
     const k = game.keys;
     let ix = (k.has("d") || k.has("D") ? 1 : 0) - (k.has("a") || k.has("A") ? 1 : 0);
     let iy = (k.has("s") || k.has("S") ? 1 : 0) - (k.has("w") || k.has("W") ? 1 : 0);
@@ -108,6 +109,10 @@
     const tx = ix * MAX_SPEED, ty = iy * MAX_SPEED;
     const ax = clamp(tx - s.vx, -ACCEL * dt, ACCEL * dt), ay = clamp(ty - s.vy, -ACCEL * dt, ACCEL * dt);
     s.vx += ax; s.vy += ay; s.h += clamp(turn, -1, 1) * TURN * dt;
+    // Drive motors: pitch and loudness follow speed
+    const sp = Math.hypot(s.vx, s.vy) / MAX_SPEED + Math.abs(clamp(turn, -1, 1)) * 0.35;
+    if (!motor?.alive) motor = Sound.loop({ f: 70, vol: 0.0001, cutoff: 500, type: "sawtooth" });
+    motor.set({ f: 70 + sp * 120, vol: sp > 0.02 ? 0.012 + sp * 0.03 : 0.0001, cutoff: 400 + sp * 900 });
     const px = s.x, py = s.y;
     s.x = clamp(s.x + s.vx * dt, 40 + ROBOT / 2, W - 40 - ROBOT / 2); s.y = clamp(s.y + s.vy * dt, 40 + ROBOT / 2, H - 40 - ROBOT / 2);
     if (s.x === 40 + ROBOT / 2 || s.x === W - 40 - ROBOT / 2) s.vx *= -0.3;
@@ -120,7 +125,7 @@
         s.x = cn.x + dx / d * min; s.y = cn.y + dy / d * min;
         const last = s.hit.get(cn) || -9;
         const pen = window.Arcade.pick([0, 0.5, 1, 2, 3]);
-        if (s.t - last > 0.8) { s.penalty += pen; s.touched++; s.hit.set(cn, s.t); Sound.tone({ f: 180, dur: 0.1, type: "square", vol: 0.08 }); game.shake(4); game.floaters.add(pen ? `+${pen}s` : "Bump!", cn.x, cn.y - 16, pen ? C.danger : C.amber, 18); }
+        if (s.t - last > 0.8) { s.penalty += pen; s.touched++; s.hit.set(cn, s.t); Sound.hit(); game.shake(4); game.floaters.add(pen ? `+${pen}s` : "Bump!", cn.x, cn.y - 16, pen ? C.danger : C.amber, 18); }
       }
       cn.x += (cn.ox - cn.x) * dt * 0.6; cn.y += (cn.oy - cn.y) * dt * 0.6;
     }

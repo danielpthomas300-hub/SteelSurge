@@ -111,11 +111,11 @@
     const dist = next.map((q, i) => Math.abs(q[0] - pos[i][0]) + Math.abs(q[1] - pos[i][1]));
     const maxD = Math.max(...dist);
     if (!maxD) { // nothing moves — little nudge feedback
-      bump = pos.map(() => 1); anim = { from: pos, to: pos, d, t: 0, dur: 0.14, nudge: true }; Sound.tone({ f: 160, dur: 0.06, type: "square", vol: 0.05 }); return;
+      bump = pos.map(() => 1); anim = { from: pos, to: pos, d, t: 0, dur: 0.14, nudge: true }; Sound.hit(); return;
     }
     history.push(pos); updateMoves();
     anim = { from: pos, to: next, dist, d, t: 0, dur: 0.1 + maxD * 0.055 };
-    Sound.tone({ f: 300, f2: 520, dur: 0.08, type: "triangle", vol: 0.07 });
+    Sound.tone({ f: 300, f2: 520, dur: 0.08, type: "triangle", vol: 0.07 }); Sound.whoosh();
   }
 
   function arrive() {
@@ -140,7 +140,7 @@
   }
 
   function outOfMoves() {
-    won = true; queued = null; Sound.tone({ f: 300, f2: 120, dur: 0.3, type: "sawtooth", vol: 0.08 });
+    won = true; queued = null; Sound.gameOver();
     game.showOverlay(`<span class="kicker">Level ${li + 1} · ${window.Arcade.levelName()}</span><h2>Out of moves</h2>
       <p>You used all ${moveLimit()} moves. Par for this level is ${L.par}. Plan the route, then try again.</p>
       <div class="overlay-actions"><button class="btn primary" data-primary>Try again</button></div>`, { onPrimary: () => load(li) });

@@ -52,7 +52,7 @@
       if (s.score >= 500) game.trophy("fw-gold");
       if (s.D > 1.5 && s.score >= 250) game.trophy("fw-extreme");
       newHive();
-    } else { if (s.streak) game.floaters.add("Streak lost", b.x, Math.min(b.y, GROUND - 30), C.danger, 16); s.streak = 0; Sound.tone({ f: 260, f2: 160, dur: 0.2, type: "triangle", vol: 0.07 }); }
+    } else { if (s.streak) game.floaters.add("Streak lost", b.x, Math.min(b.y, GROUND - 30), C.danger, 16); s.streak = 0; Sound.miss(); }
     newWind(); updateHud();
     if (s.balls <= 0) setTimeout(endRound, 700);
   }
@@ -60,6 +60,7 @@
   function endRound() {
     if (s.over) return; s.over = true; game.stop();
     const isRecord = game.submitBest(s.score, `${s.score.toLocaleString()} pts`);
+    if (!isRecord) s.made >= 5 ? Sound.win() : Sound.gameOver();
     game.showOverlay(`<span class="kicker">Round over</span><h2>${s.made >= 8 ? "Sharpshooter!" : s.made >= 5 ? "Nice shooting" : "Keep tuning"}</h2>
       <div class="big-score">${s.score.toLocaleString()}</div><p>${s.made}/10 shots scored · best streak ${s.bestStreak}</p>
       ${isRecord ? '<span class="record">New personal best</span>' : `<p>Best: ${game.best()?.label ?? "—"}</p>`}

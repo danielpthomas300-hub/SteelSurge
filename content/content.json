@@ -1,4 +1,21 @@
 {
+  "controls": {
+    "maintenance": false,
+    "maintenanceTitle": "We'll be right back",
+    "maintenanceMessage": "Our website is getting a tune-up. Check back soon, or email the team if you need us.",
+    "maintenanceUntil": "",
+    "banner": false,
+    "bannerText": "",
+    "bannerLink": "",
+    "bannerTone": "info",
+    "arcade": true,
+    "calculator": true,
+    "media": true,
+    "trophies": true,
+    "steelAI": true,
+    "contactForm": true,
+    "searchEngines": true
+  },
   "team": {
     "name": "Steel Surge",
     "number": 27254,
@@ -103,9 +120,9 @@
       "image": "assets/img/projects/keychain-medallion.jpg"
     },
     {
-      "title": "Webcam tilt mount",
-      "body": "A snap-together case and tilt bracket for a Logitech C270 webcam. It mounts to goBILDA and REV parts and prints without supports.",
-      "image": "assets/img/projects/camera-mount.jpg"
+      "title": "Team shirts and stickers",
+      "body": "Our team shirt design puts the Steel Surge shield on the chest with our team number underneath. Matching die-cut stickers carry the logo, the bolt, and 27254 for trading at events.",
+      "image": "assets/img/projects/team-merch.jpg"
     },
     {
       "title": "Makerspace doorstop",
@@ -162,11 +179,11 @@
     },
     {
       "id": "898VsTdlHjY",
-      "title": "Outreach with Steel Surge"
+      "title": "Intro to robotics"
     },
     {
       "id": "G7XKZ31Kun8",
-      "title": "Another meeting"
+      "title": "Outreach with Steel Surge"
     }
   ],
   "sponsorPitch": "Running a robotics team takes real resources: parts, tools, competition fees, travel, and outreach events. Your support keeps students building, learning, and sharing STEM with the community — and puts your name in front of families, schools, and the FIRST community all season long.",

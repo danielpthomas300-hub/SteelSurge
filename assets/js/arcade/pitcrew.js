@@ -58,13 +58,13 @@
       f.fixed = true; f.fixT = 0;
       const pts = 10 * s.combo * (b.golden ? 2 : 1);
       s.score += pts; s.combo = Math.min(8, s.combo + 1); s.bestCombo = Math.max(s.bestCombo, s.combo); if (s.combo >= 6) game.trophy("pc-combo");
-      Sound.tone({ f: 520 + s.combo * 60, f2: 900 + s.combo * 60, dur: 0.09, type: "triangle", vol: 0.1 });
+      Sound.combo(s.combo);
       game.particles.burst(px, py, { n: 16, color: TOOLS[i].color, speed: 240, life: 0.5, gravity: 400, size: 3 });
       game.floaters.add(`+${pts}`, px, py - 10, TOOLS[i].color, 20);
       if (b.faults.every((x) => x.fixed)) finishBot();
     } else {
       b.time = Math.max(0, b.time - 1.2); s.combo = 1; s.flash = 0.25;
-      Sound.tone({ f: 140, dur: 0.16, type: "square", vol: 0.1 }); game.shake(6);
+      Sound.error(); game.shake(6);
       game.floaters.add("Wrong tool −1.2s", STAND_X, STAND_Y - 150, C.danger, 18);
     }
     updateHud();
@@ -83,7 +83,7 @@
 
   function strike() {
     const b = s.bot; b.state = "tow"; b.stateT = 0; s.strikes++; s.combo = 1;
-    Sound.tone({ f: 300, f2: 90, dur: 0.5, type: "sawtooth", vol: 0.12 }); game.shake(10);
+    Sound.fail(); game.shake(10);
     game.floaters.add("Missed the match!", STAND_X, STAND_Y - 170, C.danger, 24);
     updateHud();
     if (s.strikes >= 3) setTimeout(gameOver, 700);
@@ -92,6 +92,7 @@
   function gameOver() {
     s.over = true; game.stop();
     const isRecord = game.submitBest(s.score, `${s.score.toLocaleString()} pts`);
+    Sound.gameOver();
     game.showOverlay(`
       <span class="kicker">Pit closed</span>
       <h2>${s.fixed >= 25 ? "Legendary pit crew" : s.fixed >= 12 ? "Solid shift" : "Rough day in the pit"}</h2>

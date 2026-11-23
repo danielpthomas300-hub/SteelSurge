@@ -70,7 +70,7 @@
       if (s.i >= s.path.length) return routeDone();
     } else {
       s.strikes++; s.wrongAt = [s.at[0] + DIRS[d][0], s.at[1] + DIRS[d][1]]; s.wrongT = 0.6;
-      Sound.tone({ f: 200, f2: 90, dur: 0.25, type: "sawtooth", vol: 0.1 }); game.shake(6);
+      Sound.error(); game.shake(6);
       game.setHud("strikes", `${s.strikes}/${s.maxStrikes}`);
       if (s.strikes >= s.maxStrikes) return endRun();
       game.setMessage(`Wrong way. Strike ${s.strikes} of ${s.maxStrikes}. Watch the route again.`);
@@ -91,6 +91,7 @@
   function endRun() {
     s.over = true; s.phase = "over"; game.stop();
     const rec = game.submitBest(s.best, `${s.best} steps`);
+    setTimeout(() => Sound.gameOver(), 350);
     setTimeout(() => game.showOverlay(`<span class="kicker">Out of strikes</span><h2>${s.best >= 12 ? "Perfect recall!" : s.best >= 8 ? "Sharp memory" : "Keep practicing"}</h2>
       <div class="big-score">${s.best}</div><p>longest route remembered · ${s.score} correct steps · ${window.Arcade.levelName()}</p>
       ${rec ? '<span class="record">New personal best</span>' : `<p>Best: ${game.best()?.label ?? "—"}</p>`}

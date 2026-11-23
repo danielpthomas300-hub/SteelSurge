@@ -21,6 +21,7 @@
 
   /* ---------------- Sidebar groups and "view on site" links ---------------- */
   const GROUPS = [
+    ["Site", ["controls"]],
     ["Team", ["team", "members", "values", "projects", "mentors"]],
     ["Season", ["achievements", "outreach"]],
     ["Media", ["featuredVideos", "updates"]],
@@ -35,6 +36,28 @@
   /* ---------------- Schema: what can be edited, in plain words ---------------- */
   const DEPTS = ["Mechanical", "Programming", "Outreach", "Leadership", "Other"];
   const SECTIONS = [
+    { id: "controls", title: "Master controls", icon: "gear", desc: "Switches for the whole site: maintenance mode, a site-wide announcement, and which features are turned on. Like every change here, they go live when you publish.",
+      get: (c) => ({ ...(window.SS?.CONTROL_DEFAULTS || {}), ...(c.controls || {}) }), set: (c, v) => (c.controls = v),
+      fields: [
+        { k: "_mx", label: "Maintenance mode", type: "heading", hint: "Shows a 'we'll be right back' page on every page of the site. The Team editor keeps working, and on this device you can still view the site." },
+        { k: "maintenance", label: "Turn on maintenance mode", type: "bool" },
+        { k: "maintenanceTitle", label: "Headline", type: "text", hint: "e.g. We'll be right back" },
+        { k: "maintenanceMessage", label: "Message", type: "textarea" },
+        { k: "maintenanceUntil", label: "Expected back (optional)", type: "text", hint: "e.g. Sunday evening. Leave empty to hide." },
+        { k: "_banner", label: "Announcement banner", type: "heading", hint: "A strip across the top of every page. Visitors can hide it; it comes back for them when you change the text." },
+        { k: "banner", label: "Show the announcement banner", type: "bool" },
+        { k: "bannerText", label: "Announcement", type: "text", hint: "e.g. We're competing at the Chester County Qualifier this Saturday!" },
+        { k: "bannerLink", label: "Link (optional)", type: "text", hint: "A full web address, or a page on this site like ftc.html. Adds a 'Learn more' link." },
+        { k: "bannerTone", label: "Style", type: "select", options: [["info", "Info (steel blue)"], ["celebrate", "Celebrate (gold)"], ["warning", "Heads up (orange)"]] },
+        { k: "_features", label: "Features", type: "heading", hint: "Switch parts of the site off. Their links disappear, and their pages say they're taking a break." },
+        { k: "arcade", label: "Arcade games", type: "bool" },
+        { k: "calculator", label: "Score Calculator", type: "bool" },
+        { k: "media", label: "Media page", type: "bool" },
+        { k: "trophies", label: "Trophies and trophy case", type: "bool" },
+        { k: "steelAI", label: "Steel AI assistant", type: "bool" },
+        { k: "contactForm", label: "Contact form", type: "bool", hint: "When off, the Contact page shows the team email instead." },
+        { k: "searchEngines", label: "Let search engines list the site", type: "bool", hint: "Turn off to ask Google and others not to show the site in search results." },
+      ] },
     { id: "team", title: "Team info", icon: "flag", desc: "Your name, intro, location, and links used across the whole site.",
       get: (c) => c.team, set: (c, v) => (c.team = v),
       fields: [
@@ -304,7 +327,10 @@
       const hint = f.hint ? `<span class="hint">${esc(f.hint)}</span>` : "";
       const set = (v) => { value[f.k] = v; onChange({ ...value }); };
       const v = value[f.k];
-      if (f.type === "textarea") {
+      if (f.type === "heading") {
+        row.className = "ed-group-head";
+        row.innerHTML = `<h3>${esc(f.label)}</h3>${f.hint ? `<p class="hint">${esc(f.hint)}</p>` : ""}`;
+      } else if (f.type === "textarea") {
         row.innerHTML = `${label}<textarea class="textarea" id="${id}" rows="4">${esc(v)}</textarea>${hint}`;
         $("textarea", row).addEventListener("input", (e) => set(e.target.value));
       } else if (f.type === "select") {

@@ -319,7 +319,7 @@
     if (raw.trim() && s.t > 0 && (!res || res.numberOnly)) {
       const box = ui.querySelector(".kv-hint"), input = ui.querySelector("#kv-in");
       box.textContent = !res ? `No FTC team called “${raw.trim()}”. Check the spelling and try again.` : res.team ? `Type the team's name, not its number. (#${res.team.number} is ${res.team.name}.)` : "Type a team name, not a number.";
-      box.classList.add("warn"); input.select(); Sound.tone({ f: 200, dur: 0.08, type: "square", vol: 0.05 });
+      box.classList.add("warn"); input.select(); Sound.error();
       return;
     }
     s.phase = "reveal";
@@ -339,10 +339,11 @@
       if (tier === 0) Sound.tone({ f: 520, dur: 0.08, type: "triangle", vol: 0.1 });
       const r = game.stage.getBoundingClientRect();
       game.particles.burst(W / 2, (r.height / r.width) * W * 0.35, { n: 10 + tier * 10, color: T.color, speed: 160 + tier * 50, life: 0.8, gravity: 120 });
+      if (tier >= 3) Sound.zap();
       if (tier >= 4) game.shake(4 + tier);
       if (tier === 5) game.trophy("kv-surge");
       if (team.number === HOME) game.trophy("kv-home");
-    } else Sound.tone({ f: 260, f2: 130, dur: 0.25, type: "sawtooth", vol: 0.07 });
+    } else Sound.miss();
     const ex = examples(c, team);
     const T = tier >= 0 ? TIERS[tier] : null;
     ui.querySelector(".kv-main").innerHTML = `

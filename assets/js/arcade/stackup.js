@@ -46,7 +46,7 @@
     if (perfect) {
       x = prev.x; w = prev.w; s.combo++; s.perfects++; s.bestCombo = Math.max(s.bestCombo, s.combo);
       if (s.combo >= 3 && s.regrow) { const grow = Math.min(s.regrow, BW0 - w); x -= grow / 2; w += grow; }
-      Sound.tone({ f: 520 + Math.min(s.combo, 8) * 70, f2: 900 + Math.min(s.combo, 8) * 90, dur: 0.12, type: "triangle", vol: 0.12 });
+      Sound.combo(s.combo); Sound.thud();
       game.particles.burst(x + w / 2, y + BH / 2, { n: 18 + s.combo * 2, color: m.color, speed: 220, life: 0.6, gravity: 200, spread: Math.PI, angle: -Math.PI / 2 });
       game.floaters.add(s.combo > 1 ? `PERFECT ×${s.combo}` : "PERFECT", x + w / 2, y - 18, C.ok, 20);
     } else {
@@ -70,6 +70,7 @@
   function endRun() {
     if (s.over) return; s.over = true; game.stop();
     const h = s.score, rec = game.submitBest(h, `${h} high`);
+    Sound.gameOver();
     game.showOverlay(`<span class="kicker">Tower down</span><h2>${h >= 40 ? "Sky-high!" : h >= 20 ? "Great stack" : h >= 10 ? "Nice build" : "Keep stacking"}</h2>
       <div class="big-score">${h}</div><p>pieces stacked · ${s.perfects} perfect drop${s.perfects === 1 ? "" : "s"} · best combo ${s.bestCombo} · ${window.Arcade.levelName()}</p>
       ${rec ? '<span class="record">New personal best</span>' : `<p>Best: ${game.best()?.label ?? "—"}</p>`}

@@ -605,6 +605,9 @@
   }
 
   window.SteelAI = { ask: (q) => { if (!open) toggle(true); return ask(q); }, answer, open: () => toggle(true), forget: () => { ctx.season = null; }, searchManual: (q, y) => manualSearch(q, y || curSeason()) };
-  const start = () => { build(); if (/[?&]ask=/.test(location.search)) { const q = new URLSearchParams(location.search).get("ask"); toggle(true); if (q) ask(q); } };
+  const start = async () => {
+    // Stay hidden when the team switches Steel AI off or the site is in maintenance mode.
+    try { const c = await SS().loadContent?.(); if (c && SS().siteOff?.(c, "steelAI")) return; } catch {}
+    build(); if (/[?&]ask=/.test(location.search)) { const q = new URLSearchParams(location.search).get("ask"); toggle(true); if (q) ask(q); } };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();

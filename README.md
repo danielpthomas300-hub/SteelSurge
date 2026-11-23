@@ -28,6 +28,13 @@ A fast, static website (plain HTML, CSS, and JavaScript, with no build step need
 4. Click **Preview site** to see the real site with your draft.
 5. Click **Publish…** and follow the 4 steps (copy, open GitHub, paste, commit). The live site updates in about a minute.
 
+#### Master controls (Site → Master controls in the editor)
+Switches for the whole site, saved in the `controls` block of `content/content.json`. Like every editor change, they go live when you publish.
+- **Maintenance mode:** every page shows a "We'll be right back" screen with your headline, message, optional "expected back" time, the team email, and social links. The editor keeps working. On a device where someone has used the editor, the maintenance screen has a **View the site anyway** button, and a reminder pill stays on screen while maintenance is on. This hides the site from visitors, but a static site can't truly lock anyone out, so don't rely on it to hide private information.
+- **Announcement banner:** a strip above the header on every page, with optional "Learn more" link and three styles (info, celebrate, heads up). Visitors can close it; it comes back for them when you change the text.
+- **Features:** turn the Arcade, Score Calculator, Media page, trophies, Steel AI, or the contact form off. Their menu, footer, and in-page links disappear, their pages say "taking a break", and the Contact page shows the team email when the form is off.
+- **Search engines:** turn off to add a `noindex` tag so Google and others stop listing the site.
+
 New photos: use **Prepare a new image** in the editor. It crops and shrinks the photo and downloads it. Then upload it to `assets/img/team/` (or `projects/`, `sponsors/`) on GitHub. The Publish dialog has links.
 
 ### Option 2: edit `content/content.json` directly
@@ -54,7 +61,9 @@ Every page except the editor and the arcade games has an **Ask Steel AI** button
 
 Thirteen original games share one engine (`assets/js/arcade/kit.js`): sound, particles, overlays, pause, fullscreen, touch controls, and best scores saved per device.
 
-Every game has five difficulty levels: **Super Easy, Easy, Medium, Hard, and Extreme**. The badge in each game's toolbar shows the current level; click it (or the gear button) to open **Settings**, which also has sound effects and volume, screen shake, particles, high contrast, and larger text. Settings are shared by all games and saved per browser.
+Sound effects are made in code, so there are no audio files to download. `Arcade.Sound` has named effects for every game to share: `select`, `pickup`, `combo(n)`, `hit`, `thud`, `boom`, `miss`, `fail`, `error`, `win`, `star(i)`, `record`, `gameOver`, `go`, `warn`, `zap`, `steam`, `whoosh`, and `rewind`. It also has `Sound.loop()` for held sounds such as the motor hum in Overclock and Mecanum Rush. The engine plays a start sound, a pause and resume sound, a chime for each star on a level-complete card, and a fanfare for a new personal best (which replaces the game-over sound).
+
+Every game has five difficulty levels: **Super Easy, Easy, Medium, Hard, and Extreme**. The badge in each game's toolbar shows the current level; click it (or the gear button) to open **Settings**, which also has sound effects and volume, screen shake, particles, glow effects, high contrast, and larger text. The engine adds a soft neon glow and vignette to every game; it turns the glow off by itself on devices that can't keep a smooth frame rate. Settings are shared by all games and saved per browser.
 
 - Action games get faster and less forgiving at higher levels.
 - Puzzles change their rules: easier levels add hints (Gridlock's Super Easy shows the next best move after every move), while Hard and Extreme add move, block, or loop limits and turn off hints (and undo on Extreme). Every level stays solvable on every difficulty.
@@ -133,6 +142,7 @@ tools/                    Page builder, level generators, image generator, data 
 - **Check links:** `python tools/check_links.py` confirms every internal link, image, and script exists.
 - **After changing layout, CSS, or JS:** run `python tools/build_pages.py`. It rebuilds the pages and stamps a new version on asset links so visitors get the update right away.
 - **Logo and icons:** the official logo lives at `assets/img/brand/logo-source.png`. To change it, replace that file and run `python tools/make_images.py` (needs `pip install pillow`). It rebuilds the homepage logo, header icon, browser-tab icon, app icons, and the social share card.
+- **Merch picture:** `assets/img/projects/team-merch.jpg` (the team shirt and stickers on the Team page) is drawn by `python tools/make_merch.py` from the same logo. Rerun it after a logo change. When you have a real photo of the shirts, upload it in the editor under Team → Projects instead.
 - **Levels:** `node tools/check_levels.js` checks Echo; the generators check Gridlock and Autonomous.
 - **Editor passcode:** only a SHA-256 hash is stored. It keeps the editor out of sight; it isn't real security and can't change the live site. Publishing always needs the team's GitHub login.
 - **Contact form:** sends through [FormSubmit](https://formsubmit.co) to the team email. The **first** message triggers a one-time activation email; click its link. If sending fails, visitors get a pre-filled email instead.

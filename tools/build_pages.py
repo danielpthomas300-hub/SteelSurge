@@ -131,9 +131,9 @@ pages["index.html"] = shell("Steel Surge — FTC Robotics Team 27254", "Steel Su
 
 pages["team.html"] = shell("Team" + T, "Meet the students behind Steel Surge, FTC team 27254: mechanical, programming, and outreach.", "team",
   page_hero("The team", "Meet the crew", "Students who design, build, code, and promote our robot every season.", "team-lead")
-  + section('        <div class="filter-bar" id="team-filter" role="group" aria-label="Filter by department"></div>\n        <div class="team-grid" id="team-grid"></div>')
+  + section('        <h2 class="sr-only">Team members</h2>\n        <div class="filter-bar" id="team-filter" role="group" aria-label="Filter by department"></div>\n        <div class="team-grid" id="team-grid"></div>')
   + section(head_block("How we work", "What Steel Surge stands for") + '\n        <div class="values-grid" id="values-grid"></div>', attrs=' id="values" hidden')
-  + section(head_block("Made by Steel Surge", "From our CAD to the 3D printer", "Beyond the robot, we design and print our own team gear and shop tools.") + '\n        <div class="projects-grid" id="projects-grid"></div>', attrs=' id="projects" hidden')
+  + section(head_block("Made by Steel Surge", "Designed by our team", "Beyond the robot, we design our own merch, 3D-printed team gear, and shop tools.") + '\n        <div class="projects-grid" id="projects-grid"></div>', attrs=' id="projects" hidden')
   + section(head_block("Mentors", "The people who guide us") + '\n        <div class="grid cols-3" id="mentor-grid"></div>', attrs=' id="mentors" hidden')
   + section(head_block("Our story", "Milestones and awards", "Official awards appear here automatically from FTCScout.", f'<a class="link-arrow" id="results-link" href="https://ftcscout.org/teams/27254" target="_blank" rel="noopener">Every event and match on FTCScout {A}</a>') + '\n        <div class="timeline" id="timeline"></div>', attrs=' id="milestones"')
   + section(f'''        <div class="cta-band reveal">
@@ -163,7 +163,7 @@ pages["media.html"] = shell("Media" + T, "Videos, highlights, and social media f
 
 pages["arcade.html"] = shell("Arcade" + T, "Thirteen original browser games from Steel Surge, FTC team 27254, each with trophies to earn.", "arcade",
   page_hero("Steel Surge Arcade", "Play something we built", 'Thirteen original robot games starring Surge, our mascot. They run in your browser on a computer or phone, remember your best scores on this device, and award <a href="trophies.html">trophies</a> as you play.')
-  + section('        <div id="arcade-progress"></div>\n        <div class="grid cols-3" id="arcade-games"></div>'), path="arcade.html")
+  + section('        <h2 class="sr-only">Games</h2>\n        <div id="arcade-progress"></div>\n        <div class="grid cols-3" id="arcade-games"></div>'), path="arcade.html")
 
 WHY = [
     ("Reach local families", "Your name travels with us to events, outreach demos, and our online channels all season."),

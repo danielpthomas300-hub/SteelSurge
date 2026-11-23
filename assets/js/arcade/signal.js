@@ -156,6 +156,7 @@
     const [sx, sy] = toScreen(s.px, s.py);
     game.particles.burst(sx, sy, { n: 40, color: C.surge, speed: 360, life: 1, size: 4 }); game.particles.burst(sx, sy, { n: 20, color: C.danger, speed: 260, life: 0.8 });
     const isRecord = game.submitBest(s.score, `${s.score.toLocaleString()} pts`);
+    setTimeout(() => Sound.gameOver(), 800);
     setTimeout(() => {
       game.stop();
       game.showOverlay(`<span class="kicker">Signal lost</span><h2>A drone found you</h2><div class="big-score">${s.score.toLocaleString()}</div>

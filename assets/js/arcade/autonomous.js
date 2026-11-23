@@ -110,10 +110,10 @@
     const geo = layout(), [cx, cy] = cell(geo, st.x, st.y);
     if (res.event === "move") Sound.tone({ f: 330, f2: 400, dur: 0.07, type: "triangle", vol: 0.06 });
     else if (res.event === "turn") Sound.tone({ f: 500, dur: 0.05, type: "sine", vol: 0.05 });
-    else if (res.event === "bump") { Sound.tone({ f: 130, dur: 0.1, type: "square", vol: 0.08 }); game.shake(4); }
+    else if (res.event === "bump") { Sound.hit(); game.shake(4); }
     else if (res.event === "grab") { Sound.pickup(); game.particles.burst(cx, cy, { n: 12, color: C.amber, speed: 160, life: 0.5, gravity: 0 }); }
-    else if (res.event === "score") { Sound.win(); game.particles.burst(cx, cy, { n: 30, color: C.ok, speed: 260, life: 0.7, gravity: 0 }); game.floaters.add("+1 SCORED", cx, cy - 20, C.ok, 18); }
-    else if (res.event === "miss") { Sound.tone({ f: 220, f2: 160, dur: 0.12, type: "triangle", vol: 0.07 }); game.floaters.add(step.cmd === "G" ? "Nothing to grab" : "Can't score here", cx, cy - 20, C.danger, 15); }
+    else if (res.event === "score") { Sound.pickup(); Sound.star(2); game.particles.burst(cx, cy, { n: 30, color: C.ok, speed: 260, life: 0.7, gravity: 0 }); game.floaters.add("+1 SCORED", cx, cy - 20, C.ok, 18); }
+    else if (res.event === "miss") { Sound.error(); game.floaters.add(step.cmd === "G" ? "Nothing to grab" : "Can't score here", cx, cy - 20, C.danger, 15); }
     highlight(step.src);
   }
   function finish() {
@@ -123,11 +123,11 @@
     const rl = runLimit() - runs;
     if (rl <= 0) { game.setMessage(`Out of runs: ${left} sample${left > 1 ? "s" : ""} not scored. Starting the level over.`); setTimeout(() => load(li), 1600); }
     else game.setMessage(`Autonomous over: ${left} sample${left > 1 ? "s" : ""} not scored. Edit your program and run it again.${Number.isFinite(rl) ? ` ${rl} run${rl === 1 ? "" : "s"} left.` : ""}`);
-    Sound.tone({ f: 400, f2: 200, dur: 0.3, type: "sawtooth", vol: 0.08 });
+    if (rl <= 0) Sound.gameOver(); else Sound.fail();
     renderUI();
   }
   function win() {
-    won = true;
+    won = true; Sound.win();
     const n = program.length, stars = n <= L.par ? 3 : n <= L.par + 2 ? 2 : 1;
     prog$.stars[li] = Math.max(prog$.stars[li] || 0, stars); saveProg();
     game.trophy("au-first"); if (Object.values(prog$.stars).filter((n) => n === 3).length >= 10) game.trophy("au-stars"); if (program.some((b) => b === "2" || b === "3")) game.trophy("au-repeat");

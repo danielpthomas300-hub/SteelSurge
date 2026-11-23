@@ -45,6 +45,7 @@
   function endRun(why) {
     if (s.over) return; s.over = true; s.overT = 0; game.stop();
     const secs = Math.floor(s.t), rec = game.submitBest(s.score, `${s.score.toLocaleString()} pts`);
+    setTimeout(() => Sound.gameOver(), 500);
     setTimeout(() => game.showOverlay(`<span class="kicker">${why}</span><h2>${secs >= 90 ? "Steady hands!" : secs >= 45 ? "Well balanced" : "Keep it level"}</h2>
       <div class="big-score">${s.score.toLocaleString()}</div><p>${s.collected} pieces collected · ${secs} seconds · ${window.Arcade.levelName()}</p>
       ${rec ? '<span class="record">New personal best</span>' : `<p>Best: ${game.best()?.label ?? "—"}</p>`}
@@ -77,7 +78,7 @@
       } else {
         if (Math.abs(s.th) > 0.07) p.v += Math.sin(s.th) * 520 * dt; p.v *= 1 - 2.2 * dt; p.u += p.v * dt;
         p.x = beamX(p.u); p.y = beamY(p.u) - p.r;
-        if (Math.abs(p.u) > HALF + 4) { p.gone = true; s.lost++; s.combo = 0; Sound.tone({ f: 300, f2: 90, dur: 0.35, type: "sawtooth", vol: 0.08 }); game.floaters.add("Dropped!", clamp(p.x, 60, W - 60), PY - 60, C.danger, 18); updateHud(); if (s.lost >= 3) endRun("3 pieces dropped"); }
+        if (Math.abs(p.u) > HALF + 4) { p.gone = true; s.lost++; s.combo = 0; Sound.miss(); game.floaters.add("Dropped!", clamp(p.x, 60, W - 60), PY - 60, C.danger, 18); updateHud(); if (s.lost >= 3) endRun("3 pieces dropped"); }
         else if (Math.abs(p.u - s.u) < 30 + p.r) { // collect
           p.gone = true; s.collected++; s.combo++;
           const pts = p.pts * (1 + Math.min(4, Math.floor(s.combo / 5)));

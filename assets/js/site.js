@@ -96,6 +96,23 @@
   if (params.get("preview") === "0") { try { sessionStorage.removeItem(PREVIEW_KEY); } catch {} }
   const isPreview = () => { try { return sessionStorage.getItem(PREVIEW_KEY) === "1" && !!store.get(DRAFT_KEY); } catch { return false; } };
 
+  /* ---------------- Master controls (set in the Team editor) ---------------- */
+  const CONTROL_DEFAULTS = {
+    maintenance: false, maintenanceTitle: "We'll be right back", maintenanceMessage: "Our website is getting a tune-up. Check back soon, or email the team if you need us.", maintenanceUntil: "",
+    banner: false, bannerText: "", bannerLink: "", bannerTone: "info",
+    arcade: true, calculator: true, media: true, trophies: true, steelAI: true, contactForm: true, searchEngines: true,
+  };
+  const controls = (c) => ({ ...CONTROL_DEFAULTS, ...(c?.controls || {}) });
+  /** Someone who uses the Team editor on this device (they get a "view the site anyway" button). */
+  const isTeamDevice = (c) => { if (isPreview() || store.get(DRAFT_KEY)) return true; try { return !!c?.dev?.passcodeHash && sessionStorage.getItem("ss-editor-unlocked") === c.dev.passcodeHash; } catch { return false; } };
+  const mxBypassed = () => { try { return sessionStorage.getItem("ss-mx-bypass") === "1"; } catch { return false; } };
+  const maintenanceOn = (c) => controls(c).maintenance && PAGE !== "editor" && !mxBypassed();
+  /** True when a feature is switched off, or the whole site is in maintenance mode. */
+  const siteOff = (c, key) => maintenanceOn(c) || (!!key && controls(c)[key] === false);
+  const PAGE_SWITCH = { arcade: "arcade", calculator: "calculator", media: "media", trophies: "trophies" };
+  const pageSwitch = () => (PAGE.startsWith("game") ? "arcade" : PAGE_SWITCH[PAGE]);
+  const navFor = (c) => { const k = controls(c); return NAV.filter(([, , id]) => !(id in PAGE_SWITCH) || k[id]); };
+
   let contentPromise;
   function loadContent() {
     if (contentPromise) return contentPromise;
@@ -229,15 +246,15 @@
   function renderHeader(c) {
     const host = $("#site-header");
     if (!host) return;
-    const cur = navSection();
-    const links = NAV.map(([href, label, id]) => `<a href="${url(href)}"${id === cur ? ' aria-current="page"' : ""}>${label}</a>`).join("");
+    const cur = navSection(), nav = navFor(c), trophiesOn = controls(c).trophies;
+    const links = nav.map(([href, label, id]) => `<a href="${url(href)}"${id === cur ? ' aria-current="page"' : ""}>${label}</a>`).join("");
     host.className = "site-header";
     host.innerHTML = `
       <div class="wrap">
         <a class="brand" href="${url("index.html")}" aria-label="${esc(c.team.name)} home">${LOGO}<span>${esc(c.team.name)}<small>FTC #${esc(c.team.number)}</small></span></a>
         <nav class="nav" aria-label="Main">${links}</nav>
         <div class="header-actions">
-          <a class="icon-btn trophy-btn" href="${url("trophies.html")}" aria-label="Your trophies" title="Your trophies">${ICON.trophy}<span class="trophy-count" data-trophy-count hidden></span></a>
+          ${trophiesOn ? `<a class="icon-btn trophy-btn" href="${url("trophies.html")}" aria-label="Your trophies" title="Your trophies">${ICON.trophy}<span class="trophy-count" data-trophy-count hidden></span></a>` : ""}
           <button class="icon-btn theme-btn" type="button" aria-label="Switch light or dark theme">${ICON.moon}${ICON.sun}</button>
           <a class="btn primary sm header-cta" href="${url("sponsors.html")}">Sponsor us</a>
           <button class="icon-btn menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav">${ICON.menu}</button>
@@ -245,8 +262,8 @@
       </div>`;
     const mobile = document.createElement("nav");
     mobile.id = "mobile-nav"; mobile.className = "mobile-nav"; mobile.setAttribute("aria-label", "Mobile");
-    mobile.innerHTML = NAV.map(([href, label, id]) => `<a href="${url(href)}"${id === cur ? ' aria-current="page"' : ""}>${label}${ICON.arrow.replace("<svg", '<svg width="20" height="20"')}</a>`).join("")
-      + `<a href="${url("trophies.html")}">Trophies${ICON.arrow.replace("<svg", '<svg width="20" height="20"')}</a><a class="btn primary" href="${url("sponsors.html")}">Sponsor us</a>`;
+    mobile.innerHTML = nav.map(([href, label, id]) => `<a href="${url(href)}"${id === cur ? ' aria-current="page"' : ""}>${label}${ICON.arrow.replace("<svg", '<svg width="20" height="20"')}</a>`).join("")
+      + (trophiesOn ? `<a href="${url("trophies.html")}">Trophies${ICON.arrow.replace("<svg", '<svg width="20" height="20"')}</a>` : "") + `<a class="btn primary" href="${url("sponsors.html")}">Sponsor us</a>`;
     host.after(mobile);
 
     $(".theme-btn", host).addEventListener("click", theme.toggle);
@@ -275,13 +292,13 @@
             <a class="brand" href="${url("index.html")}">${LOGO}<span>${esc(c.team.name)}<small>FTC #${esc(c.team.number)}</small></span></a>
             <p>${esc(c.team.program)} team from ${esc(c.team.location)}.</p>
           </div>
-          <div><h4>Explore</h4><ul>${NAV.slice(1, 6).map(([h, l]) => `<li><a href="${url(h)}">${l}</a></li>`).join("")}<li><a href="${url("trophies.html")}">Trophy case</a></li></ul></div>
-          <div><h4>Get involved</h4><ul>
+          <div><h2>Explore</h2><ul>${navFor(c).slice(1).filter(([, , id]) => id !== "sponsors" && id !== "contact").slice(0, 5).map(([h, l]) => `<li><a href="${url(h)}">${l}</a></li>`).join("")}${controls(c).trophies ? `<li><a href="${url("trophies.html")}">Trophy case</a></li>` : ""}</ul></div>
+          <div><h2>Get involved</h2><ul>
             <li><a href="${url("sponsors.html")}">Become a sponsor</a></li>
             <li><a href="${esc(c.team.joinFormUrl)}" target="_blank" rel="noopener">Join the team</a></li>
             <li><a href="${url("contact.html")}">Contact us</a></li>
           </ul></div>
-          <div><h4>Follow</h4><ul>${c.team.instagram ? `<li><a href="https://www.instagram.com/${esc(String(c.team.instagram).replace(/^@/, ""))}/" target="_blank" rel="noopener">Instagram</a></li>` : ""}${socials}<li><a href="https://www.firstinspires.org/robotics/ftc" target="_blank" rel="noopener">About FIRST Tech Challenge</a></li></ul></div>
+          <div><h2>Follow</h2><ul>${c.team.instagram ? `<li><a href="https://www.instagram.com/${esc(String(c.team.instagram).replace(/^@/, ""))}/" target="_blank" rel="noopener">Instagram</a></li>` : ""}${socials}<li><a href="https://www.firstinspires.org/robotics/ftc" target="_blank" rel="noopener">About FIRST Tech Challenge</a></li></ul></div>
         </div>
         <div class="footer-partners">
           <span>A proud team in</span>
@@ -303,6 +320,88 @@
     pill.innerHTML = `<span>Previewing your draft</span><a href="${url("editor.html")}">Back to editor</a><button type="button">Exit</button>`;
     $("button", pill).addEventListener("click", () => { try { sessionStorage.removeItem(PREVIEW_KEY); } catch {} location.href = location.pathname; });
     document.body.append(pill);
+  }
+
+  function renderBanner(c) {
+    const k = controls(c), text = String(k.bannerText || "").trim();
+    if (!k.banner || !text || PAGE === "editor") return;
+    const id = text + "|" + k.bannerLink;
+    if (store.get("ss-banner-hidden") === id) return;
+    const tone = ["info", "warning", "celebrate"].includes(k.bannerTone) ? k.bannerTone : "info";
+    const ico = { info: ICON.flag, warning: ICON.alert, celebrate: ICON.star }[tone] || "";
+    const ext = /^https?:/i.test(k.bannerLink || "");
+    const el = document.createElement("div");
+    el.className = `site-banner tone-${tone}`; el.setAttribute("role", "region"); el.setAttribute("aria-label", "Announcement");
+    el.innerHTML = `<div class="wrap"><span class="site-banner-ico" aria-hidden="true">${ico}</span><p>${esc(text)}${k.bannerLink ? ` <a href="${esc(ext ? k.bannerLink : url(k.bannerLink))}"${ext ? ' target="_blank" rel="noopener"' : ""}>Learn more</a>` : ""}</p><button class="icon-btn" type="button" aria-label="Hide this announcement">${ICON.close}</button></div>`;
+    $("button", el).addEventListener("click", () => { store.set("ss-banner-hidden", id); el.remove(); });
+    const header = $("#site-header"); if (header) header.before(el); else document.body.prepend(el);
+  }
+
+  function renderMaintenance(c) {
+    const k = controls(c), T = c.team || {};
+    [...document.body.children].forEach((el) => { if (el.tagName !== "SCRIPT") el.hidden = true; });
+    document.body.classList.add("mx-on");
+    const team = isTeamDevice(c);
+    const socials = socialLinks(c).map((s) => `<a class="social-pill" href="${esc(s.url)}" target="_blank" rel="noopener">${s.icon}<span>${esc(s.label)}</span></a>`).join("");
+    const main = document.createElement("main"); main.id = "main"; main.className = "mx";
+    main.innerHTML = `<div class="mx-card">
+        <div class="brand mx-brand">${LOGO}<span>${esc(T.name)}<small>FTC #${esc(T.number)}</small></span></div>
+        <span class="eyebrow">Maintenance</span>
+        <h1>${esc(k.maintenanceTitle || CONTROL_DEFAULTS.maintenanceTitle)}</h1>
+        <p class="mx-msg">${esc(k.maintenanceMessage || CONTROL_DEFAULTS.maintenanceMessage)}</p>
+        ${k.maintenanceUntil ? `<p class="mx-until">${ICON.flag}<span>Expected back: <b>${esc(k.maintenanceUntil)}</b></span></p>` : ""}
+        <div class="mx-actions">${T.email ? `<a class="btn primary" href="mailto:${esc(T.email)}">${ICON.mail} Email the team</a>` : ""}${socials}</div>
+        ${team ? `<div class="mx-team"><p><b>Team member?</b> Visitors see this page. You can still look around in this tab, or turn maintenance mode off in the editor.</p><div><button class="btn sm" type="button" data-mx-bypass>View the site anyway</button><a class="btn sm" href="${url("editor.html")}">Open the Team editor</a></div></div>` : ""}
+      </div>`;
+    document.body.append(main);
+    $("[data-mx-bypass]", main)?.addEventListener("click", () => { try { sessionStorage.setItem("ss-mx-bypass", "1"); } catch {} location.reload(); });
+    document.title = `${k.maintenanceTitle || CONTROL_DEFAULTS.maintenanceTitle} · ${T.name || "Steel Surge"}`;
+  }
+
+  /** Small pill so a team member who skipped the maintenance page remembers it's on. */
+  function renderMaintenancePill(c) {
+    if (!controls(c).maintenance || !mxBypassed() || PAGE === "editor") return;
+    const pill = document.createElement("div"); pill.className = "preview-pill mx-pill";
+    pill.innerHTML = `<span>Maintenance mode is on. Visitors see the maintenance page.</span><button type="button">Show it</button>`;
+    $("button", pill).addEventListener("click", () => { try { sessionStorage.removeItem("ss-mx-bypass"); } catch {} location.reload(); });
+    document.body.append(pill);
+  }
+
+  const CLOSED_NAMES = { arcade: "The Arcade", calculator: "The Score Calculator", media: "The Media page", trophies: "The trophy case" };
+  function renderClosed(key) {
+    const main = $("main"); if (!main) return;
+    main.innerHTML = `<section class="section"><div class="wrap"><div class="closed-card reveal">${ICON.alert}<h1>${CLOSED_NAMES[key]} is taking a break</h1><p>The team has switched this part of the site off for now. Check back soon!</p><a class="btn primary" href="${url("index.html")}">Back to the home page</a></div></div></section>`;
+    document.title = `${CLOSED_NAMES[key]} is taking a break · Steel Surge`;
+  }
+
+  /** "Back to top" button on long pages. It appears after scrolling down a couple of screens. */
+  function initToTop() {
+    if (PAGE === "editor" || PAGE.startsWith("game-")) return;
+    const btn = document.createElement("button");
+    btn.className = "to-top"; btn.type = "button"; btn.setAttribute("aria-label", "Back to top"); btn.title = "Back to top";
+    btn.innerHTML = ICON.arrow.replace("<svg", '<svg width="20" height="20" style="transform:rotate(-90deg)"');
+    btn.addEventListener("click", () => { scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); $("#main")?.focus?.({ preventScroll: true }); });
+    document.body.append(btn);
+    let on = false;
+    const check = () => { const want = scrollY > innerHeight * 1.5; if (want !== on) { on = want; btn.classList.toggle("show", on); } };
+    addEventListener("scroll", check, { passive: true }); check();
+  }
+
+  /** Hide links and sections that point at switched-off features. */
+  function applySwitches(c) {
+    const k = controls(c), hide = (el) => el && (el.hidden = true);
+    if (!k.arcade) { hide($("#home-games")?.closest("section")); $$('main a[href*="arcade"]').forEach(hide); }
+    if (!k.media) { hide($("#latest-videos")?.closest("section")); $$('main a[href*="media.html"]').forEach(hide); }
+    if (!k.calculator) $$('main a[href*="calculator.html"]').forEach(hide);
+    if (!k.trophies) $$('a[href*="trophies.html"]').forEach(hide);
+    if (!k.steelAI) $$("[data-ai-ask]").forEach(hide);
+    if (!k.contactForm && PAGE === "contact") {
+      const form = $("#contact-form");
+      if (form) {
+        form.hidden = true;
+        form.insertAdjacentHTML("beforebegin", `<div class="card form form-off">${ICON.mail}<div><h2>Email us instead</h2><p class="muted">Our contact form is switched off for now. Email the team at <a href="mailto:${esc(c.team.email)}">${esc(c.team.email)}</a> and we'll get back to you.</p></div></div>`);
+      }
+    }
   }
 
   /* ---------------- Reveal on scroll ---------------- */
@@ -381,17 +480,21 @@
   /** Accepts a bare video ID or any YouTube link (watch?v=, youtu.be/, shorts/, embed/). */
   const ytId = (s) => { s = String(s || "").trim(); const m = s.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([\w-]{11})/); return m ? m[1] : s; };
   function videoCard(v, big = false) {
-    const id = ytId(v.id);
+    const id = ytId(v.id), short = !!v.short || /shorts\//.test(String(v.id));
+    const src = `https://i.ytimg.com/vi/${esc(id)}/${big && !short ? "maxresdefault" : "hqdefault"}.jpg`;
+    const img = `<img src="${src}" onerror="if(!this.dataset.f){this.dataset.f=1;this.src='https://i.ytimg.com/vi/${esc(id)}/hqdefault.jpg'}" alt="" loading="lazy" decoding="async">`;
+    // Shorts are vertical: show the real frame sharp in the middle over a soft, blurred copy instead of black or stretched bars
+    const thumb = short ? `<span class="video-thumb is-short"><span class="thumb-bg" style="background-image:url('${src}')"></span><span class="thumb-fg">${img}</span><span class="badge-short">Short</span>` : `<span class="video-thumb">${img}`;
     return `
-      <button class="video-card reveal${big ? " big" : ""}" type="button" data-video="${esc(id)}" data-title="${esc(cleanTitle(v.title))}">
-        <span class="video-thumb"><img src="https://i.ytimg.com/vi/${esc(id)}/${big ? "maxresdefault" : "hqdefault"}.jpg" onerror="if(!this.dataset.f){this.dataset.f=1;this.src='https://i.ytimg.com/vi/${esc(id)}/hqdefault.jpg'}" alt="" loading="lazy" decoding="async"><span class="play">${ICON.play}</span></span>
+      <button class="video-card reveal${big ? " big" : ""}" type="button" data-video="${esc(id)}" data-title="${esc(cleanTitle(v.title))}"${short ? " data-short" : ""}>
+        ${thumb}<span class="play">${ICON.play}</span></span>
         <span class="video-meta"><b>${esc(cleanTitle(v.title))}</b>${v.published ? `<span>${fmtDate(String(v.published).slice(0, 10))}</span>` : ""}</span>
       </button>`;
   }
   function wireVideoCards(scope = document) {
-    $$("[data-video]", scope).forEach((b) => b.addEventListener("click", () => openLightbox(b.dataset.video, b.dataset.title)));
+    $$("[data-video]", scope).forEach((b) => b.addEventListener("click", () => openLightbox(b.dataset.video, b.dataset.title, b.hasAttribute("data-short"))));
   }
-  function openLightbox(id, title) {
+  function openLightbox(id, title, short = false) {
     window.SS?.track?.("video", id);
     let dlg = $("#lightbox");
     if (!dlg) {
@@ -400,6 +503,7 @@
       dlg.addEventListener("close", () => { dlg.innerHTML = ""; });
       document.body.append(dlg);
     }
+    dlg.classList.toggle("is-short", short);
     dlg.innerHTML = `<div class="lightbox-inner"><div class="lightbox-head"><b>${esc(title)}</b><button class="icon-btn" type="button" aria-label="Close video">${ICON.close}</button></div>
       <div class="video-frame"><iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0" title="${esc(title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div></div>`;
     $("button", dlg).addEventListener("click", () => dlg.close());
@@ -768,6 +872,13 @@
   pages.media = async (c) => {
     $("#media-video").innerHTML = videoEmbed(c.team.youtubeChannelId, "Steel Surge on YouTube");
     wireVideos($("#media-video"));
+    // Use the newest wide video's thumbnail as the player's backdrop
+    loadVideos().then((vids) => {
+      const v = vids.find((x) => !x.short) || vids[0], poster = $("#media-video .video-poster"); if (!v || !poster) return;
+      const img = new Image(), id = ytId(v.id);
+      img.onload = () => { if (img.naturalWidth > 200) poster.style.setProperty("--poster", `url("${img.src}")`); poster.classList.add("has-art"); };
+      img.src = `https://i.ytimg.com/vi/${encodeURIComponent(id)}/${v.short ? "hqdefault" : "maxresdefault"}.jpg`;
+    });
     $("#yt-link").href = `https://www.youtube.com/channel/${c.team.youtubeChannelId}?sub_confirmation=1`;
     const ig = c.team.instagram ? String(c.team.instagram).replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/\/$/, "") : "";
     if (ig) $("#ig-link").outerHTML = `<a class="btn" href="https://www.instagram.com/${esc(ig)}/" target="_blank" rel="noopener">${ICON.instagram} Follow @${esc(ig)} on Instagram</a>`;
@@ -784,7 +895,9 @@
     wireVideoCards(grid); initReveal(grid);
     const fav = c.featuredVideos || [];
     $("#favorites").hidden = !fav.length;
-    $("#fav-grid").innerHTML = fav.map((v) => videoCard(v)).join(""); wireVideoCards($("#fav-grid"));
+    // Fill in YouTube's own title and Short flag when we know the video, so a picks list can't show the wrong title
+    const known = new Map((await loadVideos()).map((v) => [v.id, v]));
+    $("#fav-grid").innerHTML = fav.map((v) => { const k = known.get(ytId(v.id)); return videoCard({ ...v, title: k?.title || v.title, short: v.short || !!k?.short }); }).join(""); wireVideoCards($("#fav-grid"));
   };
 
   pages.arcade = async () => {
@@ -1050,7 +1163,11 @@
       return;
     }
     window.SS.content = c;
-    renderHeader(c); renderFooter(c); renderPreviewPill(); initOverdrive();
+    if (!controls(c).searchEngines) document.head.insertAdjacentHTML("beforeend", '<meta name="robots" content="noindex, nofollow">');
+    if (maintenanceOn(c)) { renderMaintenance(c); renderPreviewPill(); document.dispatchEvent(new CustomEvent("ss:ready", { detail: c })); return; }
+    renderHeader(c); renderFooter(c); renderBanner(c); renderPreviewPill(); renderMaintenancePill(c); initOverdrive();
+    const sw = pageSwitch();
+    if (sw && !controls(c)[sw]) { renderClosed(sw); initReveal(); document.dispatchEvent(new CustomEvent("ss:ready", { detail: c })); return; }
     $$("[data-team-name]").forEach((el) => (el.textContent = c.team.name));
     try { await pages[PAGE]?.(c); }
     catch (err) {
@@ -1061,10 +1178,12 @@
       if (!tried && err instanceof TypeError) { location.replace(`${location.pathname}?fresh=${Date.now()}${location.hash}`); return; }
     }
     try { if (sessionStorage.getItem("ss-fresh") === location.pathname && !params.has("fresh")) sessionStorage.removeItem("ss-fresh"); } catch {}
+    applySwitches(c);
     initReveal();
+    initToTop();
     document.dispatchEvent(new CustomEvent("ss:ready", { detail: c }));
   }
 
-  window.SS = Object.assign(window.SS || {}, { ICON, LOGO, esc, store, toast, url, loadContent, loadFTC, theme, GAMES, gameArt, seasonLabel, currentSeason, DRAFT_KEY, PREVIEW_KEY });
+  window.SS = Object.assign(window.SS || {}, { ICON, LOGO, esc, store, toast, url, loadContent, loadFTC, theme, GAMES, gameArt, seasonLabel, currentSeason, DRAFT_KEY, PREVIEW_KEY, CONTROL_DEFAULTS, controls, siteOff });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })();

@@ -29,6 +29,10 @@ try {
     title: decode(e.match(/<title>([^<]*)/)?.[1] || ""),
     published: e.match(/<published>([^<]+)/)?.[1],
   })).filter((v) => v.id).slice(0, 12);
+  // Vertical Shorts get a portrait thumbnail on the site. youtube.com/shorts/<id> answers 200 for a Short and redirects otherwise.
+  await Promise.all(videos.map(async (v) => {
+    try { if ((await fetch(`https://www.youtube.com/shorts/${v.id}`, { method: "HEAD", redirect: "manual" })).status === 200) v.short = true; } catch {}
+  }));
   if (videos.length) await writeIfChanged("content/videos.json", { updatedAt: new Date().toISOString(), videos }, "videos");
 } catch (e) { console.warn("YouTube refresh failed:", e.message); }
 
