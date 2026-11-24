@@ -374,6 +374,17 @@
     document.title = `${CLOSED_NAMES[key]} is taking a break · Steel Surge`;
   }
 
+  /** Outreach hours: this season's logged hours if the log has any, else the number typed in the editor, else all logged hours. */
+  function outreachStat(c) {
+    const o = c.outreach || {}, ev = (o.events || []).filter((e) => e && Number(e.hours) > 0);
+    const start = `${currentSeason()}-09-01`, now = ev.filter((e) => String(e.date || "") >= start);
+    const sum = (l) => String(Math.round(l.reduce((t, e) => t + Number(e.hours), 0) * 10) / 10);
+    if (now.length) return { hours: sum(now), label: `outreach hours in ${seasonLabel(currentSeason())}` };
+    if (o.hours) return { hours: String(o.hours), label: o.label || "Community outreach" };
+    if (ev.length) return { hours: sum(ev), label: "outreach hours logged" };
+    return null;
+  }
+
   /** "Back to top" button on long pages. It appears after scrolling down a couple of screens. */
   function initToTop() {
     if (PAGE === "editor" || PAGE.startsWith("game-")) return;
@@ -441,7 +452,7 @@
         ${tile("Seasons", seasons, `Competing since ${esc(c.team.rookieYear)}`)}
         ${tile("Events", events, "Scrimmages, qualifiers, and more")}
         ${tile("Matches played", matches, "Qualification matches")}
-        ${withAwards ? tile("Awards", awards, awards ? "Judged and match awards" : "Our first is on the way") : c.outreach?.hours ? `<div class="stat"><dt>Outreach</dt><dd>${esc(c.outreach.hours)}<small>hrs</small></dd><div class="stat-note">${esc(c.outreach.label || "Community outreach")}</div></div>` : tile("Team members", c.members.length, "Middle and high school students")}
+        ${withAwards ? tile("Awards", awards, awards ? "Judged and match awards" : "Our first is on the way") : outreachStat(c) ? `<div class="stat"><dt>Outreach</dt><dd>${esc(outreachStat(c).hours)}<small>hrs</small></dd><div class="stat-note">${esc(outreachStat(c).label)}</div></div>` : tile("Team members", c.members.length, "Middle and high school students")}
       </dl>${sourceLine(ftc)}`;
   }
 
@@ -766,7 +777,7 @@
       <div><dt>Based in</dt><dd>${esc(c.team.location)}</dd></div>
       <div><dt>Founded</dt><dd>${esc(c.team.rookieYear)}</dd></div>
       <div><dt>Members</dt><dd>${c.members.length}</dd></div>
-      ${c.outreach?.hours ? `<div><dt>Outreach</dt><dd>${esc(c.outreach.hours)} hrs</dd></div>` : ""}`;
+      ${outreachStat(c) ? `<div><dt>Outreach</dt><dd>${esc(outreachStat(c).hours)} hrs</dd></div>` : ""}`;
     heroCanvas($(".hero-canvas"));
 
     const pillars = [
@@ -830,6 +841,19 @@
     const values = c.values || [];
     $("#values").hidden = !values.length;
     $("#values-grid").innerHTML = values.map((v, i) => `<div class="value-card reveal"><span class="value-num">0${i + 1}</span><h3>${esc(v.title)}</h3><p>${esc(v.body)}</p></div>`).join("");
+    const evs = [...(c.outreach?.events || [])].filter((e) => e?.title).sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+    $("#outreach").hidden = !evs.length;
+    if (evs.length) {
+      const hrs = Math.round(evs.reduce((t, e) => t + (Number(e.hours) || 0), 0) * 10) / 10, ppl = evs.reduce((t, e) => t + (Number(e.people) || 0), 0);
+      $("#outreach-summary").innerHTML = [[evs.length, evs.length === 1 ? "event" : "events"], hrs ? [hrs, "hours"] : null, ppl ? [ppl.toLocaleString(), "people reached"] : null]
+        .filter(Boolean).map(([n, l]) => `<div><b>${n}</b><span>${l}</span></div>`).join("");
+      $("#outreach-list").innerHTML = evs.map((e) => `
+        <article class="outreach-item reveal">
+          <time${e.date ? ` datetime="${esc(e.date)}"` : ""}>${e.date ? fmtDate(e.date) : ""}</time>
+          <div class="oi-main"><h3>${esc(e.title)}</h3>${e.place ? `<div class="oi-place">${esc(e.place)}</div>` : ""}${e.detail ? `<p>${esc(e.detail)}</p>` : ""}</div>
+          <div class="oi-meta">${Number(e.hours) ? `<span><b>${esc(e.hours)}</b> hrs</span>` : ""}${Number(e.people) ? `<span><b>${Number(e.people).toLocaleString()}</b> people</span>` : ""}</div>
+        </article>`).join("");
+    }
     const projects = c.projects || [];
     $("#projects").hidden = !projects.length;
     $("#projects-grid").innerHTML = projects.map((p) => `
@@ -900,7 +924,54 @@
     $("#fav-grid").innerHTML = fav.map((v) => { const k = known.get(ytId(v.id)); return videoCard({ ...v, title: k?.title || v.title, short: v.short || !!k?.short }); }).join(""); wireVideoCards($("#fav-grid"));
   };
 
+  /* ---------------- Weekly arcade challenge ----------------
+     One score target a week, the same for every visitor. It changes every Monday
+     (00:00 UTC) and cycles through these games. Targets scale with difficulty. */
+  const WEEKLY = [
+    { id: "overclock", base: 600, unit: "points", verb: "Score" },
+    { id: "stackup", base: 20, unit: "pieces high", verb: "Stack" },
+    { id: "pitcrew", base: 1500, unit: "points", verb: "Score" },
+    { id: "flywheel", base: 300, unit: "points", verb: "Score" },
+    { id: "signal", base: 2000, unit: "points", verb: "Score" },
+    { id: "balance", base: 300, unit: "points", verb: "Score" },
+    { id: "odometry", base: 8, unit: "steps", verb: "Remember a route of" },
+  ];
+  const WEEK_MS = 7 * 864e5, WEEK0 = Date.UTC(2024, 0, 1); // a Monday
+  const LEVEL_SCALE = [0.5, 0.75, 1, 1.3, 1.6], LEVEL_NAMES = ["Super Easy", "Easy", "Medium", "Hard", "Extreme"];
+  function weekly(now = Date.now()) {
+    const week = Math.floor((now - WEEK0) / WEEK_MS), w = WEEKLY[((week * 5) % WEEKLY.length + WEEKLY.length) % WEEKLY.length];
+    const round = (v) => (v >= 100 ? Math.round(v / 50) * 50 : Math.max(1, Math.round(v)));
+    const target = (lv = 2) => round(w.base * LEVEL_SCALE[lv] ?? 1);
+    return { ...w, week, title: GAMES.find((g) => g.id === w.id)?.title || w.id, endsAt: WEEK0 + (week + 1) * WEEK_MS, target,
+      text: (lv) => `${w.verb} ${target(lv).toLocaleString()} ${w.unit}`, done: store.get("ss-weekly", {})[week] || null };
+  }
+  /** Called by the arcade kit after every run. Returns true the first time this week's target is reached. */
+  function weeklySubmit(gameId, value, lv) {
+    const w = weekly(); if (gameId !== w.id || w.done || !(value >= w.target(lv))) return false;
+    const log = store.get("ss-weekly", {}); log[w.week] = { value, level: LEVEL_NAMES[lv], at: Date.now() }; store.set("ss-weekly", log);
+    window.SS?.trophy?.("weekly");
+    setTimeout(() => toast(`Weekly challenge complete: ${w.title}!`), 900);
+    return true;
+  }
+  const savedLevel = () => { const i = LEVEL_NAMES.map((n) => n.replace(/ (.)/, (_, ch) => ch).replace(/^./, (ch) => ch.toLowerCase())).indexOf(store.get("ss-arcade-settings", {})?.difficulty); return i < 0 ? 2 : i; };
+  function weeklyCard() {
+    const w = weekly(), lv = savedLevel(), left = Math.max(0, w.endsAt - Date.now());
+    const d = Math.floor(left / 864e5), h = Math.floor(left / 36e5) % 24;
+    const ladder = LEVEL_NAMES.map((n, i) => `<li${i === lv ? ' class="on"' : ""}><span>${n}</span><b>${w.target(i).toLocaleString()}</b></li>`).join("");
+    return `<section class="weekly reveal${w.done ? " done" : ""}" aria-labelledby="weekly-h">
+      <a class="weekly-art" href="${url(`arcade/${w.id}.html`)}" tabindex="-1" aria-hidden="true">${gameArt(w.id)}</a>
+      <div class="weekly-body">
+        <span class="eyebrow">Weekly challenge · new one in ${d ? `${d}d ` : ""}${h}h</span>
+        <h2 id="weekly-h">${esc(w.text(lv))} in ${esc(w.title)}</h2>
+        <p>${w.done ? `${ICON.check.replace("<svg", '<svg width="18" height="18"')} Done! You reached ${Number(w.done.value).toLocaleString()} on ${esc(w.done.level)}. A new challenge starts Monday.` : `Hit the target in one run to earn the <b>Weekly Winner</b> trophy. Easier levels have lower targets.`}</p>
+        <ul class="weekly-ladder" aria-label="Target by difficulty">${ladder}</ul>
+        <a class="btn ${w.done ? "" : "primary"}" href="${url(`arcade/${w.id}.html`)}">${w.done ? "Play again" : "Take the challenge"} ${ICON.arrow}</a>
+      </div>
+    </section>`;
+  }
+
   pages.arcade = async () => {
+    $("#weekly-challenge").innerHTML = weeklyCard();
     $("#arcade-games").innerHTML = gameCards();
     const played = GAMES.filter((g) => bestFor(g.id)).length;
     $("#arcade-progress").innerHTML = `<div class="arcade-pass"><div><b>${played}/${GAMES.length}</b> games played on this device</div><div class="pass-bar"><span style="width:${(played / GAMES.length) * 100}%"></span></div><a class="link-arrow" href="${url("trophies.html")}">Your trophies ${ICON.arrow}</a></div>`;
@@ -1184,6 +1255,6 @@
     document.dispatchEvent(new CustomEvent("ss:ready", { detail: c }));
   }
 
-  window.SS = Object.assign(window.SS || {}, { ICON, LOGO, esc, store, toast, url, loadContent, loadFTC, theme, GAMES, gameArt, seasonLabel, currentSeason, DRAFT_KEY, PREVIEW_KEY, CONTROL_DEFAULTS, controls, siteOff });
+  window.SS = Object.assign(window.SS || {}, { ICON, LOGO, esc, store, toast, url, loadContent, loadFTC, theme, GAMES, gameArt, seasonLabel, currentSeason, DRAFT_KEY, PREVIEW_KEY, CONTROL_DEFAULTS, controls, siteOff, weekly, weeklySubmit, outreachStat });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })();

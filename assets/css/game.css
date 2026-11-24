@@ -316,3 +316,10 @@
 /* Fill the window when real full screen isn't available */
 .pseudo-full { position: fixed !important; inset: 0 !important; z-index: 2000 !important; width: 100vw !important; height: 100dvh !important; max-width: none !important; margin: 0 !important; border-radius: 0 !important; background: #070a0e; overflow: auto; }
 html.no-scroll, html.no-scroll body { overflow: hidden; }
+
+/* Weekly challenge in the game menu */
+.menu-weekly { border: 1px solid #2b6fb0; border-radius: 12px; padding: 10px 12px; background: linear-gradient(135deg, rgba(59,168,255,.14), rgba(59,168,255,.03)); }
+.menu-weekly h3 { color: #84cdff !important; }
+.menu-weekly p { margin: 0; font-size: 14px; color: #e9eef4; }
+.menu-weekly.done { border-color: #2a8f66; background: linear-gradient(135deg, rgba(61,220,151,.14), rgba(61,220,151,.03)); }
+.menu-weekly.done h3 { color: #3ddc97 !important; }

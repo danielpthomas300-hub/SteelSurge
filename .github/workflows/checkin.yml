@@ -1,0 +1,65 @@
+name: Website check-in
+
+# Every other Monday: checks that both live sites are up and current, that the
+# automatic jobs are passing, that outside links and videos work, and flags
+# content that's going stale (outreach log, team updates, the season's game,
+# maintenance mode left on...). Posts the result as a GitHub issue, which
+# emails the repo owner, and closes the previous check-in. No secrets needed.
+on:
+  schedule:
+    - cron: "15 13 * * 1"   # Mondays at 13:15 UTC; the first step skips every other week
+  workflow_dispatch:          # run it any time from the Actions tab
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+jobs:
+  checkin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every other week
+        id: week
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] && [ $(( $(date -u +%s) / 604800 % 2 )) -ne 0 ]; then
+            echo "Off week; skipping."; echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.week.outputs.run == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.week.outputs.run == 'true'
+        with:
+          node-version: 20
+      - name: Latest result of each automatic job
+        if: steps.week.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "{" > runs.json
+          first=1
+          for wf in "Refresh site data" "Site check" "Weekly link check"; do
+            r=$(gh run list --workflow "$wf" --limit 1 --json conclusion,createdAt --jq '.[0] // null' 2>/dev/null || echo null)
+            [ -z "$r" ] && r=null
+            [ $first -eq 1 ] || echo "," >> runs.json; first=0
+            printf '"%s": %s' "$wf" "$r" >> runs.json
+          done
+          echo "}" >> runs.json
+          cat runs.json
+      - name: Check outside links
+        if: steps.week.outputs.run == 'true'
+        run: node tools/check_external.mjs links.md
+      - name: Write the check-in
+        if: steps.week.outputs.run == 'true'
+        run: node tools/checkin.mjs checkin.md runs.json links.md
+      - name: Post it as an issue
+        if: steps.week.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PREV=$(gh issue list --state open --search "\"Website check-in\" in:title" --json number --jq '.[].number')
+          NEW=$(gh issue create --title "Website check-in · $(date -u +'%b %-d, %Y')" --body-file checkin.md)
+          echo "Posted $NEW"
+          for n in $PREV; do gh issue close "$n" --comment "Replaced by the newer check-in: $NEW"; done

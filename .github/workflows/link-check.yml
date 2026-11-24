@@ -1,0 +1,36 @@
+name: Weekly link check
+
+# Every Monday, checks every outside link on the site (sponsors, FIRST, YouTube,
+# social media). If any are broken it opens an issue on this repository (GitHub
+# emails the repo owner), or updates the existing one. When everything works
+# again, it closes that issue. No secrets needed.
+on:
+  schedule:
+    - cron: "40 12 * * 1"   # Mondays at 12:40 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check outside links
+        run: node tools/check_external.mjs report.md
+      - name: Open, update, or close the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TITLE="Broken outside links on the website"
+          NUM=$(gh issue list --state open --search "\"$TITLE\" in:title" --json number --jq '.[0].number')
+          if [ -s report.md ]; then
+            if [ -n "$NUM" ]; then gh issue edit "$NUM" --body-file report.md; else gh issue create --title "$TITLE" --body-file report.md; fi
+          elif [ -n "$NUM" ]; then
+            gh issue close "$NUM" --comment "All outside links work again. Closing."
+          fi

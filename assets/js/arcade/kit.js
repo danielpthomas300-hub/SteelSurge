@@ -523,8 +523,9 @@
       const SS = window.SS || {}, earned = store.get("ss-trophies", {}), list = (SS.TROPHIES || []).filter((t) => t.group === this.id);
       const got = list.filter((t) => earned[t.id]).length, plays = store.get("ss-arcade-plays", {})[this.id] || 0, best = this.best();
       const cup = (tier) => (SS.trophyCup ? SS.trophyCup(tier, 22) : "");
-      const lv = level();
-      return `
+      const lv = level(), wk = window.SS?.weekly?.();
+      const wkSec = wk && wk.id === this.id ? `<section class="menu-sec menu-weekly${wk.done ? " done" : ""}"><h3>Weekly challenge</h3><p data-weekly>${wk.done ? "Completed this week. Nice work!" : `${wk.text(lv)} in one run on ${LEVELS[lv].label}.`}</p></section>` : "";
+      return `${wkSec}
         <section class="menu-sec"><h3>Difficulty</h3>
           <div class="menu-diff" role="radiogroup" aria-label="Difficulty">${LEVELS.map((l, i) => `<button type="button" role="radio" aria-checked="${i === lv}" data-level="${l.key}" class="lv-${i}">${l.label}</button>`).join("")}</div>
           <p class="menu-note">${this.difficultyNote || "Higher levels are faster and less forgiving."}</p></section>
@@ -540,6 +541,7 @@
       o.querySelectorAll(".menu-diff [data-level]").forEach((b) => b.addEventListener("click", (e) => {
         e.stopPropagation(); Settings.difficulty = b.dataset.level; saveSettings(); Sound.blip(); window.SS?.trophy?.("tinkerer");
         this._syncBadge?.(); this.onDifficulty?.();
+        const wk = window.SS?.weekly?.(), wp = o.querySelector("[data-weekly]"); if (wk && wp && !wk.done) wp.textContent = `${wk.text(level())} in one run on ${levelName()}.`;
         o.querySelectorAll(".menu-diff [data-level]").forEach((x) => x.setAttribute("aria-checked", String(x === b)));
       }));
       o.querySelector("[data-menu-settings]")?.addEventListener("click", (e) => { e.stopPropagation(); this.openSettings(); });
@@ -609,6 +611,7 @@
     best() { return store.get(`ss-arcade-${this.id}`, null); }
     /** Saves if better. `better(a,b)` returns true when a beats b. Returns true on new record. */
     submitBest(value, label, better = (a, b) => a > b) {
+      try { window.SS?.weeklySubmit?.(this.id, value, level()); } catch {}
       const prev = this.best();
       if (!prev || better(value, prev.value)) {
         store.set(`ss-arcade-${this.id}`, { value, label, at: Date.now() }); this.setHudBest(label);

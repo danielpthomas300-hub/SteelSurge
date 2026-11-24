@@ -1,0 +1,45 @@
+name: Site check
+
+# Runs on every push and pull request. Fails (and GitHub emails whoever pushed)
+# if a script has a syntax error, a content file is broken, a link or image is
+# missing, or the HTML pages weren't rebuilt after a script or style change.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Scripts have no syntax errors
+        run: for f in assets/js/*.js assets/js/arcade/*.js tools/*.mjs tools/*.js; do node --check "$f" || exit 1; done
+
+      - name: Content files are valid
+        run: python tools/check_content.py
+
+      - name: Pages are up to date
+        run: |
+          python tools/build_pages.py
+          if [ -n "$(git status --porcelain -- '*.html' sitemap.xml robots.txt)" ]; then
+            echo "::error::The HTML pages are out of date. Run 'python tools/build_pages.py' and commit the result."
+            git status --short -- '*.html' sitemap.xml robots.txt
+            exit 1
+          fi
+
+      - name: Internal links and images resolve
+        run: python tools/check_links.py
+
+      - name: Puzzle levels are solvable
+        run: node tools/check_levels.js

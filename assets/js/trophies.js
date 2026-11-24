@@ -48,6 +48,7 @@
     ["arcade-regular", "site", "gold", "Arcade Regular", "Play all thirteen arcade games."],
     ["daredevil", "site", "gold", "Daredevil", "Earn the Extreme trophy in 3 different arcade games."],
     ["tinkerer", "site", "bronze", "Make It Yours", "Change a setting in any arcade game."],
+    ["weekly", "site", "silver", "Weekly Winner", "Complete a weekly arcade challenge."],
     ["field-trip", "site", "silver", "Field Trip", "Explore 5 different FTC fields in 3D on the FTC page."],
     ["historian", "site", "gold", "FTC Historian", "Explore every FTC field in 3D on the FTC page."],
     // Games

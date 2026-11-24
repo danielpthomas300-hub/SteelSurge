@@ -16,6 +16,16 @@ A fast, static website (plain HTML, CSS, and JavaScript, with no build step need
 | Instagram links (Media, Contact, footer) | Appear automatically once an Instagram handle is entered in the editor |
 | Backup stats if FTCScout is down | The same Action saves `content/ftc.json` daily |
 | Season label, copyright year, team size, events and matches played | Calculated |
+| Outreach hours (home and sponsor pages) | Added up from this season's outreach log in the editor |
+| Weekly arcade challenge | Changes every Monday at 00:00 UTC (Sunday evening in Pennsylvania) |
+
+### Automatic checks (GitHub Actions)
+- **Site check** (`.github/workflows/site-check.yml`) runs on every push. It fails, and GitHub emails whoever pushed, if a script has a syntax error, `content/content.json` is broken or points at a missing image, a link inside the site is broken, the HTML pages weren't rebuilt after a script or style change (fix: run `python tools/build_pages.py` and commit), or a puzzle level stops being solvable. The checks it runs are `tools/check_content.py`, `tools/check_links.py`, and `tools/check_levels.js`.
+- **Weekly link check** (`.github/workflows/link-check.yml`) runs every Monday. It tries every outside link (FIRST, FTCScout, YouTube, the join form, sponsor and social links) and every team video. If any are broken, deleted, or private, it opens an issue titled "Broken outside links on the website" listing them (GitHub emails the repo owner). It updates that issue while links stay broken and closes it once everything works. Sites that block robots are reported as "couldn't check" in the run log instead of raising an alarm. Run it any time from the Actions tab, or locally with `node tools/check_external.mjs`.
+
+- **Website check-in** (`.github/workflows/checkin.yml`) runs every other Monday and posts a GitHub issue titled "Website check-in · <date>" (GitHub emails the repo owner), closing the previous one. It checks that GitHub Pages and Netlify are both up and running the latest version (Netlify isn't connected to GitHub, so this catches a forgotten redeploy), that the other automatic jobs are passing, that outside links and videos work, and flags content going stale: no outreach logged this season, old team updates, the FTC page missing the current game, maintenance mode or a banner left on, and search engines switched off. Run it any time from the Actions tab ("Website check-in" → Run workflow), or locally with `node tools/checkin.mjs report.md`.
+
+**Contact form:** messages go to the team email through [FormSubmit](https://formsubmit.co) (the `formEndpoint` in the editor's Contact settings). FormSubmit needs a one-time activation: the first message sent from the site triggers an "Activate Form" email to the team inbox (check spam), and messages are only delivered after someone clicks it. If sending fails, visitors are offered a pre-filled email to send from their own mail app instead, so nothing is silently lost.
 
 **One-time setup for the daily refresh:** in the GitHub repo, go to **Settings → Actions → General → Workflow permissions** and choose **Read and write permissions**. You can run it by hand from the **Actions** tab ("Refresh site data" → Run workflow).
 
@@ -24,7 +34,7 @@ A fast, static website (plain HTML, CSS, and JavaScript, with no build step need
 ### Option 1: the team editor (developer mode, easiest)
 1. Go to **/editor.html**. You can also click **Team editor** in the footer, or press **Ctrl + Shift + E** (Cmd + Shift + E on a Mac) on any page.
 2. Enter the team passcode (change it under *Editor settings*).
-3. Edit members (and their fun facts), the motto, the Instagram handle, team values, team projects, outreach hours, milestones, featured videos, updates, sponsors, tiers, the sponsor packet link, and contact topics.
+3. Edit members (and their fun facts), the motto, the Instagram handle, team values, team projects, the outreach log, milestones, featured videos, updates, sponsors, tiers, the sponsor packet link, and contact topics.
 4. Click **Preview site** to see the real site with your draft.
 5. Click **Publish…** and follow the 4 steps (copy, open GitHub, paste, commit). The live site updates in about a minute.
 
@@ -35,6 +45,9 @@ Switches for the whole site, saved in the `controls` block of `content/content.j
 - **Features:** turn the Arcade, Score Calculator, Media page, trophies, Steel AI, or the contact form off. Their menu, footer, and in-page links disappear, their pages say "taking a break", and the Contact page shows the team email when the form is off.
 - **Search engines:** turn off to add a `noindex` tag so Google and others stop listing the site.
 
+#### Outreach log (Season → Outreach in the editor)
+Add one entry per outreach event: date, event name, where, **team hours** (total across everyone who helped, so 4 people for 3 hours is 12), people reached, and a short note. The Team page lists every event, newest first, with totals for events, hours, and people reached. The home and sponsor pages show **this season's** logged hours (seasons start September 1). If nothing is logged for the current season yet, they show the number typed in "Hours to show when nothing is logged this season" instead.
+
 New photos: use **Prepare a new image** in the editor. It crops and shrinks the photo and downloads it. Then upload it to `assets/img/team/` (or `projects/`, `sponsors/`) on GitHub. The Publish dialog has links.
 
 ### Option 2: edit `content/content.json` directly
@@ -42,7 +55,7 @@ Everything editable lives in that one file.
 
 ## Trophies
 
-Visitors earn 86 PlayStation-style trophies (bronze, silver, gold, and a platinum for collecting them all) for exploring the site and playing the arcade. Earned trophies pop up in the corner and are listed on **/trophies.html**. Trophy definitions live in `assets/js/trophies.js`; pages and games award them with `SS.trophy("id")`. Progress is saved per browser.
+Visitors earn 87 PlayStation-style trophies (bronze, silver, gold, and a platinum for collecting them all) for exploring the site and playing the arcade. Earned trophies pop up in the corner and are listed on **/trophies.html**. Trophy definitions live in `assets/js/trophies.js`; pages and games award them with `SS.trophy("id")`. Progress is saved per browser.
 
 ### Steel AI (site assistant)
 
@@ -60,6 +73,8 @@ Every page except the editor and the arcade games has an **Ask Steel AI** button
 ## The arcade
 
 Thirteen original games share one engine (`assets/js/arcade/kit.js`): sound, particles, overlays, pause, fullscreen, touch controls, and best scores saved per device.
+
+**Weekly challenge:** every Monday (00:00 UTC) the Arcade page shows one score target, the same for every visitor, which rotates through Overclock, Stack Up, Pit Crew, Flywheel, Signal Lost, Balance, and Odometry. The target scales with difficulty (half on Super Easy, 1.6× on Extreme), and the game's menu shows it at the chosen level. Hitting it in one run awards the **Weekly Winner** trophy. The games and base targets are in the `WEEKLY` list in `assets/js/site.js`; the arcade engine reports each finished run through `SS.weeklySubmit`.
 
 Sound effects are made in code, so there are no audio files to download. `Arcade.Sound` has named effects for every game to share: `select`, `pickup`, `combo(n)`, `hit`, `thud`, `boom`, `miss`, `fail`, `error`, `win`, `star(i)`, `record`, `gameOver`, `go`, `warn`, `zap`, `steam`, `whoosh`, and `rewind`. It also has `Sound.loop()` for held sounds such as the motor hum in Overclock and Mecanum Rush. The engine plays a start sound, a pause and resume sound, a chime for each star on a level-complete card, and a fanfare for a new personal best (which replaces the game-over sound).
 
