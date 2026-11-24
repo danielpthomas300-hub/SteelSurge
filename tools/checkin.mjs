@@ -41,7 +41,11 @@ for (const [name, url] of Object.entries(SITES)) {
 let runs = null; if (runsFile) { try { runs = JSON.parse(await readArg(runsFile)); } catch {} }
 if (runs) {
   for (const [wf, r] of Object.entries(runs)) {
-    if (!r) { info.push(`${wf}: hasn't run yet.`); continue; }
+    if (!r) {
+      if (wf === "Refresh site data") warn.push(`**${wf} has never run**, so new videos and the backup FTC stats aren't being saved. Open the Actions tab → "${wf}" → Run workflow, and make sure Settings → Actions → General → Workflow permissions is set to "Read and write".`);
+      else info.push(`${wf}: hasn't run yet.`);
+      continue;
+    }
     const when = `${fmt(r.createdAt)}, ${daysSince(r.createdAt)} days ago`;
     if (r.conclusion && r.conclusion !== "success") warn.push(`**${wf} failed** on its last run (${when}). Open the Actions tab on GitHub to see why.`);
     else if (wf === "Refresh site data" && daysSince(r.createdAt) > 3) warn.push(`**${wf} hasn't run in ${daysSince(r.createdAt)} days.** GitHub pauses scheduled jobs after 60 days without commits; re-enable it from the Actions tab.`);
