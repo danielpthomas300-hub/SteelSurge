@@ -93,7 +93,9 @@
     for (const f of list || []) {
       const seen = new Set(), items = [];
       f.items.split("|").map((n) => n.trim()).filter(Boolean).forEach((name) => {
-        const keys = [...new Set([fkey(name), / award$/i.test(name) ? fkey(name.replace(/ award$/i, "")) : ""])].filter((k) => k && !seen.has(k));
+        // "Tank" counts for "Tank drive", "Inspire" for "Inspire Award", "Color" for "Color sensor"…
+        const short = / (award|drive|wheels?|zones?|sensor)$/i.test(name) ? fkey(name.replace(/ (award|drive|wheels?|zones?|sensor)$/i, "")) : "";
+        const keys = [...new Set([fkey(name), short.length >= 3 ? short : ""])].filter((k) => k && !seen.has(k));
         if (!keys.length) return; keys.forEach((k) => seen.add(k)); items.push({ name, rank: items.length, keys });
       });
       const cat = { type: f.type, id: f.id, text: f.text, season: f.season || "", facts: true, own: !!f.own, items, valid: items, test: () => false };
@@ -106,11 +108,13 @@
   /** Returns { item, fits } for the best match, or null when it isn't on any list. */
   function findFact(raw, cat) {
     const k = fkey(raw); if (!k) return null;
-    const max = k.length >= 10 ? 2 : 1;
-    const dist = (it) => (it.keys.includes(k) ? 0 : k.length >= 4 && it.keys.some((x) => lev(x, k, max) <= max) ? 1 : -1);
-    let best = null;
-    for (const it of cat.items) { const d = dist(it); if (d >= 0 && (!best || d < best.d || (d === best.d && it.rank < best.it.rank))) best = { it, d }; }
-    if (best) return { item: best.it, fits: true };
+    const exact = cat.items.find((it) => it.keys.includes(k));
+    if (exact) return { item: exact, fits: true };
+    const hits = nearest(k, cat.items.flatMap((it) => it.keys));
+    if (hits) {
+      const items = [...new Set(hits.map((h) => cat.items.find((it) => it.keys.includes(h))))];
+      return items.length > 1 ? { ambiguous: true } : { item: items[0], fits: true, fuzzy: true };
+    }
     const other = (FACT_ALL.get(k) || []).find((x) => x.cat !== cat);
     return other ? { item: other.it, fits: false, cat: other.cat } : null;
   }
@@ -321,24 +325,46 @@
 
   /** For testing: every prompt and how many teams fit it. */
   window.KilovoltPrompts = () => CATS.map((c) => [c.type, c.text, validFor(c).length]);
-  window.KilovoltTest = { opts, makeCustom: (seed = 1) => makeCustom(rng(seed)).prompts.map((c) => [topicOf(c), c.id, Math.round(ease(c) * 100) / 100]), ease: (id) => ease(CATS.find((c) => c.id === id)), state: () => s };
+  window.KilovoltTest = { match: (raw, id) => { const c = CATS.find((x) => x.id === id); const r = c.facts ? findFact(raw, c) : findTeam(raw, c); return r ? { name: (r.item || r.team)?.name, fits: r.fits, fuzzy: !!r.fuzzy, ambiguous: !!r.ambiguous } : null; }, opts, makeCustom: (seed = 1) => makeCustom(rng(seed)).prompts.map((c) => [topicOf(c), c.id, Math.round(ease(c) * 100) / 100]), ease: (id) => ease(CATS.find((c) => c.id === id)), state: () => s };
   const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
   const EPOCH = Date.UTC(2026, 10, 22); // Kilovolt #1
   const dayNumber = () => { const d = new Date(); return Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - EPOCH) / 86400000) + 1; };
   const seedFor = (key) => [...key].reduce((h, ch) => Math.imul(h ^ ch.charCodeAt(0), 16777619), 2166136261);
 
   /* ---------------- Matching an answer ---------------- */
+  /** Typo distance: one wrong, missing, or extra letter is 1, and so is two letters swapped ("cnoe" → "cone"). */
   function lev(a, b, max) {
     if (Math.abs(a.length - b.length) > max) return max + 1;
-    let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+    let pp = null, prev = Array.from({ length: b.length + 1 }, (_, j) => j), prevBest = 0;
     for (let i = 1; i <= a.length; i++) {
       const cur = [i]; let best = i;
-      for (let j = 1; j <= b.length; j++) { cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); best = Math.min(best, cur[j]); }
-      if (best > max) return max + 1; prev = cur;
+      for (let j = 1; j <= b.length; j++) {
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+        if (pp && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) cur[j] = Math.min(cur[j], pp[j - 2] + 1);
+        best = Math.min(best, cur[j]);
+      }
+      if (best > max && prevBest > max) return max + 1;
+      pp = prev; prev = cur; prevBest = best;
     }
     return prev[b.length];
   }
-  /** Returns { team, fits } for the best match, or { numberOnly } / null. */
+  /**
+   * Spelling slack. Capitals, spaces, punctuation, "the", and plurals never matter. Beyond that,
+   * answers under 4 letters must be exact, 4–12 letters may have one typo, and 13+ may have two.
+   * The first letter must match, and a typo that's equally close to two different answers isn't guessed.
+   */
+  const slack = (n) => (n < 4 ? 0 : n < 13 ? 1 : 2);
+  function nearest(k, keys) {
+    const max = slack(k.length); if (!max) return null;
+    let best = max + 1, hits = [];
+    for (const x of keys) {
+      if (x[0] !== k[0] || Math.abs(x.length - k.length) > max) continue;
+      const d = lev(x, k, max);
+      if (d < best) { best = d; hits = [x]; } else if (d === best && d <= max) hits.push(x);
+    }
+    return best <= max ? hits : null;
+  }
+  /** Returns { team, fits } for the best match, or { numberOnly } / { ambiguous } / null. */
   function findTeam(raw, cat) {
     let text = raw.trim(); if (!text) return null;
     // "27254 Steel Surge" or "#27254 - Steel Surge": use the name part; a bare number isn't enough
@@ -346,17 +372,21 @@
     if (m && !m[2]) return { numberOnly: true, team: BY_NUM.get(+m[1]) };
     if (m && m[2]) text = m[2];
     const k1 = key1(text), k2 = key2(text);
-    let cands = [...(INDEX.get(k1) || []), ...(INDEX.get(k2) || [])];
-    if (!cands.length && k2.length >= 4) {
-      const max = k2.length >= 12 ? 2 : 1;
-      for (const [k, list] of INDEX) { if (Math.abs(k.length - k2.length) <= max && lev(k, k2, max) <= max) cands.push(...list); }
+    let cands = [...(INDEX.get(k1) || []), ...(INDEX.get(k2) || [])], fuzzy = false;
+    if (!cands.length) {
+      const hits = nearest(k2, INDEX.keys());
+      if (hits) {
+        const found = hits.flatMap((h) => INDEX.get(h));
+        if (new Set(found.map((t) => t.k2)).size > 1) return { ambiguous: true };
+        cands = found; fuzzy = true;
+      }
     }
     if (!cands.length) return null;
     cands = [...new Set(cands)];
     const fitting = cands.filter((t) => cat.test(t));
     // If several real teams share the name, the name is only as rare as its best-known team
-    if (fitting.length) return { team: fitting.sort((a, b) => b.fame - a.fame)[0], fits: true, shared: fitting.length > 1 };
-    return { team: cands.sort((a, b) => b.fame - a.fame)[0], fits: false };
+    if (fitting.length) return { team: fitting.sort((a, b) => b.fame - a.fame)[0], fits: true, shared: fitting.length > 1, fuzzy };
+    return { team: cands.sort((a, b) => b.fame - a.fame)[0], fits: false, fuzzy };
   }
 
   /* ---------------- Game state ---------------- */
@@ -442,9 +472,9 @@
     if (!s || s.phase !== "ask") return;
     const c = s.prompts[s.i], v = validFor(c), fact = !!c.facts, res = raw.trim() ? (fact ? findFact(raw, c) : findTeam(raw, c)) : null;
     // Unknown names and bare numbers don't use up the prompt: say why and let them try again
-    if (raw.trim() && s.t > 0 && (!res || res.numberOnly)) {
+    if (raw.trim() && s.t > 0 && (!res || res.numberOnly || res.ambiguous)) {
       const box = ui.querySelector(".kv-hint"), input = ui.querySelector("#kv-in");
-      box.textContent = !res ? (fact ? `“${raw.trim()}” isn't on our list. Check the spelling, or try another answer.` : `No FTC team called “${raw.trim()}”. Check the spelling and try again.`) : res.team ? `Type the team's name, not its number. (#${res.team.number} is ${res.team.name}.)` : "Type a team name, not a number.";
+      box.textContent = res?.ambiguous ? `“${raw.trim()}” is close to more than one ${fact ? "answer" : "team name"}. Check the spelling and try again.` : !res ? (fact ? `“${raw.trim()}” isn't on our list. Check the spelling, or try another answer.` : `No FTC team called “${raw.trim()}”. Check the spelling and try again.`) : res.team ? `Type the team's name, not its number. (#${res.team.number} is ${res.team.name}.)` : "Type a team name, not a number.";
       box.classList.add("warn"); input.select(); Sound.error();
       return;
     }
@@ -453,6 +483,7 @@
     const item = fact ? res?.item || null : null;
     if (!raw.trim()) msg = s.t <= 0 ? "Time's up." : "Skipped.";
     else if (!res) msg = `We couldn't find an FTC team called “${esc(raw.trim())}”. Check the spelling, or try another team.`;
+    else if (res.ambiguous) msg = `“${esc(raw.trim())}” is close to more than one ${fact ? "answer" : "team name"}, so it can't be scored.`;
     else if (res.numberOnly) msg = res.team ? `Type the team's name, not its number. (#${res.team.number} is ${esc(res.team.name)}.)` : "Type a team name, not a number.";
     else if (fact && !res.fits) msg = `${esc(item.name)} is real${res.cat.season ? ` (it's from ${esc(res.cat.season)})` : ""}, but it doesn't fit this prompt.`;
     else if (!res.fits) msg = `${esc(team.name)} (#${team.number}, ${esc(where(team))}) is a real team, but it doesn't fit this prompt.`;
@@ -483,6 +514,7 @@
         <p class="kv-note">${team.number === HOME ? "That's us! Steel Surge always counts as a Full Surge. ⚡" : T.blurb}${res.shared ? " (More than one team has this name, so it's scored by the best-known one.)" : ""}</p>`}`
       : `<div class="kv-result miss"><span class="kv-tier">No charge</span><span class="kv-pts">+0 V</span></div><p class="kv-note">${msg}</p>`}
       ${s.endless && tier < 0 ? `<p class="kv-lifeline${s.lives ? "" : " out"}">${livesHtml()} ${s.lives ? `${s.lives} miss${s.lives === 1 ? "" : "es"} left.` : `That was your third miss. You charged up ${s.answers.filter((a) => a.tier >= 0).length} answers.`}</p>` : ""}
+      ${T && res.fuzzy ? `<p class="kv-fuzzy">Close enough: you typed “${esc(raw.trim())}”.</p>` : ""}
       <div class="kv-examples"><h3>${s.practice ? (fact ? "Every answer on the list, most obvious first" : (ex.length >= v.length ? `All ${v.length} teams that fit, best-known first` : `${ex.length} of the ${v.length.toLocaleString()} teams that fit, best-known first`)) : "Answers that would have worked"}</h3><ul class="${s.practice ? "kv-all" : ""}">${ex.map(({ t, k }) => `<li style="--tc:${TIERS[k].color}"${t === mine && tier >= 0 ? ' class="mine"' : ""}><span>${TIERS[k].name}</span>${esc(t.name)}${fact ? "" : ` <small>#${t.number} · ${esc(where(t))}</small>`}</li>`).join("")}</ul><p>${fact ? `${v.length} answers were on the list.` : `${v.length.toLocaleString()} teams fit this prompt.`}</p></div>
       <button class="btn primary" type="button" data-next>${(s.endless ? s.lives <= 0 : s.i + 1 >= s.prompts.length) ? "See results" : "Next prompt"}</button>`;
     ui.querySelector(".kv-meter")?.replaceWith(Object.assign(document.createElement("div"), { innerHTML: meterHtml() }).firstElementChild);

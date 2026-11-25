@@ -388,3 +388,5 @@ html.no-scroll, html.no-scroll body { overflow: hidden; }
 .kv-examples li.mine { color: #fff; font-weight: 700; }
 .kv-examples li.mine::after { content: "  ← yours"; color: var(--tc); font: 600 11px/1 var(--font-mono); }
 @media (max-width: 560px) { .kv-examples ul.kv-all { grid-template-columns: 1fr; } }
+
+.kv-fuzzy { margin: 8px 0 0; font: 500 12.5px/1.4 var(--font-mono); color: #8a99ab; }
