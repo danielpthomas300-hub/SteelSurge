@@ -26,7 +26,7 @@ const scan = (text, where) => { for (const m of text.matchAll(/https:\/\/[^\s"'<
 const pages = [...(await readdir(root)).filter((f) => f.endsWith(".html")), ...(await readdir(new URL("arcade/", root))).filter((f) => f.endsWith(".html")).map((f) => `arcade/${f}`)];
 for (const p of pages) scan(await read(p), p);
 scan(await read("content/content.json"), "content.json");
-for (const f of ["site.js", "steel-ai.js"]) scan(await read(`assets/js/${f}`), f);
+for (const f of ["site.js", "steel-ai.js", "codelab-data.js"]) scan(await read(`assets/js/${f}`), f);
 // Team videos: a deleted or private video leaves a blank card, so check each one through YouTube's oEmbed
 const ytIds = new Map();
 try { for (const v of JSON.parse(await read("content/content.json")).featuredVideos || []) ytIds.set(String(v.id).match(/[\w-]{11}$/)?.[0], "Media → Our picks"); } catch {}

@@ -1107,3 +1107,32 @@ body.mx-on { min-height: 100vh; }
 .oi-meta { display: grid; gap: 4px; text-align: right; font-size: 13px; color: var(--muted); white-space: nowrap; }
 .oi-meta b { color: var(--text); font-family: var(--font-display); }
 @media (max-width: 640px) { .outreach-item { grid-template-columns: 1fr; gap: 6px; } .oi-meta { display: flex; gap: 14px; text-align: left; } }
+
+/* ---------- Home: Code Lab invitation ---------- */
+.codelab-band { background: radial-gradient(600px 240px at 0% 100%, rgba(61,220,151,.12), transparent 70%), radial-gradient(500px 220px at 100% 0%, var(--surge-soft), transparent 70%), var(--surface); }
+.codelab-band .eyebrow { display: inline-block; margin-bottom: 10px; }
+@media (max-width: 720px) { body[data-page="codelab"] .to-top { display: none; } }
+
+/* ---------- Team page: alumni ---------- */
+.alumni { margin-top: 34px; padding: 22px 24px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); }
+.alumni h3 { font-size: 20px; }
+.alumni > p { color: var(--muted); margin: 6px 0 16px; font-size: 14.5px; }
+.alumni ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.alumni li { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 12px; background: var(--surface-2); }
+.alumni img, .alumni .ini { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: none; }
+.alumni .ini { display: grid; place-items: center; background: var(--surface-3); color: var(--muted); font: 700 14px var(--font-display); }
+.alumni b { display: block; font-size: 14.5px; }
+.alumni small { display: block; color: var(--dim); font-size: 12.5px; }
+
+/* ---------- Small polish ---------- */
+h1, h2, h3 { text-wrap: balance; }
+p, li { text-wrap: pretty; }
+img { image-rendering: auto; }
+a, button { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline-offset: 3px; }
+@media print {
+  .site-header, .site-footer, .site-banner, .mobile-menu, .preview-pill, .mx-pill, [data-ai-root], .hero-canvas { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  .reveal { opacity: 1 !important; transform: none !important; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 85%; color: #555; }
+}

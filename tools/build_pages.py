@@ -25,6 +25,12 @@ ICO_CHECK = I('<path d="M20 6 9 17l-5-5"/>')
 T = " · Steel Surge FTC 27254"
 
 
+def og_image(page):
+    """A page's own link-preview image (tools/make_og.py) if it has one, else the site-wide card."""
+    key = "arcade" if page.startswith("game-") else page
+    return f"assets/img/og/{key}.jpg" if os.path.exists(os.path.join(OUT, "assets", "img", "og", f"{key}.jpg")) else "assets/img/og-image.jpg"
+
+
 def head(title, desc, page, root=".", noindex=False, path="", css=(), js=(), jsonld="", extra_head=""):
     r = root
     robots = '\n  <meta name="robots" content="noindex">' if noindex else ""
@@ -39,12 +45,13 @@ def head(title, desc, page, root=".", noindex=False, path="", css=(), js=(), jso
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{title}</title>
   <meta name="description" content="{desc}">
-  <meta name="theme-color" content="#090c11">{robots}{canon}
+  <meta name="theme-color" content="#090c11" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f6f8fb" media="(prefers-color-scheme: light)">{robots}{canon}
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Steel Surge FTC 27254">
   <meta property="og:title" content="{title}">
   <meta property="og:description" content="{desc}">
-  <meta property="og:image" content="{SITE}assets/img/og-image.jpg">
+  <meta property="og:image" content="{SITE}{og_image(page)}">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="{r}/assets/img/favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="{r}/assets/img/icon-180.png">
@@ -123,6 +130,10 @@ pages["index.html"] = shell("Steel Surge — FTC Robotics Team 27254", "Steel Su
   + section(head_block("How we build", "From kickoff to competition", "Every season starts from scratch. Here's how a new robot comes together.") + '\n        <ol class="steps" id="build-steps"></ol>', cls="section alt")
   + section(head_block("Watch", "Latest from our channel", "Builds, matches, and moments from the build room. New videos appear here as soon as we post them.", f'<a class="link-arrow" href="media.html">All videos {A}</a>') + '\n        <div class="latest-videos" id="latest-videos"></div>')
   + section(head_block("Steel Surge Arcade", "Games built by a robotics team", "Thirteen original games you can play in your browser, on a computer or phone. Here are three to start, and every game has trophies to earn.", f'<a class="link-arrow" href="arcade.html">Open the arcade {A}</a>') + '\n        <div class="grid cols-3" id="home-games"></div>')
+  + section(f'''        <div class="cta-band reveal codelab-band">
+          <div><span class="eyebrow">Code Lab</span><h2>Learn to program a robot</h2><p>Free FTC programming practice in your browser: short lessons, real-code bug hunts, coding drills, and a simulated robot you program and drive yourself.</p></div>
+          <div class="actions"><a class="btn primary" href="codelab.html">Open the Code Lab {A}</a><a class="btn" href="codelab.html#drive">Drive the robot</a></div>
+        </div>''')
   + section(f'''        <div id="home-sponsors" style="margin-bottom:40px"></div>
         <div class="cta-band reveal">
           <div><h2>Power the surge</h2><p>Sponsors keep our robot running and our outreach growing. Every tier comes with real visibility for your business.</p></div>
@@ -270,9 +281,15 @@ pages["ftc.html"] = shell("What is FTC?" + T, "New to FIRST Tech Challenge? How 
   open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ftc_page.html"), encoding="utf-8").read(), path="ftc.html",
   extra_head='\n  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>\n  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>')
 
-pages["calculator.html"] = shell("Score calculator" + T, "Free FTC score calculator for every FIRST Tech Challenge game since 2017–18, including BIOBUZZ and DECODE. Tap what your alliance scored to see the total, breakdown, and ranking points.", "calculator",
-  page_hero("Score calculator", "FTC score calculator", "Tap what your alliance scored and watch the total, the breakdown, and ranking points add up. Every FTC game since 2017–18, with point values from the official manuals.")
-  + section(f"""        <div class="calc">
+pages["calculator.html"] = shell("Score calculator and scouting" + T, "Free FTC match tools: a score calculator for every FIRST Tech Challenge game since 2017–18, and an event scouting tool with live FTCScout stats, team notes, and an alliance pick list.", "calculator",
+  page_hero("Match tools", "Score calculator and scouting", "Score any FTC match since 2017–18 with point values from the official manuals, or scout an event: live stats for every team, notes on your phone, and an alliance pick list.")
+  + section(f"""        <div class="mt-tabs" role="tablist" aria-label="Match tools">
+          <button type="button" role="tab" class="mt-tab" id="mt-tab-calc" aria-controls="mt-calc" aria-selected="true" data-mt="calc">{I('<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h8"/>')}<span><b>Score calculator</b><small>Tap what an alliance scored</small></span></button>
+          <button type="button" role="tab" class="mt-tab" id="mt-tab-scout" aria-controls="mt-scout" aria-selected="false" data-mt="scout">{I('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M8 11h6M11 8v6"/>')}<span><b>Event scouting</b><small>Stats, notes, and pick list</small></span></button>
+        </div>
+        <div id="mt-scout" role="tabpanel" aria-labelledby="mt-tab-scout" hidden><div id="scout"><noscript><p>Scouting needs JavaScript.</p></noscript></div></div>
+        <div id="mt-calc" role="tabpanel" aria-labelledby="mt-tab-calc">
+        <div class="calc">
           <div class="calc-pick">
             <label class="calc-pick-label" for="calc-select">Season</label>
             <select id="calc-select" class="input calc-select"></select>
@@ -298,7 +315,13 @@ pages["calculator.html"] = shell("Score calculator" + T, "Free FTC score calcula
             </aside>
           </div>
         </div>
-        <div class="calc-mobile-bar"><span>Total</span><b id="calc-bar-total">0</b><button class="btn sm" type="button" id="calc-jump">Breakdown</button></div>"""), path="calculator.html", js=("calc-data.js", "calculator.js"))
+        <div class="calc-mobile-bar"><span>Total</span><b id="calc-bar-total">0</b><button class="btn sm" type="button" id="calc-jump">Breakdown</button></div>
+        </div>"""), path="calculator.html", css=("scouting.css",), js=("calc-data.js", "calculator.js", "scouting.js"))
+
+pages["codelab.html"] = shell("Code Lab" + T, "Practice FTC Java programming in your browser: find bugs in real robot code, write methods that are checked instantly, and program a simulated robot's autonomous.", "codelab",
+  page_hero("Code Lab", "Practice FTC programming", "Learn the Java that runs FTC robots, right in your browser: find bugs in real robot code, write methods that get checked instantly, then program a robot and drive it. Plus short CAD and outreach lessons for the whole team. No setup and no account needed.")
+  + section('        <div id="codelab"><noscript><p>The Code Lab needs JavaScript to run code in your browser.</p></noscript></div>\n        <p class="fine" style="margin-top:22px">The Code Lab runs a simplified Java in your browser, so it doesn\'t need Android Studio. It follows the FTC SDK\'s names and rules, but real robots use the full SDK: see <a href="https://ftc-docs.firstinspires.org/" target="_blank" rel="noopener">FTC Docs</a> and <a href="https://gm0.org/" target="_blank" rel="noopener">Game Manual 0</a> when you\'re ready. Your progress is saved in this browser.</p>', cls="section codelab-section"),
+  path="codelab.html", css=("codelab.css",), js=("minijava.js", "codelab-sim.js", "codelab-data.js", "codelab.js"))
 
 pages["trophies.html"] = shell("Trophies" + T, "Your Steel Surge trophy case: earn bronze, silver, gold, and platinum trophies by exploring the site and playing the arcade.", "trophies",
   page_hero("Trophy case", "Your trophies", "Earn bronze, silver, gold, and platinum trophies by exploring the site and playing the arcade. Collect every one to unlock the platinum trophy.")

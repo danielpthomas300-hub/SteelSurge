@@ -99,8 +99,8 @@
   /* ---------------- Master controls (set in the Team editor) ---------------- */
   const CONTROL_DEFAULTS = {
     maintenance: false, maintenanceTitle: "We'll be right back", maintenanceMessage: "Our website is getting a tune-up. Check back soon, or email the team if you need us.", maintenanceUntil: "",
-    banner: false, bannerText: "", bannerLink: "", bannerTone: "info",
-    arcade: true, calculator: true, media: true, trophies: true, steelAI: true, contactForm: true, searchEngines: true,
+    banner: false, bannerText: "", bannerLink: "", bannerTone: "info", bannerUntil: "",
+    arcade: true, calculator: true, codelab: true, scouting: true, weekly: true, media: true, trophies: true, steelAI: true, contactForm: true, searchEngines: true,
   };
   const controls = (c) => ({ ...CONTROL_DEFAULTS, ...(c?.controls || {}) });
   /** Someone who uses the Team editor on this device (they get a "view the site anyway" button). */
@@ -109,7 +109,7 @@
   const maintenanceOn = (c) => controls(c).maintenance && PAGE !== "editor" && !mxBypassed();
   /** True when a feature is switched off, or the whole site is in maintenance mode. */
   const siteOff = (c, key) => maintenanceOn(c) || (!!key && controls(c)[key] === false);
-  const PAGE_SWITCH = { arcade: "arcade", calculator: "calculator", media: "media", trophies: "trophies" };
+  const PAGE_SWITCH = { arcade: "arcade", calculator: "calculator", codelab: "codelab", media: "media", trophies: "trophies" };
   const pageSwitch = () => (PAGE.startsWith("game") ? "arcade" : PAGE_SWITCH[PAGE]);
   const navFor = (c) => { const k = controls(c); return NAV.filter(([, , id]) => !(id in PAGE_SWITCH) || k[id]); };
 
@@ -239,7 +239,7 @@
   /* ---------------- Layout: header / footer ---------------- */
   const NAV = [
     ["index.html", "Home", "home"], ["team.html", "Team", "team"],
-    ["ftc.html", "FTC", "ftc"], ["calculator.html", "Score Calculator", "calculator"], ["media.html", "Media", "media"], ["arcade.html", "Arcade", "arcade"], ["sponsors.html", "Sponsors", "sponsors"], ["contact.html", "Contact", "contact"],
+    ["ftc.html", "FTC", "ftc"], ["calculator.html", "Match Tools", "calculator"], ["codelab.html", "Code Lab", "codelab"], ["media.html", "Media", "media"], ["arcade.html", "Arcade", "arcade"], ["sponsors.html", "Sponsors", "sponsors"], ["contact.html", "Contact", "contact"],
   ];
   const navSection = () => (PAGE.startsWith("game") ? "arcade" : PAGE);
 
@@ -325,6 +325,7 @@
   function renderBanner(c) {
     const k = controls(c), text = String(k.bannerText || "").trim();
     if (!k.banner || !text || PAGE === "editor") return;
+    if (k.bannerUntil && new Date().toISOString().slice(0, 10) > k.bannerUntil) return; // its end date has passed
     const id = text + "|" + k.bannerLink;
     if (store.get("ss-banner-hidden") === id) return;
     const tone = ["info", "warning", "celebrate"].includes(k.bannerTone) ? k.bannerTone : "info";
@@ -367,7 +368,7 @@
     document.body.append(pill);
   }
 
-  const CLOSED_NAMES = { arcade: "The Arcade", calculator: "The Score Calculator", media: "The Media page", trophies: "The trophy case" };
+  const CLOSED_NAMES = { arcade: "The Arcade", calculator: "Match tools", codelab: "The Code Lab", media: "The Media page", trophies: "The trophy case" };
   function renderClosed(key) {
     const main = $("main"); if (!main) return;
     main.innerHTML = `<section class="section"><div class="wrap"><div class="closed-card reveal">${ICON.alert}<h1>${CLOSED_NAMES[key]} is taking a break</h1><p>The team has switched this part of the site off for now. Check back soon!</p><a class="btn primary" href="${url("index.html")}">Back to the home page</a></div></div></section>`;
@@ -404,6 +405,7 @@
     if (!k.arcade) { hide($("#home-games")?.closest("section")); $$('main a[href*="arcade"]').forEach(hide); }
     if (!k.media) { hide($("#latest-videos")?.closest("section")); $$('main a[href*="media.html"]').forEach(hide); }
     if (!k.calculator) $$('main a[href*="calculator.html"]').forEach(hide);
+    if (!k.codelab) { $$('main a[href*="codelab.html"]').forEach(hide); $$(".codelab-band").forEach((b) => { const sec = b.closest("section"); if (sec) sec.hidden = true; }); }
     if (!k.trophies) $$('a[href*="trophies.html"]').forEach(hide);
     if (!k.steelAI) $$("[data-ai-ask]").forEach(hide);
     if (!k.contactForm && PAGE === "contact") {
@@ -776,7 +778,7 @@
     $("#hero-meta").innerHTML = `
       <div><dt>Based in</dt><dd>${esc(c.team.location)}</dd></div>
       <div><dt>Founded</dt><dd>${esc(c.team.rookieYear)}</dd></div>
-      <div><dt>Members</dt><dd>${c.members.length}</dd></div>
+      <div><dt>Members</dt><dd>${c.members.filter((m) => !m.alumni).length}</dd></div>
       ${outreachStat(c) ? `<div><dt>Outreach</dt><dd>${esc(outreachStat(c).hours)} hrs</dd></div>` : ""}`;
     heroCanvas($(".hero-canvas"));
 
@@ -816,12 +818,16 @@
   pages.team = async (c) => {
     renderTimeline(c);
     if (c.team.school) $("#team-lead").textContent = `Students from ${c.team.school} who design, build, code, and promote our robot every season.`;
-    const depts = [...new Set(c.members.map((m) => m.dept).filter(Boolean))];
+    const team = c.members.filter((m) => !m.alumni), alumni = c.members.filter((m) => m.alumni);
+    const depts = [...new Set(team.map((m) => m.dept).filter(Boolean))];
     const bar = $("#team-filter");
-    bar.innerHTML = [["all", "Everyone", c.members.length], ...depts.map((d) => [d.toLowerCase(), d, c.members.filter((m) => m.dept === d).length])]
+    bar.innerHTML = [["all", "Everyone", team.length], ...depts.map((d) => [d.toLowerCase(), d, team.filter((m) => m.dept === d).length])]
       .map(([id, label, n]) => `<button class="chip" type="button" data-filter="${esc(id)}" aria-pressed="false">${esc(label)}<span class="count">${n}</span></button>`).join("");
     const initials = (n) => n.split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
-    $("#team-grid").innerHTML = c.members.map((m) => `
+    $("#team-alumni")?.remove();
+    if (alumni.length) $("#team-grid").insertAdjacentHTML("afterend", `<div class="alumni reveal" id="team-alumni"><h3>Alumni</h3><p>Past Steel Surge members. Thank you for building the team!</p><ul>${alumni
+      .sort((a, b) => (Number(b.gradYear) || 0) - (Number(a.gradYear) || 0)).map((m) => `<li>${m.photo ? `<img src="${url(m.photo)}" alt="" loading="lazy" width="40" height="40" onerror="this.remove()">` : `<span class="ini">${esc((m.name || "?").split(/\s+/).map((p) => p[0]).slice(0, 2).join(""))}</span>`}<span><b>${esc(m.name)}</b><small>${esc([m.role, m.gradYear ? `Class of ${m.gradYear}` : ""].filter(Boolean).join(" · "))}</small></span></li>`).join("")}</ul></div>`);
+    $("#team-grid").innerHTML = team.map((m) => `
       <article class="member reveal" data-dept="${esc((m.dept || "").toLowerCase())}">
         <div class="member-photo">
           <span class="initials" aria-hidden="true">${esc(initials(m.name))}</span>
@@ -939,6 +945,7 @@
   const WEEK_MS = 7 * 864e5, WEEK0 = Date.UTC(2024, 0, 1); // a Monday
   const LEVEL_SCALE = [0.5, 0.75, 1, 1.3, 1.6], LEVEL_NAMES = ["Super Easy", "Easy", "Medium", "Hard", "Extreme"];
   function weekly(now = Date.now()) {
+    if (window.SS?.content && controls(window.SS.content).weekly === false) return null;
     const week = Math.floor((now - WEEK0) / WEEK_MS), w = WEEKLY[((week * 5) % WEEKLY.length + WEEKLY.length) % WEEKLY.length];
     const round = (v) => (v >= 100 ? Math.round(v / 50) * 50 : Math.max(1, Math.round(v)));
     const target = (lv = 2) => round(w.base * LEVEL_SCALE[lv] ?? 1);
@@ -947,7 +954,7 @@
   }
   /** Called by the arcade kit after every run. Returns true the first time this week's target is reached. */
   function weeklySubmit(gameId, value, lv) {
-    const w = weekly(); if (gameId !== w.id || w.done || !(value >= w.target(lv))) return false;
+    const w = weekly(); if (!w || gameId !== w.id || w.done || !(value >= w.target(lv))) return false;
     const log = store.get("ss-weekly", {}); log[w.week] = { value, level: LEVEL_NAMES[lv], at: Date.now() }; store.set("ss-weekly", log);
     window.SS?.trophy?.("weekly");
     setTimeout(() => toast(`Weekly challenge complete: ${w.title}!`), 900);
@@ -955,7 +962,8 @@
   }
   const savedLevel = () => { const i = LEVEL_NAMES.map((n) => n.replace(/ (.)/, (_, ch) => ch).replace(/^./, (ch) => ch.toLowerCase())).indexOf(store.get("ss-arcade-settings", {})?.difficulty); return i < 0 ? 2 : i; };
   function weeklyCard() {
-    const w = weekly(), lv = savedLevel(), left = Math.max(0, w.endsAt - Date.now());
+    const w = weekly(); if (!w) return "";
+    const lv = savedLevel(), left = Math.max(0, w.endsAt - Date.now());
     const d = Math.floor(left / 864e5), h = Math.floor(left / 36e5) % 24;
     const ladder = LEVEL_NAMES.map((n, i) => `<li${i === lv ? ' class="on"' : ""}><span>${n}</span><b>${w.target(i).toLocaleString()}</b></li>`).join("");
     return `<section class="weekly reveal${w.done ? " done" : ""}" aria-labelledby="weekly-h">

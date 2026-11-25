@@ -43,3 +43,6 @@ jobs:
 
       - name: Puzzle levels are solvable
         run: node tools/check_levels.js
+
+      - name: Code Lab answers, drills, and robot challenges work
+        run: node tools/test_codelab.js
