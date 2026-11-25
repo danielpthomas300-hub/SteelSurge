@@ -1,184 +1,102 @@
 # Steel Surge — FTC Team 27254 website
 
-Live site: https://danielpthomas300-hub.github.io/SteelSurge/
+**Live:** https://danielpthomas300-hub.github.io/SteelSurge/ (GitHub Pages) · https://steelsurge-27254.netlify.app (Netlify)
 
-A fast, static website (plain HTML, CSS, and JavaScript, with no build step needed to run it) hosted free on GitHub Pages.
+A static site: plain HTML, CSS, and JavaScript. No server, no database, no monthly cost. This file is for whoever maintains it.
 
-## What updates by itself
+---
 
-| What | How |
+## Updating the site (no code)
+
+1. Open **/editor.html** (or press **Ctrl + Shift + E** on any page) and enter the team passcode.
+2. Make changes. Drafts save on your device as you type. **Live preview** shows the real page beside the form.
+3. Click **Publish** → review the list of changes and any warnings → copy → open `content.json` on GitHub → paste → **Commit changes**. GitHub Pages updates in about a minute.
+
+**Handy editor features:** the **Overview** page shows what needs attention and has quick actions (log outreach, post an update, add a member or sponsor). **Ctrl + K** searches everything. **Ctrl + Z** undoes any change, even a deleted item. Back up or restore a draft under **Editor settings**.
+
+**Photos and logos:** use **Prepare a new image** on the photo field. It crops, shrinks, and downloads the file; then upload it to `assets/img/team/`, `projects/`, or `sponsors/` on GitHub (the Publish dialog links there).
+
+**Master controls** (Site → Master controls) switch things for the whole site:
+- **Maintenance mode:** a "We'll be right back" page for visitors. It hides the site but isn't real security.
+- **Announcement banner:** a strip on every page, with an optional link and an end date so it hides itself.
+- **Features:** turn off the Arcade, Match tools, scouting, Code Lab, weekly challenge, Media page, trophies, Steel AI, or the contact form. Their links disappear everywhere.
+- **Search engines:** off asks Google not to list the site.
+
+**Good to know:**
+- **Outreach log** (Season → Outreach): log team hours per event (4 people × 3 hours = 12). The home and sponsor pages add up this season's hours (seasons start September 1).
+- **Alumni:** tick "Alumni" on a member to move them to a small Alumni list on the Team page.
+- Everything editable lives in `content/content.json`, if you'd rather edit it directly.
+
+---
+
+## What runs by itself
+
+| Thing | Source |
 |---|---|
-| Seasons, events, and matches played (home page) | [FTCScout](https://ftcscout.org/teams/27254), live in the browser (cached for 3 hours). Full results link out to FTCScout |
-| Official FTC awards (Team page timeline) | FTCScout, as soon as FIRST posts them |
-| "Up next" event countdown | FTCScout: appears automatically once the team registers for an event |
-| Latest videos (Home and Media pages) | A GitHub Action refreshes `content/videos.json` from YouTube every day |
-| "Steel Surge competed" notes on the FTC page | FTCScout: each season the team played is marked automatically |
-| Instagram links (Media, Contact, footer) | Appear automatically once an Instagram handle is entered in the editor |
-| Backup stats if FTCScout is down | The same Action saves `content/ftc.json` daily |
-| Season label, copyright year, team size, events and matches played | Calculated |
-| Outreach hours (home and sponsor pages) | Added up from this season's outreach log in the editor |
-| Weekly arcade challenge | Changes every Monday at 00:00 UTC (Sunday evening in Pennsylvania) |
+| Events, matches, awards, "Up next" countdown | [FTCScout](https://ftcscout.org/teams/27254), live in visitors' browsers |
+| Latest videos, backup FTC stats | Daily GitHub Action → `content/videos.json`, `content/ftc.json` |
+| Every FTC team (for Kilovolt) | Same Action, Mondays → `content/teams.json` |
+| Outreach hours, season label, team size | Calculated from the content |
+| Weekly arcade challenge | Rotates every Monday 00:00 UTC |
 
-### Automatic checks (GitHub Actions)
-- **Site check** (`.github/workflows/site-check.yml`) runs on every push. It fails, and GitHub emails whoever pushed, if a script has a syntax error, `content/content.json` is broken or points at a missing image, a link inside the site is broken, the HTML pages weren't rebuilt after a script or style change (fix: run `python tools/build_pages.py` and commit), or a puzzle level stops being solvable. The checks it runs are `tools/check_content.py`, `tools/check_links.py`, and `tools/check_levels.js`.
-- **Weekly link check** (`.github/workflows/link-check.yml`) runs every Monday. It tries every outside link (FIRST, FTCScout, YouTube, the join form, sponsor and social links) and every team video. If any are broken, deleted, or private, it opens an issue titled "Broken outside links on the website" listing them (GitHub emails the repo owner). It updates that issue while links stay broken and closes it once everything works. Sites that block robots are reported as "couldn't check" in the run log instead of raising an alarm. Run it any time from the Actions tab, or locally with `node tools/check_external.mjs`.
+**GitHub Actions** (the repo's Actions tab, where you can also run each by hand):
+- **Refresh site data:** daily. Needs **Settings → Actions → General → Workflow permissions → Read and write** (already set).
+- **Site check:** every push. Checks scripts, content, links, puzzle levels, and the Code Lab, and emails whoever pushed if something breaks.
+- **Weekly link check:** Mondays. Opens an issue listing broken outside links or deleted videos, and closes it once they work again.
+- **Website check-in:** every other Monday. Posts an issue summarizing site health and stale content (both sites up to date, jobs passing, outreach logged, recent updates).
 
-- **Website check-in** (`.github/workflows/checkin.yml`) runs every other Monday and posts a GitHub issue titled "Website check-in · <date>" (GitHub emails the repo owner), closing the previous one. It checks that GitHub Pages and Netlify are both up and running the latest version (Netlify isn't connected to GitHub, so this catches a forgotten redeploy), that the other automatic jobs are passing, that outside links and videos work, and flags content going stale: no outreach logged this season, old team updates, the FTC page missing the current game, maintenance mode or a banner left on, and search engines switched off. Run it any time from the Actions tab ("Website check-in" → Run workflow), or locally with `node tools/checkin.mjs report.md`.
+**Two things that aren't automatic:**
+- **Netlify** isn't connected to GitHub, so it only changes when someone redeploys it. To make it automatic, link the GitHub repo in Netlify (Site configuration → Build & deploy), or treat GitHub Pages as the official site. The check-in warns when Netlify falls behind.
+- **Contact form:** messages go to the team email through [FormSubmit](https://formsubmit.co). The first message ever sent triggers an "Activate Form" email (check spam); messages arrive only after someone clicks it. If sending fails, visitors get a pre-filled email instead.
 
-**Contact form:** messages go to the team email through [FormSubmit](https://formsubmit.co) (the `formEndpoint` in the editor's Contact settings). FormSubmit needs a one-time activation: the first message sent from the site triggers an "Activate Form" email to the team inbox (check spam), and messages are only delivered after someone clicks it. If sending fails, visitors are offered a pre-filled email to send from their own mail app instead, so nothing is silently lost.
+---
 
-**One-time setup for the daily refresh:** in the GitHub repo, go to **Settings → Actions → General → Workflow permissions** and choose **Read and write permissions**. You can run it by hand from the **Actions** tab ("Refresh site data" → Run workflow).
+## What's on the site, and where it lives
 
-## How to update content (no code)
-
-### Option 1: the team editor (developer mode, easiest)
-1. Go to **/editor.html**. You can also click **Team editor** in the footer, or press **Ctrl + Shift + E** (Cmd + Shift + E on a Mac) on any page.
-2. Enter the team passcode (change it under *Editor settings*).
-3. Edit members (and their fun facts), the motto, the Instagram handle, team values, team projects, the outreach log, milestones, featured videos, updates, sponsors, tiers, the sponsor packet link, and contact topics.
-4. Click **Preview site** to see the real site with your draft.
-5. Click **Publish…** and follow the 4 steps (copy, open GitHub, paste, commit). The live site updates in about a minute.
-
-#### Master controls (Site → Master controls in the editor)
-Switches for the whole site, saved in the `controls` block of `content/content.json`. Like every editor change, they go live when you publish.
-- **Maintenance mode:** every page shows a "We'll be right back" screen with your headline, message, optional "expected back" time, the team email, and social links. The editor keeps working. On a device where someone has used the editor, the maintenance screen has a **View the site anyway** button, and a reminder pill stays on screen while maintenance is on. This hides the site from visitors, but a static site can't truly lock anyone out, so don't rely on it to hide private information.
-- **Announcement banner:** a strip above the header on every page, with optional "Learn more" link and three styles (info, celebrate, heads up). Visitors can close it; it comes back for them when you change the text.
-- **Features:** turn the Arcade, Score Calculator, Code Lab, Media page, trophies, Steel AI, or the contact form off. Their menu, footer, and in-page links disappear, their pages say "taking a break", and the Contact page shows the team email when the form is off.
-- **Search engines:** turn off to add a `noindex` tag so Google and others stop listing the site.
-
-#### Outreach log (Season → Outreach in the editor)
-Add one entry per outreach event: date, event name, where, **team hours** (total across everyone who helped, so 4 people for 3 hours is 12), people reached, and a short note. The Team page lists every event, newest first, with totals for events, hours, and people reached. The home and sponsor pages show **this season's** logged hours (seasons start September 1). If nothing is logged for the current season yet, they show the number typed in "Hours to show when nothing is logged this season" instead.
-
-New photos: use **Prepare a new image** in the editor. It crops and shrinks the photo and downloads it. Then upload it to `assets/img/team/` (or `projects/`, `sponsors/`) on GitHub. The Publish dialog has links.
-
-### Option 2: edit `content/content.json` directly
-Everything editable lives in that one file.
-
-## Trophies
-
-Visitors earn 98 PlayStation-style trophies (bronze, silver, gold, and a platinum for collecting them all) for exploring the site and playing the arcade. Earned trophies pop up in the corner and are listed on **/trophies.html**. Trophy definitions live in `assets/js/trophies.js`; pages and games award them with `SS.trophy("id")`. Progress is saved per browser.
-
-### Steel AI (site assistant)
-
-Every page except the editor and the arcade games has an **Ask Steel AI** button in the bottom-right corner. It runs entirely in the visitor's browser: no server, no API key, no cost. Code is in `assets/js/steel-ai.js`.
-
-- **Where answers come from:** `content/content.json` (team, members, sponsors, milestones), `content/seasons.json` (every game since 2017–18), `assets/js/calc-data.js` (point values, fouls, ranking points), the official game manuals (`content/manuals/`), live FTCScout results, the arcade list, trophies, and a short list of FTC basics written into the file.
-- **Game manuals:** every season since 2017–18 is split into its individual rules and sections in `content/manuals/<year>.json`. Rule questions ("how many motors can a robot have?", "what is G417 in DECODE?") get the rule quoted with its number, page, and a link that opens the official PDF at that page. With no season named, it searches the current season's manual. A visitor's browser only downloads a season's manual (about 300 KB) when they ask about it.
-- **Adding a new season's manual:** download the PDF from FIRST, add a line to `SOURCES` in `tools/build_manuals.py`, and run `python tools/build_manuals.py <folder with the PDFs>`. If FIRST releases a team update, rerun it with the new PDF so the rules stay current. Manuals from 2021–22 onward link to FIRST's site; older ones link to an archived copy because FIRST no longer hosts them.
-- **How it answers:** exact questions (points, fouls, ranking points, people, results, joining, sponsoring) get exact answers. Everything else is matched with a small search engine over the same data. It remembers the last season you asked about, so "what about INTO THE DEEP?" works.
-- **Updating it:** edit the content files as usual and Steel AI picks up the changes. To teach it something new, add a line to `BASICS` in `steel-ai.js`.
-- **Limits:** it isn't a full chatbot. It finds and quotes the closest rule, so an oddly worded question can land on a nearby rule; the "Open the manual" link and the FTC Q&A forum have the final word.
-- **Small helpers:** it fixes small typos in long words and shows how it read the question ("motrs" → motors). Rule answers offer the same question for the previous season. Pressing the up arrow in the empty box brings back your last question. Any link or button with `data-ai-ask="question"` opens Steel AI and asks it, like the card on the FTC page.
-- Open it with a question already asked: `index.html?ask=How many points is a HIVE TIP?`
-
-## The arcade
-
-Thirteen original games share one engine (`assets/js/arcade/kit.js`): sound, particles, overlays, pause, fullscreen, touch controls, and best scores saved per device.
-
-**Weekly challenge:** every Monday (00:00 UTC) the Arcade page shows one score target, the same for every visitor, which rotates through Overclock, Stack Up, Pit Crew, Flywheel, Signal Lost, Balance, and Odometry. The target scales with difficulty (half on Super Easy, 1.6× on Extreme), and the game's menu shows it at the chosen level. Hitting it in one run awards the **Weekly Winner** trophy. The games and base targets are in the `WEEKLY` list in `assets/js/site.js`; the arcade engine reports each finished run through `SS.weeklySubmit`.
-
-Sound effects are made in code, so there are no audio files to download. `Arcade.Sound` has named effects for every game to share: `select`, `pickup`, `combo(n)`, `hit`, `thud`, `boom`, `miss`, `fail`, `error`, `win`, `star(i)`, `record`, `gameOver`, `go`, `warn`, `zap`, `steam`, `whoosh`, and `rewind`. It also has `Sound.loop()` for held sounds such as the motor hum in Overclock and Mecanum Rush. The engine plays a start sound, a pause and resume sound, a chime for each star on a level-complete card, and a fanfare for a new personal best (which replaces the game-over sound).
-
-Every game has five difficulty levels: **Super Easy, Easy, Medium, Hard, and Extreme**. The badge in each game's toolbar shows the current level; click it (or the gear button) to open **Settings**, which also has sound effects and volume, screen shake, particles, glow effects, high contrast, and larger text. The engine adds a soft neon glow and vignette to every game; it turns the glow off by itself on devices that can't keep a smooth frame rate. Settings are shared by all games and saved per browser.
-
-- Action games get faster and less forgiving at higher levels.
-- Puzzles change their rules: easier levels add hints (Gridlock's Super Easy shows the next best move after every move), while Hard and Extreme add move, block, or loop limits and turn off hints (and undo on Extreme). Every level stays solvable on every difficulty.
-- Most games have an Extreme-only trophy, and earning 3 of them unlocks **Daredevil**.
-
-| Game | Type | Notes |
+| Feature | Page | Change it in |
 |---|---|---|
-| Overclock | One-button runner | Heat management, crushers, lasers, vents, furnaces |
-| Gridlock | Sliding puzzle, 40 levels | Generated by a solver; par = true minimum (`tools/gridlock_levels.js`); in-game hints |
-| Echo | Time-loop puzzle, 9 levels | Each level's intended solution is replayed by `tools/check_levels.js` |
-| Pit Crew | Reflex arcade | Match faults to tools; combos, golden robots, strikes |
-| Autonomous | Coding puzzle, 18 levels | Generated by a shortest-path solver; par = fewest blocks (`tools/autonomous_levels.js`); hints reveal an optimal program |
-| Signal Lost | Stealth maze | Procedural mazes; pings reveal walls and alert drones; decoys |
-| Flywheel | Aim and launch | Hood angle and flywheel speed, like our real shooter; wind and moving hive |
-| Mecanum Rush | Time trial, 8 courses | Field- or robot-centric driving, cone penalties, ghost of your best run |
-| Wire Up | Rotation puzzle, endless | Boards are random spanning trees, so every circuit is solvable; board size follows the difficulty (4×4 to 11×11) |
-| Stack Up | Timing, endless | Drop pieces from a sweeping linear slide; overhangs are trimmed |
-| Balance | Physics, survival | Keep a tilting platform level while collecting falling game pieces |
-| Odometry | Memory, endless | Watch a route, then drive it from memory; routes grow by one step |
-| Kilovolt | Trivia, daily | Name real FTC teams that fit each prompt; rarer answers score more (see below) |
+| **Code Lab**: coding, CAD, and outreach lessons; debug questions; drills; robot challenges with a simulated field (autonomous + TeleOp) | `codelab.html` | `assets/js/codelab-data.js`, then run `node tools/test_codelab.js` |
+| **Match tools**: score calculator for every game since 2017–18, plus event scouting (FTCScout stats, notes, pick list) | `calculator.html` | Point values: `assets/js/calc-data.js`. Scouting: `assets/js/scouting.js` |
+| **Arcade**: 13 games with 5 difficulty levels, trophies, and a weekly challenge | `arcade.html`, `arcade/` | `assets/js/arcade/` (shared engine: `kit.js`) |
+| **FTC page**: every game since 2017–18 with a 3D field | `ftc.html` | `content/seasons.json`, `assets/js/fields3d.js`, `tools/ftc_page.html` |
+| **Steel AI**: answers questions from the site's content and the official game manuals | every page | `assets/js/steel-ai.js` (`BASICS` list), `content/manuals/` |
+| **Trophies**: 98 trophies, saved per browser | `trophies.html` | `assets/js/trophies.js` |
 
-### Kilovolt (team-name trivia)
+How the Code Lab works: `minijava.js` runs a simplified Java in the browser with real Java rules and beginner-friendly errors; `codelab-sim.js` is the field and robot. Its test suite checks every answer and drives every challenge to prove it can be finished.
 
-Seven prompts a day, like "Name an FTC team from Ohio." Any real team that fits scores, but less famous answers are worth more: **Spark** (100 V), **Static**, **Current**, **Voltage**, **Overload**, and **Full Surge** (1,000 V), up to 7,000 V a day. Steel Surge always counts as a Full Surge when it fits.
+---
 
-- **Data:** `content/teams.json` lists every FTC team that has competed since 2019–20 (about 15,000), built by `node tools/fetch-teams.mjs` from FTCScout. "Fame" comes from each team's awards, seasons, events, and age. The daily GitHub Action refreshes it every Monday.
-- **Prompts** are generated from the data (states, provinces, countries, big cities, rookie seasons, name keywords, and themes like animals or food), so new teams and places appear automatically.
-- **Daily Charge** is the same for everyone each day; **Unlimited** plays random rounds. The difficulty setting changes the answer timer.
-- **FRC** isn't included yet: the free FRC data sources were down or need an API key. The game is built so another program's team list can be added later.
+## Once a year, after kickoff
 
-Easter egg: type ↑ ↑ ↓ ↓ ← → ← → B A anywhere on the site.
+1. **FTC page:** add the new game at the top of `content/seasons.json`, and a 3D field builder in `assets/js/fields3d.js` (copy a similar season).
+2. **Score calculator:** add the season at the top of `assets/js/calc-data.js`.
+3. **Steel AI rules:** add the manual PDF to `SOURCES` in `tools/build_manuals.py` and run `python tools/build_manuals.py <folder with PDFs>`. Rerun when FIRST posts a team update.
+4. **Outreach:** update the "hours to show" caption in the editor if you aren't logging events yet.
 
-## Code Lab (programming practice)
-
-**/codelab.html** teaches the Java that runs FTC robots. Everything runs in the browser; progress and code are saved per browser. A home-page band and the FTC page link to it.
-
-- **Start here:** 12 short lessons (OpModes, variables and types, motors, loops and timing, the gamepad, telemetry, encoders, the IMU, servos, methods, feedback control, mecanum). Each lists the questions, drills, and challenges that practice it, and every question, drill, and challenge links back to its lesson.
-- **1 · Debug it:** 24 questions showing real FTC code with a classic bug. Pick the answer or click the bad line; the explanation appears after a correct answer or two misses.
-- **2 · Write it:** 16 drills where you finish a method (clipping, deadzones, encoder math, slow mode, arcade and mecanum drive, P control, angle wrapping, button edges, loops over arrays, acceleration ramps). Each run is checked against test inputs.
-- **3 · Drive it:** 13 challenges on a simulated field.
-  - **Autonomous (9):** drive and park, fix a spinning robot, encoders, RUN_TO_POSITION, IMU turns, picking up and scoring a sample, writing helper methods, strafing a **mecanum** robot, and planning a path around a **barrier**. The battery changes each run, so timing-only code isn't reliable.
-  - **TeleOp (4):** tank drive, arcade drive with slow mode, mecanum drive, and a claw toggle. Drive with the on-screen sticks and buttons, the keyboard (W A S D, arrow keys, J K U I for A B X Y, Q and E for the bumpers), or a real USB or Bluetooth controller.
-  - **Debugging tools:** **Pause** and **Step** run your code one line at a time, and the **Variables** panel shows every variable (and which method you're in) as it changes.
-  - The field shows the robot's position and heading, a dotted ghost of your best run, and a text description for screen readers.
-  - **Download .java** saves an OpMode with the right `package` and `import` lines for Android Studio's TeamCode folder. **Copy code** and **Share link** (the code is compressed into the link) work on drills too.
-- **Editor:** syntax colors, auto-indent, bracket pairing, Tab and Shift+Tab, Ctrl+Enter to run, and autocomplete: type a `.` after a motor, servo, IMU, gamepad, telemetry, `Math`, or `Range` (or press Ctrl+Space) to see its methods with a one-line explanation.
-
-**How it works:** `assets/js/minijava.js` is a small Java interpreter (int / long / double / boolean / String with Java's real rules, arrays, if / while / for / do / for-each, methods, classes with fields, casts, `String.format`, `Math`, `Range`) with plain-English errors and line numbers. `assets/js/codelab-sim.js` is the field and robot: tank or mecanum drive, motors with direction, encoders and run modes, IMU yaw, a claw servo, telemetry, gamepads, `sleep()`, `ElapsedTime`, barriers, and the autonomous (30 s) and TeleOp (2 min) timers. Both `LinearOpMode` and `OpMode` (init / loop) programs run.
-
-**Adding content:** lessons, questions, drills, and challenges live in `assets/js/codelab-data.js` (notes at the top). Then run `node tools/test_codelab.js`. It checks every answer, every drill's reference solution, every autonomous solution on a weak, medium, and full battery, and drives every TeleOp challenge with an autopilot to prove it can be finished. The same test runs on GitHub with every push. Code Lab trophies (11) are in their own group in the trophy case. Turn the page off in the editor under **Site → Master controls → Code Lab**.
-
-## Score calculator
-
-**/calculator.html** scores any FTC game since 2017–18. Pick a season, tap what your alliance scored, and see the total, a breakdown by period, fouls, and ranking points (with win or loss if you enter the other alliance's score). Results can be shared as a link, and the last inputs for each season are saved on the device. Each season on the FTC page links to its calculator, and the calculator is in the main menu.
-
-- **Data:** `assets/js/calc-data.js` holds every season's point values, taken from the official manuals.
-- **Checked against real matches:** for every season since 2019–20, recorded FTCScout match results were run through these point values; about 1,700 alliance scores matched exactly. (Earlier seasons aren't in FTCScout, so they're checked against the manuals only.)
-- **Adding a season:** add an entry at the top of `calc-data.js` with its items (`count`, `robots`, `slots`, or `toggle`), foul values, and any bonus ranking points.
-
-## FTC page: seasons and 3D fields
-
-The FTC page (`ftc.html`) has a season explorer covering every game from 2017–18 (RELIC RECOVERY) to the current season. The newest season shows by default; visitors pick others from the menu, and links like `ftc.html?season=2024` open a specific one. Each season has a detailed game description and an interactive 3D field (drag to orbit, scroll to zoom, hover parts for labels).
-
-**Adding a new season (once a year, after kickoff):**
-1. Add an entry at the top of `content/seasons.json` (same fields as the others: name, summary, periods, elements, scoring table).
-2. Add a field builder for that year in `assets/js/fields3d.js` (copy a similar season and adjust the pieces from the game manual).
-
-If a season has no 3D builder yet, the page still shows its description.
+---
 
 ## Developer notes
 
 ```
-*.html, arcade/*.html     Page shells, generated by tools/build_pages.py
-tools/ftc_page.html       Content of the FTC page
-content/content.json      All editable content
-content/videos.json       Auto-refreshed YouTube list (don't edit)
-content/ftc.json          Auto-refreshed FTCScout backup (don't edit)
-assets/css/               site.css (design tokens at top), game.css, editor.css
-assets/js/site.js         Header/footer, content, FTCScout, page renderers, easter egg
-assets/js/editor.js       Team editor (developer mode)
-assets/js/trophies.js     Trophy list, pop-ups, and the trophy case
-content/seasons.json      FTC season descriptions for the FTC page
-assets/js/calc-data.js    Score calculator point values for every season
-assets/js/calculator.js   Score calculator page
-assets/js/fields3d.js     3D field models (three.js, loaded only when needed)
-assets/img/projects/      Team project photos
-assets/img/brands/        FIRST Tech Challenge and FTCScout logos
-assets/js/arcade/         Game engine + thirteen games
-content/teams.json        Every FTC team since 2019 for Kilovolt (auto-refreshed weekly)
-tools/                    Page builder, level generators, image generator, data refresh
-.github/workflows/        Daily data refresh
+*.html, arcade/*.html     Generated pages. Edit tools/build_pages.py, not these.
+content/                  content.json (editable) + auto-refreshed data
+assets/js/site.js         Header, footer, content loading, FTCScout, page logic
+assets/js/editor.js       Team editor
+assets/css/               site.css (design tokens at the top) + page styles
+tools/                    Page builder, checks, tests, image generators, data refresh
+.github/workflows/        Data refresh, site check, link check, check-in
 ```
 
-- **Run locally:** `python tools/serve.py`, then open http://localhost:5173. Opening the files directly won't work. (It's like `python -m http.server`, but handles many connections at once and never caches.)
-- **Check links:** `python tools/check_links.py` confirms every internal link, image, and script exists.
-- **After changing layout, CSS, or JS:** run `python tools/build_pages.py`. It rebuilds the pages and stamps a new version on asset links so visitors get the update right away.
-- **Logo and icons:** the official logo lives at `assets/img/brand/logo-source.png`. To change it, replace that file and run `python tools/make_images.py` (needs `pip install pillow`). It rebuilds the homepage logo, header icon, browser-tab icon, app icons, and the social share card.
-- **Merch picture:** `assets/img/projects/team-merch.jpg` (the team shirt and stickers on the Team page) is drawn by `python tools/make_merch.py` from the same logo. Rerun it after a logo change. When you have a real photo of the shirts, upload it in the editor under Team → Projects instead.
-- **Levels:** `node tools/check_levels.js` checks Echo; the generators check Gridlock and Autonomous.
-- **Editor passcode:** only a SHA-256 hash is stored. It keeps the editor out of sight; it isn't real security and can't change the live site. Publishing always needs the team's GitHub login.
-- **Contact form:** sends through [FormSubmit](https://formsubmit.co) to the team email. The **first** message triggers a one-time activation email; click its link. If sending fails, visitors get a pre-filled email instead.
-- **After a deploy:** if a browser pairs a cached old page with the new script, the site reloads that page once automatically.
-- **Custom domain later?** Add a `CNAME` file and update `SITE` in `tools/build_pages.py` (used for share links and the sitemap).
+| Task | Command |
+|---|---|
+| Run locally | `python tools/serve.py`, then open http://localhost:5173 |
+| Rebuild pages after changing HTML, CSS, or JS | `python tools/build_pages.py` (stamps a new version so visitors get updates) |
+| Run every check | `python tools/check_content.py`, `python tools/check_links.py`, `node tools/check_levels.js`, `node tools/test_codelab.js` |
+| Check outside links | `node tools/check_external.mjs` |
+| New logo or icons | Replace `assets/img/brand/logo-source.png`, then `python tools/make_images.py`, `python tools/make_og.py` (link previews), and `python tools/make_merch.py` (needs `pip install pillow`) |
+| Publish code changes | Commit and push to `main`; GitHub Pages updates itself. Redeploy Netlify separately (see above). |
+
+- **Editor passcode:** only a SHA-256 hash is stored. It keeps visitors out of the editor, but publishing always needs the team's GitHub login.
+- **Privacy:** members show names, roles, and photos only. All contact goes through the team email.
+- **Custom domain later:** add a `CNAME` file and change `SITE` in `tools/build_pages.py`.
+- **Easter egg:** ↑ ↑ ↓ ↓ ← → ← → B A on any page.
