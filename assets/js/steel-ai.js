@@ -145,6 +145,8 @@
     (SS().TROPHIES || []).filter((t) => !t.hidden).forEach((t) => add(`Trophy: ${t.name}`, `${t.desc || ""} It's a ${t.tier} trophy.`, "trophies.html", `trophy ${t.name} earn unlock`, "trophy"));
     if (c) {
       const T = c.team;
+      // Answers the team wrote in the editor (Site → Steel AI answers) win over everything else.
+      (c.faq || []).filter((f) => f.q && f.a).forEach((f) => add(f.q, f.a, f.link || "contact.html", `${f.q} ${f.keywords || ""} faq question`, "faq"));
       add(`About ${T.name}`, `${T.intro} We're FTC team ${T.number} from ${T.location}, and our rookie season was ${label(T.rookieYear)}. Our motto is "${T.motto}".`, "team.html", "team about who us steel surge history number location school", "team");
       (c.values || []).forEach((v) => add(`Our value: ${v.title}`, v.body, "team.html", "value", "team"));
       (c.projects || []).forEach((p) => add(`Project: ${p.title}`, p.body, "team.html", "project made print", "team"));
@@ -172,7 +174,7 @@
         const idf = Math.log(1 + (N - df[w] + 0.5) / (df[w] + 0.5));
         s += idf * (f * 2.2) / (f + 1.2 * (0.25 + 0.75 * t.length / avg));
       }
-      return { d, s };
+      return { d, s: d.kind === "faq" ? s * 1.6 : s };
     }).filter((r) => r.s > 0).sort((a, b) => b.s - a.s).slice(0, n);
   }
 

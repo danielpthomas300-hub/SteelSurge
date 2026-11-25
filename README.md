@@ -22,6 +22,12 @@ A static site: plain HTML, CSS, and JavaScript. No server, no database, no month
 - **Features:** turn off the Arcade, Match tools, scouting, Code Lab, weekly challenge, Media page, trophies, Steel AI, or the contact form. Their links disappear everywhere.
 - **Search engines:** off asks Google not to list the site.
 
+**More site options** (also under Site):
+- **Appearance:** the accent color (presets or any custom color), the theme first-time visitors see, and animations on or off.
+- **Home page:** show or hide each home section, rewrite the "what we do" cards and season steps, and pick the three featured arcade games.
+- **Steel AI answers:** write your own question-and-answer pairs (meeting times, how to join). Steel AI gives these first.
+- The Overview's **Systems** switches flip features on or off in one click, and its health score drops as to-dos pile up.
+
 **Good to know:**
 - **Outreach log** (Season → Outreach): log team hours per event (4 people × 3 hours = 12). The home and sponsor pages add up this season's hours (seasons start September 1).
 - **Alumni:** tick "Alumni" on a member to move them to a small Alumni list on the Team page.

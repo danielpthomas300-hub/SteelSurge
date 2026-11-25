@@ -1136,3 +1136,8 @@ a, button { -webkit-tap-highlight-color: transparent; }
   .reveal { opacity: 1 !important; transform: none !important; }
   a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 85%; color: #555; }
 }
+
+/* ---------- Team-chosen look: animations off ---------- */
+html.no-motion { scroll-behavior: auto; }
+html.no-motion .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+html.no-motion *, html.no-motion *::before, html.no-motion *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }

@@ -60,7 +60,7 @@ def head(title, desc, page, root=".", noindex=False, path="", css=(), js=(), jso
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap">
   <link rel="stylesheet" href="{r}/assets/css/site.css?v={V}">{extra_css}
-  <script>try{{var t=JSON.parse(localStorage.getItem("ss-theme"));document.documentElement.dataset.theme=t==="light"?"light":"dark"}}catch(e){{document.documentElement.dataset.theme="dark"}}</script>
+  <script>try{{var t=JSON.parse(localStorage.getItem("ss-theme"));if(!t){{var d=localStorage.getItem("ss-theme-default");t=d==="light"||(d==="system"&&matchMedia("(prefers-color-scheme: light)").matches)?"light":"dark"}}document.documentElement.dataset.theme=t==="light"?"light":"dark";var l=localStorage.getItem("ss-look-css");if(l){{var st=document.createElement("style");st.id="ss-look";st.textContent=l;document.head.appendChild(st)}}if(localStorage.getItem("ss-no-motion")==="1")document.documentElement.classList.add("no-motion")}}catch(e){{document.documentElement.dataset.theme="dark"}}</script>
   <script src="{r}/assets/js/site.js?v={V}" defer></script>
   <script src="{r}/assets/js/trophies.js?v={V}" defer></script>
   <script src="{r}/assets/js/steel-ai.js?v={V}" defer></script>{extra_js}{ld}{extra_head}
@@ -135,7 +135,7 @@ pages["index.html"] = shell("Steel Surge — FTC Robotics Team 27254", "Steel Su
           <div class="actions"><a class="btn primary" href="codelab.html">Open the Code Lab {A}</a><a class="btn" href="codelab.html#drive">Drive the robot</a></div>
         </div>''')
   + section(f'''        <div id="home-sponsors" style="margin-bottom:40px"></div>
-        <div class="cta-band reveal">
+        <div class="cta-band reveal" id="home-cta">
           <div><h2>Power the surge</h2><p>Sponsors keep our robot running and our outreach growing. Every tier comes with real visibility for your business.</p></div>
           <div class="actions"><a class="btn primary" href="sponsors.html">See sponsor tiers {A}</a><a class="btn" href="contact.html">Get in touch</a></div>
         </div>'''), jsonld=JSONLD)
@@ -230,7 +230,7 @@ pages["contact.html"] = shell("Contact" + T, "Contact Steel Surge, FTC team 2725
   + f'''    <section class="section">
       <div class="wrap contact-layout">
         <form class="card form" id="contact-form" novalidate>
-          <div class="form-head"><h2>Send us a message</h2><p class="muted">Fields marked * are required. We usually reply within a few days.</p></div>
+          <div class="form-head"><h2>Send us a message</h2><p class="muted">Fields marked * are required. <span id="reply-note">We usually reply within a few days.</span></p></div>
           <div class="field">
             <span id="reason-label" style="font-weight:600;font-size:14px">What's this about?</span>
             <div class="reason-chips" id="reason-chips" role="radiogroup" aria-labelledby="reason-label"></div>

@@ -103,6 +103,47 @@
     arcade: true, calculator: true, codelab: true, scouting: true, weekly: true, media: true, trophies: true, steelAI: true, contactForm: true, searchEngines: true,
   };
   const controls = (c) => ({ ...CONTROL_DEFAULTS, ...(c?.controls || {}) });
+
+  /* ---------------- Appearance (Team editor → Site → Appearance) ---------------- */
+  const LOOK_DEFAULTS = { accent: "blue", accentCustom: "", defaultTheme: "dark", heroAnimation: true, animations: true };
+  /** Accent palettes: [dark accent, dark light-variant, light-theme accent, light-theme deep] */
+  const ACCENTS = {
+    blue: null,
+    violet: ["#a78bfa", "#c4b5fd", "#7c3aed", "#6d28d9"], green: ["#34d399", "#6ee7b7", "#059669", "#047857"],
+    orange: ["#fb923c", "#fdba74", "#ea580c", "#c2410c"], red: ["#f87171", "#fca5a5", "#dc2626", "#b91c1c"],
+    gold: ["#fbbf24", "#fcd34d", "#b45309", "#92400e"], teal: ["#2dd4bf", "#5eead4", "#0d9488", "#0f766e"], pink: ["#f472b6", "#f9a8d4", "#db2777", "#be185d"],
+  };
+  const look = (c) => ({ ...LOOK_DEFAULTS, ...(c?.appearance || {}) });
+  const hexRgb = (h) => { const m = /^#?([\da-f]{6})$/i.exec(h || ""); if (!m) return null; const n = parseInt(m[1], 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
+  const mix = (rgb, to, t) => "#" + rgb.map((v, i) => Math.round(v + (to[i] - v) * t).toString(16).padStart(2, "0")).join("");
+  function accentCss(a) {
+    let pal = ACCENTS[a.accent];
+    if (a.accent === "custom") { const rgb = hexRgb(a.accentCustom); if (rgb) pal = [mix(rgb, [255, 255, 255], 0.1), mix(rgb, [255, 255, 255], 0.45), mix(rgb, [0, 0, 0], 0.25), mix(rgb, [0, 0, 0], 0.4)]; }
+    if (!pal) return "";
+    const rgba = (h, o) => { const [r, g, b] = hexRgb(h); return `rgba(${r}, ${g}, ${b}, ${o})`; };
+    const lum = (h) => { const [r, g, b] = hexRgb(h); return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
+    const dark = `--surge:${pal[0]};--surge-2:${pal[1]};--surge-soft:${rgba(pal[0], 0.12)};--surge-glow:${rgba(pal[0], 0.38)};--surge-ink:${lum(pal[0]) > 0.55 ? "#04121f" : "#ffffff"};`;
+    const light = `--surge:${pal[2]};--surge-2:${pal[3]};--surge-soft:${rgba(pal[2], 0.09)};--surge-glow:${rgba(pal[2], 0.25)};--surge-ink:#ffffff;`;
+    return `:root,:root[data-theme="dark"]{${dark}}:root[data-theme="light"]{${light}}`;
+  }
+  /** Applies the team's chosen look and remembers it, so the next page load starts with it. */
+  function applyLook(c, persist = !isPreview()) {
+    const a = look(c), css = accentCss(a);
+    let el = document.getElementById("ss-look");
+    if (css) { if (!el) { el = document.createElement("style"); el.id = "ss-look"; document.head.append(el); } el.textContent = css; } else el?.remove();
+    document.documentElement.classList.toggle("no-motion", a.animations === false);
+    if (!persist) return;
+    try {
+      css ? localStorage.setItem("ss-look-css", css) : localStorage.removeItem("ss-look-css");
+      localStorage.setItem("ss-no-motion", a.animations === false ? "1" : "0");
+      localStorage.setItem("ss-theme-default", a.defaultTheme);
+      if (!localStorage.getItem("ss-theme")) {
+        const t = a.defaultTheme === "light" || (a.defaultTheme === "system" && matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark";
+        document.documentElement.dataset.theme = t;
+      }
+    } catch {}
+  }
+  const HOME_DEFAULTS = { stats: true, crews: true, build: true, videos: true, arcade: true, codelab: true, sponsors: true, cta: true };
   /** Someone who uses the Team editor on this device (they get a "view the site anyway" button). */
   const isTeamDevice = (c) => { if (isPreview() || store.get(DRAFT_KEY)) return true; try { return !!c?.dev?.passcodeHash && sessionStorage.getItem("ss-editor-unlocked") === c.dev.passcodeHash; } catch { return false; } };
   const mxBypassed = () => { try { return sessionStorage.getItem("ss-mx-bypass") === "1"; } catch { return false; } };
@@ -307,7 +348,7 @@
         </div>
         <div class="footer-bottom">
           <span>© ${new Date().getFullYear()} ${esc(c.team.name)} · FTC Team ${esc(c.team.number)}</span>
-          <span class="footer-egg" title="Psst: try ↑↑↓↓←→←→BA">Built by the students of Steel Surge ⚡</span>
+          <span class="footer-egg" title="Psst: try ↑↑↓↓←→←→BA">${esc(c.team.footerTagline || "Built by the students of Steel Surge ⚡")}</span>
           <span>Live stats from <a href="https://ftcscout.org/teams/${esc(c.team.number)}" target="_blank" rel="noopener">FTCScout</a> · <a href="${url("editor.html")}" title="Developer mode (Ctrl+Shift+E)">Team editor</a></span>
         </div>
       </div>`;
@@ -735,8 +776,10 @@
       <text x="22" y="34" fill="#67768a" font-family="JetBrains Mono, monospace" font-size="10">LOOP 2 · ECHO ×1</text></svg>`;
   }
 
-  function gameCards(limit) {
-    return GAMES.slice(0, limit || GAMES.length).map((g) => {
+  function gameCards(limit, pick) {
+    const chosen = (pick || []).map((id) => GAMES.find((g) => g.id === id)).filter(Boolean);
+    const list = chosen.length ? [...new Set([...chosen, ...GAMES])].slice(0, limit) : GAMES.slice(0, limit || GAMES.length);
+    return list.map((g) => {
       const b = bestFor(g.id);
       return `
         <a class="game-card reveal" href="${url(`arcade/${g.id}.html`)}">
@@ -763,6 +806,11 @@
     const place = [e.venue, [e.city, e.state].filter(Boolean).join(", ")].filter(Boolean).join(" · ");
     return `<div class="next-event reveal"><span class="tag ok">Up next · ${esc(nextLabel(e))}</span><h3>${esc(e.name)}</h3><p>${fmtDate(e.start)}${place ? ` · ${esc(place)}` : ""}</p><a class="link-arrow" href="https://ftcscout.org/events/${esc(e.season)}/${esc(e.code)}" target="_blank" rel="noopener">Follow it live on FTCScout ${ICON.arrow}</a></div>`;
   }
+  const HOME_CREWS = [
+    ["gear", "Engineer", "We design every subsystem in CAD, build it, and keep improving it until it holds up in real matches.", "Mechanical"],
+    ["code", "Program", "From autonomous routines to driver controls, our code turns a pile of motors into a competitor.", "Programming"],
+    ["heart", "Inspire", "We run outreach, partner with local businesses, and help other students get into STEM.", "Outreach"],
+  ];
   const BUILD_STEPS = [
     ["flag", "Strategy", "When FIRST reveals the new game in September, we study the rules and decide what our robot needs to do well."],
     ["pencil", "Design", "We sketch ideas, build quick prototypes, and model every part in CAD before we cut or print anything."],
@@ -780,16 +828,15 @@
       <div><dt>Founded</dt><dd>${esc(c.team.rookieYear)}</dd></div>
       <div><dt>Members</dt><dd>${c.members.filter((m) => !m.alumni).length}</dd></div>
       ${outreachStat(c) ? `<div><dt>Outreach</dt><dd>${esc(outreachStat(c).hours)} hrs</dd></div>` : ""}`;
-    heroCanvas($(".hero-canvas"));
+    if (look(c).heroAnimation !== false && look(c).animations !== false) heroCanvas($(".hero-canvas")); else $(".hero-canvas")?.remove();
 
-    const pillars = [
-      ["gear", "Engineer", "We design every subsystem in CAD, build it, and keep improving it until it holds up in real matches.", "Mechanical"],
-      ["code", "Program", "From autonomous routines to driver controls, our code turns a pile of motors into a competitor.", "Programming"],
-      ["heart", "Inspire", "We run outreach, partner with local businesses, and help other students get into STEM.", "Outreach"],
-    ];
+    const H = { ...HOME_DEFAULTS, ...(c.home?.sections || {}) };
+    let pillars = HOME_CREWS;
+    if (c.home?.crews?.length) pillars = c.home.crews.filter((x) => x.title).map((x, i) => [x.icon || ["gear", "code", "heart", "star"][i % 4], x.title, x.text || "", x.dept || ""]);
     $("#pillars").innerHTML = pillars.map(([i, t, d, dept]) => `
-      <a class="card reveal" href="${url("team.html")}#${dept.toLowerCase()}"><div class="card-icon">${ICON[i]}</div><h3>${t}</h3><p>${d}</p><span class="link-arrow">Meet the ${dept.toLowerCase()} crew ${ICON.arrow}</span></a>`).join("");
-    $("#build-steps").innerHTML = BUILD_STEPS.map(([i, t, d], k) => `<li class="step reveal"><span class="step-num">${String(k + 1).padStart(2, "0")}</span><div class="card-icon">${ICON[i]}</div><h3>${t}</h3><p>${d}</p></li>`).join("");
+      <a class="card reveal" href="${url("team.html")}${dept ? "#" + esc(dept.toLowerCase()) : ""}"><div class="card-icon">${ICON[i] || ICON.star}</div><h3>${esc(t)}</h3><p>${esc(d)}</p><span class="link-arrow">${dept ? `Meet the ${esc(dept.toLowerCase())} crew` : "Meet the team"} ${ICON.arrow}</span></a>`).join("");
+    const steps = c.home?.steps?.length ? c.home.steps.filter((x) => x.title).map((x, k) => [["flag", "pencil", "gear", "code", "trophy", "star"][k % 6], esc(x.title), esc(x.text || "")]) : BUILD_STEPS;
+    $("#build-steps").innerHTML = steps.map(([i, t, d], k) => `<li class="step reveal"><span class="step-num">${String(k + 1).padStart(2, "0")}</span><div class="card-icon">${ICON[i] || ICON.star}</div><h3>${t}</h3><p>${d}</p></li>`).join("");
 
     // Latest videos: the newest upload is featured; the next few are listed. All automatic.
     const vids = (await loadVideos()).slice(0, 5);
@@ -802,10 +849,17 @@
       wireVideoCards(host);
     }
 
-    $("#home-games").innerHTML = gameCards(3);
+    $("#home-games").innerHTML = gameCards(3, c.home?.games);
     const names = (c.sponsors || []).map((s) => `<span>${esc(s.name)}</span>`).join("");
     $("#home-sponsors").innerHTML = names ? `<p class="marquee-label">Supported by</p><div class="marquee" aria-label="Our sponsors and partners"><div class="marquee-track">${names}${names}${names}${names}</div></div>` : "";
 
+    // Sections the team switched off in the editor (Home page)
+    const hideSec = (el) => { const s = el?.closest("section"); if (s) s.hidden = true; };
+    if (!H.stats) hideSec($("#home-stats")); if (!H.crews) hideSec($("#pillars")); if (!H.build) hideSec($("#build-steps"));
+    if (!H.videos) hideSec($("#latest-videos")); if (!H.arcade) hideSec($("#home-games")); if (!H.codelab) hideSec($(".codelab-band"));
+    if (!H.sponsors) $("#home-sponsors")?.remove(); if (!H.cta) $("#home-cta")?.remove();
+    if (!H.sponsors && !H.cta) hideSec($("#home-sponsors") || $("#home-cta"));
+    if (!H.stats) return;
     const ftcHost = $("#home-stats");
     ftcHost.innerHTML = `<dl class="stats">${'<div class="stat"><dt class="skeleton">Loading</dt><dd class="skeleton">00</dd></div>'.repeat(4)}</dl>`;
     const ftc = await loadFTC(c.team.number, c.team.rookieYear);
@@ -1023,6 +1077,7 @@
   }
 
   pages.contact = async (c) => {
+    if (c.contact?.replyNote && $("#reply-note")) $("#reply-note").textContent = c.contact.replyNote;
     const reasons = c.contact?.reasons || [];
     const pre = params.get("reason");
     $("#reason-chips").innerHTML = reasons.map((r, i) => `<input type="radio" name="reason" id="r${i}" value="${esc(r)}"${(pre ? r === pre : i === 0) ? " checked" : ""}><label for="r${i}">${esc(r)}</label>`).join("");
@@ -1070,7 +1125,7 @@
         const j = await res.json().catch(() => ({}));
         if (!res.ok || j.success === "false" || j.success === false) throw new Error(j.message || res.status);
         form.reset(); count(); $$("#reason-chips input")[0] && ($$("#reason-chips input")[0].checked = true);
-        showStatus(true, `<b>Message sent!</b> Thanks, ${esc(data.name.split(" ")[0])}. We usually reply within a few days.`);
+        showStatus(true, `<b>Message sent!</b> Thanks, ${esc(data.name.split(" ")[0])}. ${esc(c.contact?.replyNote || "We usually reply within a few days.")}`);
         window.SS?.trophy?.("say-hello");
       } catch (err) {
         console.warn(err);
@@ -1242,6 +1297,7 @@
       return;
     }
     window.SS.content = c;
+    applyLook(c);
     if (!controls(c).searchEngines) document.head.insertAdjacentHTML("beforeend", '<meta name="robots" content="noindex, nofollow">');
     if (maintenanceOn(c)) { renderMaintenance(c); renderPreviewPill(); document.dispatchEvent(new CustomEvent("ss:ready", { detail: c })); return; }
     renderHeader(c); renderFooter(c); renderBanner(c); renderPreviewPill(); renderMaintenancePill(c); initOverdrive();
@@ -1263,6 +1319,6 @@
     document.dispatchEvent(new CustomEvent("ss:ready", { detail: c }));
   }
 
-  window.SS = Object.assign(window.SS || {}, { ICON, LOGO, esc, store, toast, url, loadContent, loadFTC, theme, GAMES, gameArt, seasonLabel, currentSeason, DRAFT_KEY, PREVIEW_KEY, CONTROL_DEFAULTS, controls, siteOff, weekly, weeklySubmit, outreachStat });
+  window.SS = Object.assign(window.SS || {}, { ICON, LOGO, esc, store, toast, url, loadContent, loadFTC, theme, GAMES, gameArt, seasonLabel, currentSeason, DRAFT_KEY, PREVIEW_KEY, CONTROL_DEFAULTS, controls, siteOff, weekly, weeklySubmit, outreachStat, LOOK_DEFAULTS, ACCENTS, applyLook, HOME_DEFAULTS, HOME_CREWS, BUILD_STEPS });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })();

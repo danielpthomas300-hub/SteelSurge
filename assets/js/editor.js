@@ -21,14 +21,14 @@
 
   /* ---------------- Sidebar groups and "view on site" links ---------------- */
   const GROUPS = [
-    ["Site", ["overview", "controls"]],
+    ["Site", ["overview", "controls", "appearance", "home", "faq"]],
     ["Team", ["team", "members", "values", "projects", "mentors"]],
     ["Season", ["achievements", "outreach"]],
     ["Media", ["featuredVideos", "updates"]],
     ["Sponsors & contact", ["sponsors", "tiers", "contact"]],
     ["Settings", ["settings"]],
   ];
-  const PAGE_FOR = { overview: "index.html", controls: "index.html", team: "index.html", members: "team.html", values: "team.html", projects: "team.html", mentors: "team.html", outreach: "index.html", achievements: "team.html", featuredVideos: "media.html", updates: "media.html", sponsors: "sponsors.html", tiers: "sponsors.html", contact: "contact.html" };
+  const PAGE_FOR = { overview: "index.html", controls: "index.html", appearance: "index.html", home: "index.html", faq: "index.html", team: "index.html", members: "team.html", values: "team.html", projects: "team.html", mentors: "team.html", outreach: "index.html", achievements: "team.html", featuredVideos: "media.html", updates: "media.html", sponsors: "sponsors.html", tiers: "sponsors.html", contact: "contact.html" };
   const eye = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
   const lockIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
   const searchIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
@@ -68,12 +68,63 @@
         { k: "contactForm", label: "Contact form", type: "bool", hint: "When off, the Contact page shows the team email instead." },
         { k: "searchEngines", label: "Let search engines list the site", type: "bool", hint: "Turn off to ask Google and others not to show the site in search results." },
       ] },
+    { id: "appearance", title: "Appearance", icon: "bolt", desc: "The site's accent color, the theme new visitors see first, and how much it moves. The editor shows your pick right away.",
+      get: (c) => ({ ...(window.SS?.LOOK_DEFAULTS || {}), ...(c.appearance || {}) }), set: (c, v) => { c.appearance = v; window.SS?.applyLook?.(c, false); },
+      fields: [
+        { k: "_acc", label: "Accent color", type: "heading", hint: "Used for buttons, links, glows, and highlights on every page, in both dark and light mode." },
+        { k: "accent", label: "Accent", type: "swatch" },
+        { k: "_th", label: "Theme", type: "heading", hint: "Visitors can still switch with the moon button, and their choice is remembered." },
+        { k: "defaultTheme", label: "Theme for first-time visitors", type: "segmented", options: [["dark", "Dark"], ["light", "Light"], ["system", "Match their device"]] },
+        { k: "_mo", label: "Motion", type: "heading", hint: "Visitors who ask their device for less motion never get animations, whatever you choose here." },
+        { k: "heroAnimation", label: "Animated circuit background on the home page", type: "bool" },
+        { k: "animations", label: "Scroll-in and hover animations", type: "bool", hint: "Off makes everything appear instantly." },
+      ] },
+    { id: "home", title: "Home page", icon: "flag", desc: "Choose which sections the home page shows, rewrite the 'what we do' cards and build steps, and pick the featured arcade games.",
+      get: (c) => {
+        const S = window.SS || {}, h = c.home || {}, secs = { ...(S.HOME_DEFAULTS || {}), ...(h.sections || {}) };
+        return {
+          ...Object.fromEntries(Object.entries(secs).map(([k, v]) => ["s_" + k, v !== false])),
+          crews: h.crews?.length ? h.crews : (S.HOME_CREWS || []).map(([ic, title, text, dept]) => ({ title, text, dept, icon: ic })),
+          steps: h.steps?.length ? h.steps : (S.BUILD_STEPS || []).map(([, title, text]) => ({ title, text })),
+          games: h.games || [],
+        };
+      },
+      set: (c, v) => { c.home = { sections: Object.fromEntries(Object.keys(window.SS?.HOME_DEFAULTS || {}).map((k) => [k, v["s_" + k] !== false])), crews: v.crews, steps: v.steps, games: v.games }; },
+      fields: [
+        { k: "_secs", label: "Sections", type: "heading", hint: "Switch a section off to hide it from the home page. The hero at the top always shows." },
+        { k: "s_stats", label: "Live FTC stats and next event", type: "bool" },
+        { k: "s_crews", label: "“What we do” cards", type: "bool" },
+        { k: "s_build", label: "How a season works (build steps)", type: "bool" },
+        { k: "s_videos", label: "Latest videos", type: "bool" },
+        { k: "s_arcade", label: "Arcade games", type: "bool" },
+        { k: "s_codelab", label: "Code Lab band", type: "bool" },
+        { k: "s_sponsors", label: "Scrolling sponsor names", type: "bool" },
+        { k: "s_cta", label: "“Power the surge” sponsor box", type: "bool" },
+        { k: "_cards", label: "“What we do” cards", type: "heading", hint: "Each card links to that department on the Team page." },
+        { k: "crews", label: "Cards", type: "list", itemLabel: "card", summary: (x) => x.title || "New card", fields: [
+          { k: "title", label: "Title", type: "text", required: true }, { k: "icon", label: "Icon", type: "select", options: [["gear", "Gear"], ["code", "Code"], ["heart", "Heart"], ["star", "Star"], ["trophy", "Trophy"], ["users", "People"], ["bolt", "Bolt"], ["flag", "Flag"], ["pencil", "Pencil"]] },
+          { k: "text", label: "Text", type: "textarea", max: 160 }, { k: "dept", label: "Links to", type: "select", options: [["Mechanical", "Mechanical crew"], ["Programming", "Programming crew"], ["Outreach", "Outreach crew"], ["Leadership", "Leadership"], ["", "The Team page"]] },
+        ] },
+        { k: "_steps", label: "How a season works", type: "heading", hint: "The numbered steps. Keep them short: one or two sentences each." },
+        { k: "steps", label: "Steps", type: "list", itemLabel: "step", summary: (x) => x.title || "New step", fields: [{ k: "title", label: "Title", type: "text", required: true }, { k: "text", label: "Text", type: "textarea", max: 160 }] },
+        { k: "_games", label: "Featured arcade games", type: "heading", hint: "Pick up to three, in order. Empty shows the first three." },
+        { k: "games", label: "Games", type: "picks", max: 3, options: () => (window.SS?.GAMES || []).map((g) => [g.id, g.title]) },
+      ] },
+    { id: "faq", title: "Steel AI answers", icon: "chart", desc: "Teach Steel AI, the site's helper, your own answers. When a visitor asks something close to one of these, your answer comes first.",
+      get: (c) => c.faq || [], set: (c, v) => (c.faq = v), list: true, itemLabel: "answer", summary: (f) => f.q || "New answer", sub: (f) => f.keywords || "",
+      fields: [
+        { k: "q", label: "Question", type: "text", required: true, hint: "e.g. When are team meetings?" },
+        { k: "a", label: "Answer", type: "textarea", max: 500, required: true },
+        { k: "link", label: "Link (optional)", type: "text", hint: "A page to point to, like contact.html or team.html" },
+        { k: "keywords", label: "Other words people might use (optional)", type: "text", hint: "e.g. practice schedule time when meet" },
+      ] },
     { id: "team", title: "Team info", icon: "flag", desc: "Your name, intro, location, and links used across the whole site.",
       get: (c) => ({ ...c.team, _showRecords: !!c.showRecords }), set: (c, v) => { const { _showRecords, ...t } = v; c.team = t; c.showRecords = !!_showRecords; },
       fields: [
         { k: "name", label: "Team name", type: "text", required: true },
         { k: "number", label: "FTC team number", type: "number", required: true, hint: "Live stats and awards are pulled from FTCScout using this number." },
         { k: "motto", label: "Team motto", type: "text", hint: "e.g. Surge Ahead" },
+        { k: "footerTagline", label: "Footer tagline", type: "text", hint: "The small line at the bottom of every page. Empty uses “Built by the students of Steel Surge ⚡”." },
         { k: "intro", label: "Intro paragraph", type: "textarea", max: 320, hint: "Shown on the home page under the big title." },
         { k: "location", label: "Location", type: "text" },
         { k: "school", label: "Schools", type: "text" },
@@ -152,10 +203,11 @@
           { k: "featured", label: "Highlight as top tier", type: "bool" }, { k: "perks", label: "Perks", type: "strings", itemLabel: "perk" },
         ] },
       ] },
-    { id: "contact", title: "Contact form", icon: "mail", desc: "Topics people can pick on the contact page.",
+    { id: "contact", title: "Contact form", icon: "mail", desc: "Topics people can pick on the contact page, and what it promises about replies.",
       get: (c) => c.contact, set: (c, v) => (c.contact = v),
       fields: [
         { k: "reasons", label: "Topics", type: "strings", itemLabel: "topic" },
+        { k: "replyNote", label: "How fast you reply", type: "text", hint: "Shown on the form and after sending. Empty uses “We usually reply within a few days.”" },
         { k: "formEndpoint", label: "Form delivery address", type: "url", hint: "Advanced. FormSubmit endpoint that emails messages to the team. Leave as is unless the team email changes." },
       ] },
     { id: "settings", title: "Editor settings", icon: "gear", desc: "Change the editor passcode, and back up or restore your draft.",
@@ -258,8 +310,22 @@
     const last = (c.updates || []).map((u) => u.date).filter(Boolean).sort().pop();
     const issues = attention(c), dirty = dirtySections().filter((x) => x.id !== "overview");
     const tile = (n, label, sub, sec) => `<button type="button" class="ed-stat" data-go="${sec}"><b>${n}</b><span>${label}</span><small>${sub}</small></button>`;
+    const ctl = { ...(window.SS?.CONTROL_DEFAULTS || {}), ...(c.controls || {}) };
+    const health = Math.max(0, Math.min(100, 100 - issues.reduce((t, [lv]) => t + (lv === "warn" ? 12 : 4), 0)));
+    const mood = ctl.maintenance ? ["Maintenance mode is on", "Visitors see the “We'll be right back” page until you switch it off and publish."]
+      : health >= 90 ? ["All systems go", "Nothing needs fixing. A fresh update or outreach entry keeps it that way."]
+      : health >= 65 ? ["Running smoothly", `${issues.length} small thing${issues.length === 1 ? "" : "s"} could be better. They're listed below.`]
+      : ["Needs some attention", "A few things are out of date. Start with the orange items below."];
+    const SYS = [["maintenance", "Maintenance"], ["banner", "Banner"], ["arcade", "Arcade"], ["calculator", "Match tools"], ["scouting", "Scouting"], ["codelab", "Code Lab"], ["weekly", "Weekly challenge"], ["media", "Media"], ["trophies", "Trophies"], ["steelAI", "Steel AI"], ["contactForm", "Contact form"]];
     host.innerHTML = `
       <div class="ed-ov">
+        <section class="ed-hud${ctl.maintenance ? " is-alert" : ""}">
+          <div class="ed-gauge" role="img" aria-label="Site health ${health} out of 100"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="trk" cx="60" cy="60" r="50"/><circle class="val" cx="60" cy="60" r="50" pathLength="100" style="stroke-dasharray:${health} 100"/></svg><div><b>${health}</b><span>Health</span></div></div>
+          <div class="ed-hud-text"><span class="ed-kicker">// System status</span><h2>${mood[0]}</h2><p class="muted">${mood[1]}</p></div>
+          <div class="ed-systems"><span class="ed-kicker">// Systems <small>switch here, live when you publish</small></span>
+            <div class="ed-sys-grid">${SYS.map(([k, lab]) => `<label class="ed-sys${k === "maintenance" ? " danger" : ""}"><input type="checkbox" data-sys="${k}"${ctl[k] ? " checked" : ""}><i></i><span>${lab}</span></label>`).join("")}</div>
+          </div>
+        </section>
         <div class="ed-stats">
           ${tile(active.length, "Team members", alumni ? `+ ${alumni} alumni` : "on the Team page", "members")}
           ${tile(hrs || 0, "Outreach hours", `${evs.length} event${evs.length === 1 ? "" : "s"} in ${se.label}`, "outreach")}
@@ -284,6 +350,12 @@
       </div>`;
     $$("[data-go]", host).forEach((b) => b.addEventListener("click", () => jumpTo({ sec: b.dataset.go })));
     $$("[data-q]", host).forEach((b) => b.addEventListener("click", () => quickAdd(QUICK[+b.dataset.q])));
+    $$("[data-sys]", host).forEach((b) => b.addEventListener("change", () => {
+      const k = b.dataset.sys;
+      if (k === "maintenance" && b.checked && !confirm("Turn on maintenance mode? After you publish, visitors only see a “We'll be right back” page.")) { b.checked = false; return; }
+      if (k === "banner" && b.checked && !String(ctl.bannerText || "").trim()) { b.checked = false; jumpTo({ sec: "controls", field: "bannerText" }); window.SS?.toast("Write the announcement first, then switch the banner on"); return; }
+      draft.controls = { ...ctl, [k]: b.checked }; changed(); save(); renderPanel();
+    }));
     $("#ov-publish", host)?.addEventListener("click", openPublish);
   }
 
@@ -389,7 +461,7 @@
 
   function openEditor() {
     const d = store.get(DRAFT_KEY);
-    draft = d?.content ? d.content : clone(published);
+    draft = d?.content ? d.content : clone(published); window.SS?.applyLook?.(draft, false);
     savedAt = d?.savedAt || null;
     for (const k of ["mentors", "achievements", "updates", "sponsors", "sponsorTiers", "members", "values", "featuredVideos", "projects"]) if (!Array.isArray(draft[k])) draft[k] = [];
     current = (location.hash.slice(1) && SECTIONS.some((s) => s.id === location.hash.slice(1))) ? location.hash.slice(1) : "overview";
@@ -456,7 +528,7 @@
     };
     if (now) commit(); else hist.timer = setTimeout(commit, 600);
   }
-  function restore(json, msg) { draft = JSON.parse(json); hist.last = json; save(); renderNav(); renderPanel(); updateUndo(); reloadLive(); window.SS?.toast(msg); }
+  function restore(json, msg) { draft = JSON.parse(json); hist.last = json; window.SS?.applyLook?.(draft, false); save(); renderNav(); renderPanel(); updateUndo(); reloadLive(); window.SS?.toast(msg); }
   function undo() { record(true); if (!hist.past.length) return; hist.future.push(hist.last); restore(hist.past.pop(), "Undone"); }
   function redo() { if (!hist.future.length) return; hist.past.push(hist.last); restore(hist.future.pop(), "Redone"); }
   function updateUndo() { const u = $("#undo"), rd = $("#redo"); if (u) u.disabled = !hist.past.length && JSON.stringify(draft) === hist.last; if (rd) rd.disabled = !hist.future.length; }
@@ -591,7 +663,7 @@
   }
   function discard() {
     if (!confirm("Throw away all unpublished changes on this device?")) return;
-    store.del(DRAFT_KEY); draft = clone(published); record(true); renderNav(); renderPanel(); updateStatus(); reloadLive(); window.SS?.toast("Draft discarded. Ctrl+Z brings it back.");
+    store.del(DRAFT_KEY); draft = clone(published); window.SS?.applyLook?.(draft, false); record(true); renderNav(); renderPanel(); updateStatus(); reloadLive(); window.SS?.toast("Draft discarded. Ctrl+Z brings it back.");
   }
 
   /* ---------------- Nav & panel ---------------- */
@@ -666,6 +738,29 @@
       } else if (f.type === "bool") {
         row.innerHTML = `<label class="ed-switch"><input type="checkbox" id="${id}"${v ? " checked" : ""}><span></span>${esc(f.label)}</label>${hint}`;
         $("input", row).addEventListener("change", (e) => set(e.target.checked));
+      } else if (f.type === "swatch") {
+        const A = window.SS?.ACCENTS || { blue: null }, base = getComputedStyle(document.documentElement).getPropertyValue("--surge").trim() || "#3ba8ff";
+        const col = (n) => (A[n] ? A[n][0] : "#3ba8ff"), cust = value.accentCustom || base;
+        row.innerHTML = `<span class="ed-label">${esc(f.label)}</span><div class="ed-swatches" role="radiogroup" aria-label="${esc(f.label)}">${Object.keys(A).map((n) => `<button type="button" role="radio" class="ed-sw" data-v="${n}" style="--sw:${col(n)}"><i></i><span>${n[0].toUpperCase() + n.slice(1)}</span></button>`).join("")}
+          <label class="ed-sw ed-sw-custom" data-v="custom" style="--sw:${esc(cust)}"><i></i><span>Custom</span><input type="color" value="${esc(/^#[\da-f]{6}$/i.test(cust) ? cust : "#3ba8ff")}" aria-label="Pick a custom accent color"></label></div>${hint}`;
+        const mark = (n) => $$(".ed-sw", row).forEach((b) => { b.classList.toggle("on", b.dataset.v === n); b.setAttribute("aria-checked", String(b.dataset.v === n)); });
+        mark(v || "blue");
+        $$("button.ed-sw", row).forEach((b) => b.addEventListener("click", () => { mark(b.dataset.v); set(b.dataset.v); }));
+        const ci = $("input[type=color]", row);
+        ci.addEventListener("input", (e) => { value.accentCustom = e.target.value; ci.parentNode.style.setProperty("--sw", e.target.value); mark("custom"); set("custom"); });
+      } else if (f.type === "segmented") {
+        row.innerHTML = `<span class="ed-label">${esc(f.label)}</span><div class="ed-seg" role="radiogroup" aria-label="${esc(f.label)}">${f.options.map(([val, lab]) => `<button type="button" role="radio" data-v="${esc(val)}" class="${val === v ? "on" : ""}" aria-checked="${val === v}">${esc(lab)}</button>`).join("")}</div>${hint}`;
+        $$("button", row).forEach((b) => b.addEventListener("click", () => { $$("button", row).forEach((x) => { x.classList.toggle("on", x === b); x.setAttribute("aria-checked", String(x === b)); }); set(b.dataset.v); }));
+      } else if (f.type === "picks") {
+        const opts = typeof f.options === "function" ? f.options() : f.options, cur = Array.isArray(v) ? v.slice() : [];
+        row.innerHTML = `<span class="ed-label">${esc(f.label)} <small class="ed-picks-n"></small></span><div class="ed-picks"></div>${hint}`;
+        const box = $(".ed-picks", row);
+        const draw = () => {
+          box.innerHTML = opts.map(([val, lab]) => { const i = cur.indexOf(val); return `<button type="button" class="ed-pick${i >= 0 ? " on" : ""}" data-v="${esc(val)}" aria-pressed="${i >= 0}">${i >= 0 ? `<b>${i + 1}</b>` : ""}${esc(lab)}</button>`; }).join("");
+          $(".ed-picks-n", row).textContent = `${cur.length} of ${f.max}`;
+        };
+        box.addEventListener("click", (e) => { const b = e.target.closest("[data-v]"); if (!b) return; const i = cur.indexOf(b.dataset.v); if (i >= 0) cur.splice(i, 1); else { if (cur.length >= f.max) cur.shift(); cur.push(b.dataset.v); } set(cur.slice()); draw(); });
+        draw();
       } else if (f.type === "list") {
         row.innerHTML = `<span class="ed-label">${esc(f.label)}</span>${hint}`;
         row.append(listEditor(Array.isArray(v) ? v : [], f, (nv) => set(nv)));
