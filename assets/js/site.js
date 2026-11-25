@@ -116,14 +116,21 @@
   const look = (c) => ({ ...LOOK_DEFAULTS, ...(c?.appearance || {}) });
   const hexRgb = (h) => { const m = /^#?([\da-f]{6})$/i.exec(h || ""); if (!m) return null; const n = parseInt(m[1], 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
   const mix = (rgb, to, t) => "#" + rgb.map((v, i) => Math.round(v + (to[i] - v) * t).toString(16).padStart(2, "0")).join("");
+  // WCAG contrast: accents are used for link text, so each one is nudged until it reads at 4.5:1 or better
+  const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+  const relLum = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  const contrast = (a, b) => { const x = relLum(hexRgb(a)), y = relLum(hexRgb(b)); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const readable = (hex, bg, toward, min = 4.6) => { let c = hex; for (let i = 0; i < 40 && contrast(c, bg) < min; i++) c = mix(hexRgb(c), toward, 0.07); return c; };
   function accentCss(a) {
     let pal = ACCENTS[a.accent];
     if (a.accent === "custom") { const rgb = hexRgb(a.accentCustom); if (rgb) pal = [mix(rgb, [255, 255, 255], 0.1), mix(rgb, [255, 255, 255], 0.45), mix(rgb, [0, 0, 0], 0.25), mix(rgb, [0, 0, 0], 0.4)]; }
     if (!pal) return "";
+    const W = [255, 255, 255], K = [0, 0, 0];
+    pal = [readable(pal[0], "#121922", W), readable(pal[1], "#121922", W), readable(pal[2], "#f3f5f8", K), readable(pal[3], "#f3f5f8", K)];
     const rgba = (h, o) => { const [r, g, b] = hexRgb(h); return `rgba(${r}, ${g}, ${b}, ${o})`; };
-    const lum = (h) => { const [r, g, b] = hexRgb(h); return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
-    const dark = `--surge:${pal[0]};--surge-2:${pal[1]};--surge-soft:${rgba(pal[0], 0.12)};--surge-glow:${rgba(pal[0], 0.38)};--surge-ink:${lum(pal[0]) > 0.55 ? "#04121f" : "#ffffff"};`;
-    const light = `--surge:${pal[2]};--surge-2:${pal[3]};--surge-soft:${rgba(pal[2], 0.09)};--surge-glow:${rgba(pal[2], 0.25)};--surge-ink:#ffffff;`;
+    const ink = (h) => (contrast(h, "#04121f") >= contrast(h, "#ffffff") ? "#04121f" : "#ffffff");
+    const dark = `--surge:${pal[0]};--surge-2:${pal[1]};--surge-soft:${rgba(pal[0], 0.12)};--surge-glow:${rgba(pal[0], 0.38)};--surge-ink:${ink(pal[0])};`;
+    const light = `--surge:${pal[2]};--surge-2:${pal[3]};--surge-soft:${rgba(pal[2], 0.09)};--surge-glow:${rgba(pal[2], 0.25)};--surge-ink:${ink(pal[2])};`;
     return `:root,:root[data-theme="dark"]{${dark}}:root[data-theme="light"]{${light}}`;
   }
   /** Applies the team's chosen look and remembers it, so the next page load starts with it. */
@@ -665,7 +672,7 @@
     { id: "stackup", title: "Stack Up", genre: "Timing · Endless", blurb: "Drop game pieces from a sweeping linear slide. Overhangs get trimmed, so every drop counts. How high can you build?", controls: "Space / tap" },
     { id: "balance", title: "Balance", genre: "Physics · Survival", blurb: "Keep a balancing platform level while game pieces rain down. Collect them before they slide off the ends.", controls: "Arrows / drag" },
     { id: "odometry", title: "Odometry", genre: "Memory · Endless", blurb: "Watch the robot drive a route, then drive it from memory. Every route you finish gets one step longer.", controls: "Arrows / swipe" },
-    { id: "kilovolt", title: "Kilovolt", genre: "Trivia · Daily", blurb: "Name real FTC teams that fit each prompt. Famous answers are a Spark; deep cuts are a Full Surge. New prompts every day.", controls: "Type answers" },
+    { id: "kilovolt", title: "Kilovolt", genre: "Trivia · Daily", blurb: "Name real FTC teams, old game elements, awards, and robot parts that fit each prompt. Famous answers are a Spark; deep cuts are a Full Surge. New prompts every day.", controls: "Type answers" },
   ];
   const bestFor = (id) => store.get(`ss-arcade-${id}`, null);
 
@@ -799,8 +806,67 @@
      ====================================================================== */
   const pages = {};
 
+  /* ---------------- Season calendar ----------------
+     Competitions come from FTCScout as soon as the team registers; the team adds
+     everything else (demos, kickoff parties, open houses) in the editor. */
+  const EVENT_KINDS = { Scrimmage: "Scrimmage", LeagueMeet: "League meet", Qualifier: "Qualifier", LeagueTournament: "League tournament", SuperQualifier: "Super qualifier", Championship: "Championship", FIRSTChampionship: "FIRST Championship", OffSeason: "Off-season event", NonAdvancement: "Scrimmage", Premier: "Premier event" };
+  const dayOnly = (d) => String(d || "").slice(0, 10);
+  function calendarEvents(c, ftc) {
+    const today = new Date().toISOString().slice(0, 10), place = (...p) => p.filter(Boolean).join(" · ");
+    const comps = (ftc?.upcoming || []).map((e) => ({ id: `ftc-${e.season}-${e.code}`, title: e.name, start: dayOnly(e.start), end: dayOnly(e.end || e.start), place: place(e.venue, [e.city, e.state].filter(Boolean).join(", ")),
+      kind: EVENT_KINDS[e.type] || "Competition", comp: true, link: `https://ftcscout.org/events/${e.season}/${e.code}`, detail: `FTC team ${c.team.number} (${c.team.name}) is competing. Follow it live on FTCScout.` }));
+    const own = (c.calendar || []).filter((e) => e.date && e.title).map((e, i) => ({ id: `ss-${e.date}-${i}`, title: e.title, start: dayOnly(e.date), end: dayOnly(e.end || e.date), time: e.time || "", endTime: e.endTime || "", place: e.place || "",
+      kind: e.kind || "Team event", comp: false, link: e.link || "", detail: e.detail || "" }));
+    return [...comps, ...own].filter((e) => e.start && (e.end || e.start) >= today).sort((a, b) => (a.start + (a.time || "")).localeCompare(b.start + (b.time || "")));
+  }
+  const ymd = (d) => d.replace(/-/g, "");
+  const nextDay = (d) => { const x = parseDate(d); x.setDate(x.getDate() + 1); return `${x.getFullYear()}${String(x.getMonth() + 1).padStart(2, "0")}${String(x.getDate()).padStart(2, "0")}`; };
+  const hm = (t) => String(t).replace(":", "").padEnd(4, "0") + "00";
+  const icsText = (s) => String(s || "").replace(/\\/g, "\\\\").replace(/([,;])/g, "\\$1").replace(/\r?\n/g, "\\n");
+  /** One .ics file for any number of events (works with Google, Apple, and Outlook calendars). */
+  function icsFile(events) {
+    const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+    const fold = (line) => line.length <= 74 ? line : line.match(/.{1,73}/g).join("\r\n ");
+    const body = events.flatMap((e) => {
+      const when = e.time ? [`DTSTART:${ymd(e.start)}T${hm(e.time)}`, `DTEND:${ymd(e.end || e.start)}T${hm(e.endTime || e.time)}`] : [`DTSTART;VALUE=DATE:${ymd(e.start)}`, `DTEND;VALUE=DATE:${nextDay(e.end || e.start)}`];
+      return ["BEGIN:VEVENT", `UID:${e.id}@steelsurge-27254`, `DTSTAMP:${stamp}`, ...when, `SUMMARY:${icsText(e.title)}`, e.place && `LOCATION:${icsText(e.place)}`, `DESCRIPTION:${icsText([e.detail, e.link].filter(Boolean).join("\n"))}`, e.link && `URL:${e.link}`, "END:VEVENT"].filter(Boolean);
+    });
+    return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Steel Surge FTC 27254//Season calendar//EN", "CALSCALE:GREGORIAN", "X-WR-CALNAME:Steel Surge events", ...body, "END:VCALENDAR"].map(fold).join("\r\n") + "\r\n";
+  }
+  function downloadIcs(events, name) {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([icsFile(events)], { type: "text/calendar" })); a.download = name; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Calendar file downloaded. Open it to add the event.");
+  }
+  const googleCal = (e) => {
+    const dates = e.time ? `${ymd(e.start)}T${hm(e.time)}/${ymd(e.end || e.start)}T${hm(e.endTime || e.time)}` : `${ymd(e.start)}/${nextDay(e.end || e.start)}`;
+    const q = new URLSearchParams({ action: "TEMPLATE", text: e.title, dates, details: [e.detail, e.link].filter(Boolean).join("\n\n"), location: e.place || "" });
+    return `https://calendar.google.com/calendar/render?${q}`;
+  };
+  const fmtTime = (t) => { if (!t) return ""; const [h, m] = t.split(":").map(Number); return `${((h + 11) % 12) + 1}:${String(m || 0).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`; };
+  const whenText = (e) => { const multi = e.end && e.end !== e.start; return `${fmtDate(e.start)}${multi ? ` – ${fmtDate(e.end)}` : ""}${e.time ? ` · ${fmtTime(e.time)}${e.endTime ? `–${fmtTime(e.endTime)}` : ""}` : ""}`; };
+  /** "Add to calendar" buttons for one event. */
+  const calButtons = (e) => `<div class="cal-add"><a class="btn sm" href="${esc(googleCal(e))}" target="_blank" rel="noopener">${ICON.plus || "+"} Google Calendar</a><button class="btn sm ghost" type="button" data-ics="${esc(e.id)}">Apple / Outlook (.ics)</button></div>`;
+  function wireCalButtons(host, events) {
+    host.querySelectorAll("[data-ics]").forEach((b) => b.addEventListener("click", () => { const e = events.find((x) => x.id === b.dataset.ics); if (e) downloadIcs([e], `${e.title.replace(/[^\w]+/g, "-").replace(/^-|-$/g, "").toLowerCase() || "event"}.ics`); }));
+  }
+  function renderCalendar(c, ftc) {
+    const host = $("#calendar-list"); if (!host) return;
+    const evs = calendarEvents(c, ftc);
+    host.innerHTML = evs.length ? evs.map((e) => { const d = parseDate(e.start); return `
+      <article class="event cal-event reveal${e.comp ? " is-comp" : ""}">
+        <div class="event-date"><b>${d.getDate()}</b><span>${MONTHS[d.getMonth()]} ${String(d.getFullYear()).slice(2)}</span></div>
+        <div class="cal-info"><span class="tag${e.comp ? " ok" : ""}">${esc(e.kind)} · ${esc(nextLabel(e))}</span><h3>${e.link ? `<a href="${esc(e.link)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)}</h3>
+          <p>${esc(whenText(e))}${e.place ? ` · ${esc(e.place)}` : ""}</p>${!e.comp && e.detail ? `<p class="cal-detail">${esc(e.detail)}</p>` : ""}</div>
+        ${calButtons(e)}
+      </article>`; }).join("")
+      : `<div class="empty-state">${ICON.flag}<p>Nothing on the calendar yet. Competitions show up here as soon as we register for them.</p></div>`;
+    const all = $("#calendar-all");
+    if (all) { all.hidden = evs.length < 2; all.onclick = () => downloadIcs(evs, "steel-surge-events.ics"); }
+    wireCalButtons(host, evs); initReveal(host);
+  }
+
   const daysUntil = (d) => Math.round((parseDate(d) - new Date(new Date().toDateString())) / 86400000);
-  const nextLabel = (e) => { const n = daysUntil(e.start); return n <= 0 ? "Today" : n === 1 ? "Tomorrow" : `In ${n} days`; };
+  const nextLabel = (e) => { const n = daysUntil(e.start); return n < 0 ? "Happening now" : n === 0 ? "Today" : n === 1 ? "Tomorrow" : `In ${n} days`; };
   function nextEventCard(e) {
     if (!e) return "";
     const place = [e.venue, [e.city, e.state].filter(Boolean).join(", ")].filter(Boolean).join(" · ");
@@ -865,7 +931,11 @@
     const ftc = await loadFTC(c.team.number, c.team.rookieYear);
     ftcHost.innerHTML = journeyStats(c, ftc);
     const s = summarize(ftc);
-    if (s?.next) { badge.innerHTML = `<b>Up next</b> ${esc(s.next.name)} · ${fmtDate(s.next.start)}`; ftcHost.insertAdjacentHTML("afterbegin", nextEventCard(s.next)); }
+    if (s?.next) {
+      badge.innerHTML = `<b>Up next</b> ${esc(s.next.name)} · ${fmtDate(s.next.start)}`; ftcHost.insertAdjacentHTML("afterbegin", nextEventCard(s.next));
+      const ev = calendarEvents(c, ftc).find((e) => e.comp), card = $(".next-event", ftcHost);
+      if (ev && card) { card.insertAdjacentHTML("beforeend", `${calButtons(ev)}<a class="link-arrow cal-more" href="${url("team.html")}#calendar">Full season calendar ${ICON.arrow}</a>`); wireCalButtons(card, [ev]); }
+    }
     runCounts(ftcHost); initReveal(ftcHost);
   };
 
@@ -947,8 +1017,11 @@
       initReveal(tl);
     };
     draw([]);
+    renderCalendar(c, null);
     const ftc = await loadFTC(c.team.number, c.team.rookieYear).catch(() => null);
     if (ftc?.awards?.length) draw(ftc.awards);
+    renderCalendar(c, ftc);
+    if (location.hash === "#calendar") $("#calendar")?.scrollIntoView({ block: "start" });
     // Links to #milestones (including the old Competition page) land here once it has content
     if (location.hash === "#milestones") $("#milestones").scrollIntoView({ block: "start" });
   }
@@ -1286,6 +1359,14 @@
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "E" || e.key === "e") && PAGE !== "editor") { e.preventDefault(); location.href = url("editor.html"); }
   });
 
+  /* ---------------- Steel AI loads after the page is ready, so it never slows the first paint ---------------- */
+  const SELF_SRC = document.currentScript?.src || "";
+  function loadSteelAI() {
+    if (window.SteelAI || document.getElementById("steel-ai-js") || !SELF_SRC) return;
+    const go = () => { const s = document.createElement("script"); s.id = "steel-ai-js"; s.src = SELF_SRC.replace(/site\.js/, "steel-ai.js"); document.body.append(s); };
+    if (/[?&]ask=/.test(location.search)) go(); else if ("requestIdleCallback" in window) requestIdleCallback(go, { timeout: 2500 }); else setTimeout(go, 1200);
+  }
+
   /* ---------------- Boot ---------------- */
   async function boot() {
     let c;
@@ -1302,7 +1383,7 @@
     if (maintenanceOn(c)) { renderMaintenance(c); renderPreviewPill(); document.dispatchEvent(new CustomEvent("ss:ready", { detail: c })); return; }
     renderHeader(c); renderFooter(c); renderBanner(c); renderPreviewPill(); renderMaintenancePill(c); initOverdrive();
     const sw = pageSwitch();
-    if (sw && !controls(c)[sw]) { renderClosed(sw); initReveal(); document.dispatchEvent(new CustomEvent("ss:ready", { detail: c })); return; }
+    if (sw && !controls(c)[sw]) { renderClosed(sw); initReveal(); loadSteelAI(); document.dispatchEvent(new CustomEvent("ss:ready", { detail: c })); return; }
     $$("[data-team-name]").forEach((el) => (el.textContent = c.team.name));
     try { await pages[PAGE]?.(c); }
     catch (err) {
@@ -1316,9 +1397,10 @@
     applySwitches(c);
     initReveal();
     initToTop();
+    loadSteelAI();
     document.dispatchEvent(new CustomEvent("ss:ready", { detail: c }));
   }
 
-  window.SS = Object.assign(window.SS || {}, { ICON, LOGO, esc, store, toast, url, loadContent, loadFTC, theme, GAMES, gameArt, seasonLabel, currentSeason, DRAFT_KEY, PREVIEW_KEY, CONTROL_DEFAULTS, controls, siteOff, weekly, weeklySubmit, outreachStat, LOOK_DEFAULTS, ACCENTS, applyLook, HOME_DEFAULTS, HOME_CREWS, BUILD_STEPS });
+  window.SS = Object.assign(window.SS || {}, { ICON, LOGO, esc, store, toast, url, loadContent, loadFTC, theme, GAMES, gameArt, seasonLabel, currentSeason, DRAFT_KEY, PREVIEW_KEY, CONTROL_DEFAULTS, controls, siteOff, weekly, weeklySubmit, outreachStat, LOOK_DEFAULTS, ACCENTS, applyLook, HOME_DEFAULTS, HOME_CREWS, BUILD_STEPS, calendarEvents });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })();

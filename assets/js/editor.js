@@ -21,14 +21,14 @@
 
   /* ---------------- Sidebar groups and "view on site" links ---------------- */
   const GROUPS = [
-    ["Site", ["overview", "controls", "appearance", "home", "faq"]],
+    ["Site", ["overview", "controls", "appearance", "home", "faq", "kvprompts"]],
     ["Team", ["team", "members", "values", "projects", "mentors"]],
-    ["Season", ["achievements", "outreach"]],
+    ["Season", ["calendar", "achievements", "outreach"]],
     ["Media", ["featuredVideos", "updates"]],
     ["Sponsors & contact", ["sponsors", "tiers", "contact"]],
     ["Settings", ["settings"]],
   ];
-  const PAGE_FOR = { overview: "index.html", controls: "index.html", appearance: "index.html", home: "index.html", faq: "index.html", team: "index.html", members: "team.html", values: "team.html", projects: "team.html", mentors: "team.html", outreach: "index.html", achievements: "team.html", featuredVideos: "media.html", updates: "media.html", sponsors: "sponsors.html", tiers: "sponsors.html", contact: "contact.html" };
+  const PAGE_FOR = { calendar: "team.html", kvprompts: "arcade/kilovolt.html", overview: "index.html", controls: "index.html", appearance: "index.html", home: "index.html", faq: "index.html", team: "index.html", members: "team.html", values: "team.html", projects: "team.html", mentors: "team.html", outreach: "index.html", achievements: "team.html", featuredVideos: "media.html", updates: "media.html", sponsors: "sponsors.html", tiers: "sponsors.html", contact: "contact.html" };
   const eye = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
   const lockIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
   const searchIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
@@ -110,6 +110,12 @@
         { k: "_games", label: "Featured arcade games", type: "heading", hint: "Pick up to three, in order. Empty shows the first three." },
         { k: "games", label: "Games", type: "picks", max: 3, options: () => (window.SS?.GAMES || []).map((g) => [g.id, g.title]) },
       ] },
+    { id: "kvprompts", title: "Kilovolt prompts", icon: "gamepad", desc: "Write your own trivia for the Kilovolt arcade game, like “Name a sponsor of Steel Surge.” They show up in Unlimited and Practice rounds under “Steel Surge trivia” (the Daily Charge stays the same for everyone).",
+      get: (c) => c.kilovolt || [], set: (c, v) => (c.kilovolt = v), list: true, itemLabel: "prompt", summary: (p) => p.prompt || "New prompt", sub: (p) => `${(p.answers || []).filter(Boolean).length} answers`,
+      fields: [
+        { k: "prompt", label: "Prompt", type: "text", required: true, hint: "Start with “Name…”, e.g. Name a part on our 2025–26 robot." },
+        { k: "answers", label: "Answers, most obvious first", type: "strings", itemLabel: "answer", hint: "Answers lower on the list are rarer, so they're worth more charge. Players' capitals, plurals, and small typos are accepted. Three or more works best." },
+      ] },
     { id: "faq", title: "Steel AI answers", icon: "chart", desc: "Teach Steel AI, the site's helper, your own answers. When a visitor asks something close to one of these, your answer comes first.",
       get: (c) => c.faq || [], set: (c, v) => (c.faq = v), list: true, itemLabel: "answer", summary: (f) => f.q || "New answer", sub: (f) => f.keywords || "",
       fields: [
@@ -167,6 +173,19 @@
         ] },
         { k: "hours", label: "Hours to show when nothing is logged this season", type: "text", hint: "e.g. 40+. Once you log an event this season, the log's total is shown instead." },
         { k: "label", label: "Caption for that number", type: "text", hint: "e.g. outreach hours in 2025–26" },
+      ] },
+    { id: "calendar", title: "Season calendar", icon: "flag", desc: "Events on the Team page's calendar. Competitions are added automatically from FTCScout once you register, so list everything else here: demos, kickoff, open houses, fundraisers. Past events drop off by themselves.",
+      get: (c) => c.calendar || [], set: (c, v) => (c.calendar = v), list: true, itemLabel: "event", summary: (e) => e.title || "New event", sub: (e) => [e.date, e.time].filter(Boolean).join(" · "),
+      fields: [
+        { k: "title", label: "Event", type: "text", required: true, hint: "e.g. Robot demo at Kennett Library" },
+        { k: "date", label: "Date", type: "date", required: true },
+        { k: "end", label: "Last day (optional)", type: "date", hint: "Only for events longer than one day." },
+        { k: "time", label: "Starts at (optional)", type: "time" },
+        { k: "endTime", label: "Ends at (optional)", type: "time" },
+        { k: "kind", label: "Type", type: "select", options: [["Team event", "Team event"], ["Outreach", "Outreach"], ["Demo", "Robot demo"], ["Meeting", "Open meeting"], ["Fundraiser", "Fundraiser"], ["Kickoff", "Kickoff"], ["Competition", "Competition (not on FTCScout)"]] },
+        { k: "place", label: "Where (optional)", type: "text", hint: "A public place, like a library or school. Never a home address." },
+        { k: "link", label: "Link (optional)", type: "url" },
+        { k: "detail", label: "Details (optional)", type: "textarea", max: 280 },
       ] },
     { id: "mentors", title: "Mentors", icon: "star", desc: "Shown on the team page only when at least one mentor is listed.",
       get: (c) => c.mentors || [], set: (c, v) => (c.mentors = v), list: true, itemLabel: "mentor", summary: (m) => m.name || "New mentor", sub: (m) => m.role,
@@ -281,6 +300,7 @@
     return out;
   }
   const QUICK = [
+    ["calendar", null, "Add a calendar event", "flag", () => ({ title: "", date: today(), end: "", time: "", endTime: "", kind: "Team event", place: "", link: "", detail: "" }), "start"],
     ["outreach", "events", "Log an outreach event", "users", () => ({ date: today(), title: "", place: "", hours: "", people: "", detail: "" }), "start"],
     ["updates", null, "Post a team update", "pencil", () => ({ date: today(), title: "", body: "" }), "start"],
     ["achievements", null, "Add a milestone or award", "trophy", () => ({ date: today().slice(0, 7), title: "", detail: "", icon: "milestone" }), "start"],
@@ -788,7 +808,7 @@
           e.target.value = "";
         });
       } else {
-        const type = { number: "number", email: "email", url: "url", month: "month", date: "date" }[f.type] || "text";
+        const type = { number: "number", email: "email", url: "url", month: "month", date: "date", time: "time" }[f.type] || "text";
         row.innerHTML = `${label}<input class="input" id="${id}" type="${type}" value="${esc(v)}">${hint}<span class="field-error"></span>`;
         const input = $("input", row);
         input.addEventListener("input", (e) => {

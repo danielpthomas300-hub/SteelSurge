@@ -1,10 +1,12 @@
 /* ==========================================================================
-   KILOVOLT — a daily FTC team-name trivia game.
-   Seven prompts ("Name an FTC team from Ohio"). Any real team that fits
-   scores, but the less famous your answer, the more charge it's worth:
+   KILOVOLT — a daily FTC trivia game.
+   Seven prompts ("Name an FTC team from Ohio", "Name a game element from
+   SKYSTONE"). Any right answer scores, but the less obvious it is, the more
+   charge it's worth:
    Spark → Static → Current → Voltage → Overload → Full Surge.
    Team data: content/teams.json (every FTC team since 2019, from FTCScout),
-   refreshed automatically once a week.
+   refreshed automatically once a week. Everything else (game elements,
+   awards, robot parts…): assets/js/arcade/kilovolt-facts.js.
    ========================================================================== */
 (() => {
   "use strict";
@@ -24,6 +26,8 @@
   const CUTS = [0.03, 0.08, 0.25, 0.5, 0.8, 1];
   const RANKS = [[0, "Spark"], [1000, "Static"], [2000, "Current"], [3500, "Voltage"], [5000, "Overload"], [6000, "Full Surge"]];
   const rankFor = (v) => RANKS.filter(([min]) => v >= min).pop()[1];
+  /** Scales a score to a seven-prompt round, so ranks and trophies are fair for any round length. */
+  const per7 = (total, n) => Math.round((total * ROUND) / Math.max(1, n || ROUND));
   const HOME = 27254; // Steel Surge
 
   /* ---------------- Names for regions ---------------- */
@@ -71,6 +75,44 @@
       for (const k of new Set([t.k1, t.k2])) { if (!k) continue; if (!INDEX.has(k)) INDEX.set(k, []); INDEX.get(k).push(t); }
     }
     buildCategories();
+    buildFacts(window.KilovoltFacts);
+    buildFacts(teamPrompts(await teamContent()));
+  }
+  /** The site's content (the team's draft when previewing), once site.js has loaded it. */
+  const teamContent = () => window.SS?.content ? Promise.resolve(window.SS.content) : new Promise((r) => { document.addEventListener("ss:ready", (e) => r(e.detail), { once: true }); setTimeout(() => r(window.SS?.content || null), 4000); });
+  /** Prompts the team writes in the Team editor (Site → Kilovolt prompts). Unlimited and Practice only. */
+  const teamPrompts = (c) => (c?.kilovolt || []).filter((p) => String(p.prompt || "").trim() && (p.answers || []).some((a) => String(a).trim()))
+    .map((p, i) => ({ id: `team-${i}`, type: "ftc", own: true, text: String(p.prompt).trim(), items: p.answers.map((a) => String(a).replace(/\|/g, "/").trim()).filter(Boolean).join("|") }));
+
+  /* ---------------- FTC knowledge prompts (kilovolt-facts.js) ---------------- */
+  // Answers are compared without capitals, spaces, punctuation, "the", or plural endings
+  const sing = (w) => (w.length > 3 && /(ch|sh|x)es$/.test(w) ? w.slice(0, -2) : w.length > 3 && /[^s]s$/.test(w) ? w.slice(0, -1) : w);
+  const fkey = (s) => norm(String(s).replace(/['’]/g, "")).split(" ").filter((w) => w && !["the", "a", "an"].includes(w)).map(sing).join("");
+  const FACT_ALL = new Map();
+  function buildFacts(list) {
+    for (const f of list || []) {
+      const seen = new Set(), items = [];
+      f.items.split("|").map((n) => n.trim()).filter(Boolean).forEach((name) => {
+        const keys = [...new Set([fkey(name), / award$/i.test(name) ? fkey(name.replace(/ award$/i, "")) : ""])].filter((k) => k && !seen.has(k));
+        if (!keys.length) return; keys.forEach((k) => seen.add(k)); items.push({ name, rank: items.length, keys });
+      });
+      const cat = { type: f.type, id: f.id, text: f.text, season: f.season || "", facts: true, own: !!f.own, items, valid: items, test: () => false };
+      for (const it of items) for (const k of it.keys) { if (!FACT_ALL.has(k)) FACT_ALL.set(k, []); FACT_ALL.get(k).push({ it, cat }); }
+      CATS.push(cat);
+    }
+  }
+  /** Earlier answers on a list are the obvious ones; later ones are worth more. */
+  const factTier = (cat, it) => Math.min(5, Math.floor(((it.rank + 0.5) / cat.items.length) * 6));
+  /** Returns { item, fits } for the best match, or null when it isn't on any list. */
+  function findFact(raw, cat) {
+    const k = fkey(raw); if (!k) return null;
+    const max = k.length >= 10 ? 2 : 1;
+    const dist = (it) => (it.keys.includes(k) ? 0 : k.length >= 4 && it.keys.some((x) => lev(x, k, max) <= max) ? 1 : -1);
+    let best = null;
+    for (const it of cat.items) { const d = dist(it); if (d >= 0 && (!best || d < best.d || (d === best.d && it.rank < best.it.rank))) best = { it, d }; }
+    if (best) return { item: best.it, fits: true };
+    const other = (FACT_ALL.get(k) || []).find((x) => x.cat !== cat);
+    return other ? { item: other.it, fits: false, cat: other.cat } : null;
   }
 
   /** Every prompt type, built from the data so new teams and places appear automatically. */
@@ -183,6 +225,7 @@
   }
   function validFor(cat) { if (!cat.valid) { cat.valid = TEAMS.filter(cat.test).sort((a, b) => b.fame - a.fame); cat.rankOf = new Map(cat.valid.map((t, i) => [t.number, i])); } return cat.valid; }
   function tierFor(cat, team) {
+    if (cat.facts) return factTier(cat, team);
     validFor(cat);
     if (team.number === HOME) return 5;
     const p = (cat.rankOf.get(team.number) + 0.5) / cat.valid.length;
@@ -198,15 +241,87 @@
     const r = rng(seed), used = new Set(), out = [];
     const shuffled = PLAN.slice().sort(() => r() - 0.5), plan = [];
     for (const t of shuffled) if (!plan.includes(t) && CATS.some((c) => c.type === t)) plan.push(t);
+    // Five team prompts, plus one about an FTC game and one about FTC in general, in a random order
+    plan.length = Math.min(plan.length, ROUND - 2);
+    for (const t of ["game", "ftc"]) if (CATS.some((c) => c.type === t)) plan.splice(Math.floor(r() * (plan.length + 1)), 0, t);
     for (const type of plan) {
-      let pool = CATS.filter((c) => c.type === type && !used.has(c.id));
-      if (!pool.length) pool = CATS.filter((c) => !used.has(c.id));
+      let pool = CATS.filter((c) => c.type === type && !c.own && !used.has(c.id));
+      if (!pool.length) pool = CATS.filter((c) => !c.own && !used.has(c.id));
       const c = pool[Math.floor(r() * pool.length)]; used.add(c.id); out.push(c);
     }
     return out.slice(0, ROUND);
   }
+  /* ---------------- Unlimited round settings ---------------- */
+  const TOPICS = [
+    ["places", "Places", "States, countries, regions, cities"],
+    ["names", "Team names", "Words, themes, letters, name styles"],
+    ["history", "Rookie years & numbers", "Start years, team numbers, seasons played"],
+    ["seasons", "Past game elements", "Pieces and field parts from each game"],
+    ["games", "FTC game names", "Every FTC game since 2005"],
+    ["events", "Awards & events", "Awards, events, match words, values"],
+    ["robots", "Robot parts & tools", "Mechanisms, sensors, CAD, suppliers"],
+    ["code", "Code & autonomous", "Tools, Java, autonomous methods"],
+    ["ours", "Steel Surge trivia", "Questions written by our team"],
+  ];
+  const TYPE_TOPIC = { place: "places", country: "places", region: "places", city: "places", combo: "places", word: "names", theme: "names", letter: "names", style: "names", rookie: "history", number: "history", special: "history" };
+  const FACT_TOPIC = { "f-games": "games", "f-oldgames": "games", "g-ball": "games", "g-hang": "games", "f-awards": "events", "f-events": "events", "f-judging": "events", "f-programs": "events", "f-match": "events", "f-parts": "robots", "f-drive": "robots", "f-elec": "robots", "f-cad": "robots", "f-brands": "robots", "f-code": "code", "f-sdk": "code", "f-auto": "code" };
+  const topicOf = (c) => (c.own ? "ours" : c.facts ? FACT_TOPIC[c.id] || (c.type === "game" ? "seasons" : "events") : TYPE_TOPIC[c.type] || "history");
+  const MIXES = [["mixed", "Mixed", "Mostly teams, plus two FTC knowledge prompts in every seven."], ["teams", "Teams only", "Every prompt asks for a real FTC team."], ["ftc", "FTC knowledge", "Game elements, game names, awards, parts, and code. No teams."], ["old", "Old games", "Game elements and game names from past FTC seasons."]];
+  const LENGTHS = [5, 7, 10, 15, 0]; // 0 = Endless: prompts keep coming until your third miss
+  const LIVES = 3;
+  const STANDARD = { length: 7, mix: "mixed", topics: TOPICS.map(([k]) => k), shaped: true, timer: true, noRepeat: true };
+  const opts = (() => { const o = { ...STANDARD, ...(store.get("ss-kilovolt-opts", {}) || {}) }; if (!LENGTHS.includes(o.length)) o.length = 7; if (!MIXES.some(([k]) => k === o.mix)) o.mix = "mixed"; if (!Array.isArray(o.topics)) o.topics = STANDARD.topics.slice(); return o; })();
+  const saveOpts = () => store.set("ss-kilovolt-opts", opts);
+  /** Standard rounds count toward your best score; custom ones don't. */
+  const isStandard = () => opts.length === 7 && opts.mix === "mixed" && opts.timer && STANDARD.topics.every((k) => opts.topics.includes(k));
+  const optsLabel = (o) => [o.length ? `${o.length} prompts` : "Endless", MIXES.find(([k]) => k === o.mix)[1], o.topics.length < TOPICS.length ? `${o.topics.length} of ${TOPICS.length} topics` : "", o.timer ? "" : "no timer"].filter(Boolean).join(" · ");
+  const inMix = (c, mix = opts.mix) => (mix === "teams" ? !c.facts : mix === "ftc" ? !!c.facts : mix === "old" ? !!c.facts && ["seasons", "games"].includes(topicOf(c)) : true);
+  const matching = () => CATS.filter((c) => inMix(c) && opts.topics.includes(topicOf(c)));
+  /** How broad a prompt is next to others of its kind: 0 = the narrowest, 1 = the broadest. Older seasons count as harder. */
+  let EASE = null;
+  function ease(c) {
+    if (!EASE) {
+      EASE = new Map();
+      for (const group of [CATS.filter((x) => !x.facts), CATS.filter((x) => x.facts)]) {
+        const sorted = group.slice().sort((a, b) => validFor(a).length - validFor(b).length);
+        sorted.forEach((x, i) => { let e = sorted.length > 1 ? i / (sorted.length - 1) : 0.5; const y = /^g-(\d{4})$/.exec(x.id); if (y) e -= (2026 - +y[1]) * 0.05; if (x.id === "g-old" || x.id === "f-oldgames") e -= 0.3; EASE.set(x.id, e); });
+      }
+    }
+    return EASE.get(c.id);
+  }
+  // Super Easy and Easy ask broad prompts; Hard and Extreme ask narrow ones
+  const BANDS = [(e) => e >= 0.55, (e) => e >= 0.35, () => true, (e) => e <= 0.65, (e) => e <= 0.45];
+  /** Builds an Unlimited round from the player's settings. Returns { prompts, note }. */
+  function makeCustom(r, also = []) {
+    const L = opts.length || 10, recent = new Set([...(opts.noRepeat ? saved.recent || [] : []), ...also]), band = BANDS[level()] || BANDS[2];
+    const sh = (a) => a.map((x) => [r(), x]).sort((p, q) => p[0] - q[0]).map((x) => x[1]);
+    let base = matching(), note = "";
+    if (!base.length) { base = CATS.filter((c) => inMix(c)); note = "None of your topics fit this mix, so every topic is on for this round."; }
+    const fits = (c) => !opts.shaped || band(ease(c));
+    const layers = [[(c) => !recent.has(c.id) && fits(c), ""], [fits, "You've seen every matching prompt lately, so a few repeat."], [() => true, "Not many prompts match this difficulty, so a few are easier or harder."]];
+    let pool = [];
+    for (const [f, msg] of layers) { pool = base.filter(f); if (pool.length >= L || f === layers[2][0]) { if (pool.length >= L || !note) note = note || (pool.length ? msg : ""); break; } }
+    if (pool.length < L) pool = sh(base);
+    // Spread the round across topics, and across kinds of prompt within a topic
+    const spread = (list, n) => {
+      const byTopic = new Map(); for (const c of sh(list)) { const t = topicOf(c); if (!byTopic.has(t)) byTopic.set(t, []); byTopic.get(t).push(c); }
+      const queues = sh([...byTopic.values()]), out = [];
+      while (out.length < n && queues.some((q) => q.length)) for (const q of queues) { if (out.length >= n || !q.length) continue; const types = new Set(out.map((o) => o.type)); const i = q.findIndex((c) => !types.has(c.type)); out.push(q.splice(Math.max(0, i), 1)[0]); }
+      return out;
+    };
+    let out;
+    if (opts.mix === "mixed") {
+      const facts = pool.filter((c) => c.facts), teams = pool.filter((c) => !c.facts), k = Math.min(facts.length, Math.max(1, Math.round((L * 2) / 7)));
+      out = [...spread(facts, k), ...spread(teams, L - k)];
+      if (out.length < L) out.push(...spread(pool.filter((c) => !out.includes(c)), L - out.length));
+    } else out = spread(pool, L);
+    if (out.length < L) note = `Only ${out.length} prompt${out.length === 1 ? " matches" : "s match"} your settings, so this round is shorter.`;
+    return { prompts: sh(out), note };
+  }
+
   /** For testing: every prompt and how many teams fit it. */
   window.KilovoltPrompts = () => CATS.map((c) => [c.type, c.text, validFor(c).length]);
+  window.KilovoltTest = { opts, makeCustom: (seed = 1) => makeCustom(rng(seed)).prompts.map((c) => [topicOf(c), c.id, Math.round(ease(c) * 100) / 100]), ease: (id) => ease(CATS.find((c) => c.id === id)), state: () => s };
   const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
   const EPOCH = Date.UTC(2026, 10, 22); // Kilovolt #1
   const dayNumber = () => { const d = new Date(); return Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - EPOCH) / 86400000) + 1; };
@@ -254,7 +369,8 @@
   const save = () => store.set("ss-kilovolt", saved);
   let s = null;
   const timeLimit = () => pick([60, 40, 25, 18, 12]);
-  const hintsAllowed = () => level() <= 1;
+  const timed = () => !s || s.mode === "daily" || (s.cfg.timer && !s.practice);
+  const hintsAllowed = () => level() <= 1 || !!s?.practice;
 
   const ui = document.createElement("div"); ui.className = "kv"; game.stage.append(ui);
   const esc = (x) => String(x).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
@@ -265,27 +381,36 @@
     const daily = mode === "daily", key = todayKey();
     if (daily && saved.days[key]) return showSummary(saved.days[key], true);
     const seed = daily ? seedFor(key) : (Math.random() * 2 ** 31) | 0;
-    s = { mode, key, prompts: makeRound(seed), i: -1, answers: [], total: 0, t: 0, phase: "idle", hinted: false };
+    const built = daily ? { prompts: makeRound(seed), note: "" } : makeCustom(rng(seed));
+    const practice = mode === "practice";
+    s = { mode, key, prompts: built.prompts, i: -1, answers: [], total: 0, t: 0, phase: "idle", hinted: false, cfg: { ...opts, topics: opts.topics.slice() }, custom: !daily && !isStandard(), endless: !daily && !practice && opts.length === 0, practice, lives: LIVES };
+    if (!daily) { saved.recent = [...s.prompts.map((c) => c.id), ...(saved.recent || [])].slice(0, 90); save(); }
     game.start(); ui.hidden = false;
     nextPrompt();
+    if (built.note) game.setMessage(built.note);
   }
   function nextPrompt() {
     s.i++;
-    if (s.i >= s.prompts.length) return finishRound();
-    s.t = timeLimit(); s.phase = "ask"; s.hinted = false;
-    const c = s.prompts[s.i], n = validFor(c).length;
-    game.setHud("round", `${s.i + 1}/${ROUND}`); game.setHud("charge", volts(s.total));
+    if (s.endless ? s.lives <= 0 : s.i >= s.prompts.length) return finishRound();
+    // Endless: top up with fresh prompts before running out (repeats only once every match has been used)
+    if (s.endless && s.i >= s.prompts.length - 1) {
+      const last = s.prompts[s.prompts.length - 1], more = makeCustom(rng((Math.random() * 2 ** 31) | 0), s.prompts.map((c) => c.id)).prompts.filter((c) => c !== last);
+      s.prompts.push(...(more.length ? more : CATS.filter((c) => c !== last).slice(0, 1)));
+    }
+    s.t = timed() ? timeLimit() : Infinity; s.phase = "ask"; s.hinted = false;
+    const c = s.prompts[s.i], n = validFor(c).length, fact = !!c.facts;
+    game.setHud("round", s.endless ? `#${s.i + 1}` : `${s.i + 1}/${s.prompts.length}`); game.setHud("charge", volts(s.total));
     ui.innerHTML = `
-      <div class="kv-top"><span class="kv-mode">${s.mode === "daily" ? `Daily Charge #${dayNumber()}` : "Unlimited"}</span><span class="kv-step">Prompt ${s.i + 1} of ${ROUND}</span><span class="kv-diff">${levelName()}</span></div>
-      <div class="kv-timer"><i style="width:100%"></i></div>
+      <div class="kv-top"><span class="kv-mode">${s.mode === "daily" ? `Daily Charge #${dayNumber()}` : s.practice ? "Practice" : s.endless ? "Endless" : s.custom ? "Unlimited · Custom" : "Unlimited"}</span><span class="kv-step">${s.endless ? `Prompt ${s.i + 1} ${livesHtml()}` : `Prompt ${s.i + 1} of ${s.prompts.length}`}</span><span class="kv-diff">${timed() ? "" : "No timer · "}${levelName()}</span></div>
+      <div class="kv-timer"${timed() ? "" : " hidden"}><i style="width:100%"></i></div>
       <div class="kv-body">
         <div class="kv-main">
           <h2 class="kv-prompt">${esc(c.text)}</h2>
-          <p class="kv-sub">${n.toLocaleString()} FTC teams fit. The less famous your answer, the more charge it's worth.</p>
-          <form class="kv-form" autocomplete="off"><label class="sr-only" for="kv-in">Team name</label>
-            <input id="kv-in" type="text" maxlength="80" placeholder="Type a team name…" spellcheck="false" autocapitalize="words">
+          <p class="kv-sub">${fact ? `${n} answers on our list. The less obvious your answer, the more charge it's worth.` : `${n.toLocaleString()} FTC teams fit. The less famous your answer, the more charge it's worth.`}</p>
+          <form class="kv-form" autocomplete="off"><label class="sr-only" for="kv-in">${fact ? "Your answer" : "Team name"}</label>
+            <input id="kv-in" type="text" maxlength="80" placeholder="${fact ? "Type your answer…" : "Type a team name…"}" spellcheck="false" autocapitalize="words">
             <button class="btn primary" type="submit">Lock in</button></form>
-          <div class="kv-actions">${hintsAllowed() ? '<button class="btn sm" type="button" data-hint>Hint</button>' : ""}<button class="btn sm ghost" type="button" data-skip>Skip</button></div>
+          <div class="kv-actions">${hintsAllowed() ? '<button class="btn sm" type="button" data-hint>Hint</button>' : ""}<button class="btn sm ghost" type="button" data-skip>${s.practice ? "Show answers" : "Skip"}</button></div>
           <p class="kv-hint" aria-live="polite"></p>
         </div>
         ${meterHtml()}
@@ -297,10 +422,11 @@
     setTimeout(() => input.focus({ preventScroll: true }), 30);
     Sound.select();
   }
+  const livesHtml = () => `<span class="kv-lives" role="img" aria-label="${s.lives} miss${s.lives === 1 ? "" : "es"} left">${Array.from({ length: LIVES }, (_, i) => `<i class="${i < s.lives ? "on" : ""}">⚡</i>`).join("")}</span>`;
   function meterHtml() {
-    const pct = Math.min(100, s.total / (ROUND * 100) * 100);
-    return `<aside class="kv-meter" aria-label="Charge ${volts(s.total)}"><div class="kv-bar"><i style="height:${pct}%;--w:${pct}%"></i>${RANKS.slice(1).map(([v, n]) => `<span style="bottom:${v / 70}%" title="${n}"></span>`).join("")}</div>
-      <b>${volts(s.total)}</b><small>${rankFor(s.total * 10)}</small></aside>`;
+    const n = s.endless ? Math.max(1, s.i + 1) : s.prompts.length, pct = Math.min(100, s.total / (n * 100) * 100);
+    return `<aside class="kv-meter" aria-label="Charge ${volts(s.total)}"><div class="kv-bar"><i style="height:${pct}%;--w:${pct}%"></i>${RANKS.slice(1).map(([v, nm]) => `<span style="bottom:${v / 70}%" title="${nm}"></span>`).join("")}</div>
+      <b>${volts(s.total)}</b><small>${rankFor(per7(s.total, n) * 10)}</small></aside>`;
   }
   function hint() {
     if (s.phase !== "ask" || s.hinted) return;
@@ -308,29 +434,32 @@
     const mid = v[Math.floor(v.length * rand(0.3, 0.7))];
     const masked = mid.name.split(" ").map((w) => (w.length > 1 ? w[0] + "•".repeat(Math.min(w.length - 1, 8)) : w)).join(" ");
     ui.querySelector(".kv-hint").classList.remove("warn");
-    ui.querySelector(".kv-hint").innerHTML = `Hint: one team that fits is <b>${esc(masked)}</b> from ${esc(where(mid))}.`;
+    ui.querySelector(".kv-hint").innerHTML = s.prompts[s.i].facts ? `Hint: one answer that fits is <b>${esc(masked)}</b>.` : `Hint: one team that fits is <b>${esc(masked)}</b> from ${esc(where(mid))}.`;
     ui.querySelector("[data-hint]").disabled = true;
   }
 
   function submit(raw) {
     if (!s || s.phase !== "ask") return;
-    const c = s.prompts[s.i], v = validFor(c), res = raw.trim() ? findTeam(raw, c) : null;
+    const c = s.prompts[s.i], v = validFor(c), fact = !!c.facts, res = raw.trim() ? (fact ? findFact(raw, c) : findTeam(raw, c)) : null;
     // Unknown names and bare numbers don't use up the prompt: say why and let them try again
     if (raw.trim() && s.t > 0 && (!res || res.numberOnly)) {
       const box = ui.querySelector(".kv-hint"), input = ui.querySelector("#kv-in");
-      box.textContent = !res ? `No FTC team called “${raw.trim()}”. Check the spelling and try again.` : res.team ? `Type the team's name, not its number. (#${res.team.number} is ${res.team.name}.)` : "Type a team name, not a number.";
+      box.textContent = !res ? (fact ? `“${raw.trim()}” isn't on our list. Check the spelling, or try another answer.` : `No FTC team called “${raw.trim()}”. Check the spelling and try again.`) : res.team ? `Type the team's name, not its number. (#${res.team.number} is ${res.team.name}.)` : "Type a team name, not a number.";
       box.classList.add("warn"); input.select(); Sound.error();
       return;
     }
     s.phase = "reveal";
-    let tier = -1, msg = "", team = res?.team || null;
+    let tier = -1, msg = "", team = fact ? null : res?.team || null;
+    const item = fact ? res?.item || null : null;
     if (!raw.trim()) msg = s.t <= 0 ? "Time's up." : "Skipped.";
     else if (!res) msg = `We couldn't find an FTC team called “${esc(raw.trim())}”. Check the spelling, or try another team.`;
     else if (res.numberOnly) msg = res.team ? `Type the team's name, not its number. (#${res.team.number} is ${esc(res.team.name)}.)` : "Type a team name, not a number.";
+    else if (fact && !res.fits) msg = `${esc(item.name)} is real${res.cat.season ? ` (it's from ${esc(res.cat.season)})` : ""}, but it doesn't fit this prompt.`;
     else if (!res.fits) msg = `${esc(team.name)} (#${team.number}, ${esc(where(team))}) is a real team, but it doesn't fit this prompt.`;
-    else tier = tierFor(c, team);
+    else tier = tierFor(c, fact ? item : team);
     const pts = tier >= 0 ? TIERS[tier].pts : 0;
-    s.total += pts; s.answers.push({ prompt: c.text, answer: tier >= 0 ? team.name : raw.trim(), team: team && tier >= 0 ? team.number : null, tier, pts });
+    if (s.endless && tier < 0) s.lives--;
+    s.total += pts; s.answers.push({ prompt: c.text, answer: tier >= 0 ? (fact ? item.name : team.name) : raw.trim(), team: team && tier >= 0 ? team.number : null, tier, pts });
     game.setHud("charge", volts(s.total));
     // Feedback
     if (tier >= 0) {
@@ -341,26 +470,40 @@
       game.particles.burst(W / 2, (r.height / r.width) * W * 0.35, { n: 10 + tier * 10, color: T.color, speed: 160 + tier * 50, life: 0.8, gravity: 120 });
       if (tier >= 3) Sound.zap();
       if (tier >= 4) game.shake(4 + tier);
-      if (tier === 5) game.trophy("kv-surge");
-      if (team.number === HOME) game.trophy("kv-home");
+      if (tier === 5 && !s.practice) game.trophy("kv-surge");
+      if (team?.number === HOME && !s.practice) game.trophy("kv-home");
     } else Sound.miss();
-    const ex = examples(c, team);
+    const mine = fact ? item : team, ex = s.practice ? answerList(c) : examples(c, mine);
     const T = tier >= 0 ? TIERS[tier] : null;
     ui.querySelector(".kv-main").innerHTML = `
       <h2 class="kv-prompt small">${esc(c.text)}</h2>
       ${T ? `<div class="kv-result" style="--tc:${T.color}"><span class="kv-tier">${T.name}</span><span class="kv-pts">+${volts(T.pts)}</span></div>
-        <div class="kv-team"><b>${esc(team.name)}</b><span>#${team.number} · ${esc(where(team))} · rookie ${seasonName(team.rookie)}</span></div>
-        <p class="kv-note">${team.number === HOME ? "That's us! Steel Surge always counts as a Full Surge. ⚡" : T.blurb}${res.shared ? " (More than one team has this name, so it's scored by the best-known one.)" : ""}</p>`
+        ${fact ? `<div class="kv-team"><b>${esc(item.name)}</b>${c.season ? `<span>${esc(c.season)}</span>` : ""}</div>
+        <p class="kv-note">${T.blurb}</p>` : `<div class="kv-team"><b>${esc(team.name)}</b><span>#${team.number} · ${esc(where(team))} · rookie ${seasonName(team.rookie)}</span></div>
+        <p class="kv-note">${team.number === HOME ? "That's us! Steel Surge always counts as a Full Surge. ⚡" : T.blurb}${res.shared ? " (More than one team has this name, so it's scored by the best-known one.)" : ""}</p>`}`
       : `<div class="kv-result miss"><span class="kv-tier">No charge</span><span class="kv-pts">+0 V</span></div><p class="kv-note">${msg}</p>`}
-      <div class="kv-examples"><h3>Answers that would have worked</h3><ul>${ex.map(({ t, k }) => `<li style="--tc:${TIERS[k].color}"><span>${TIERS[k].name}</span>${esc(t.name)} <small>#${t.number} · ${esc(where(t))}</small></li>`).join("")}</ul><p>${v.length.toLocaleString()} teams fit this prompt.</p></div>
-      <button class="btn primary" type="button" data-next>${s.i + 1 >= ROUND ? "See results" : "Next prompt"}</button>`;
+      ${s.endless && tier < 0 ? `<p class="kv-lifeline${s.lives ? "" : " out"}">${livesHtml()} ${s.lives ? `${s.lives} miss${s.lives === 1 ? "" : "es"} left.` : `That was your third miss. You charged up ${s.answers.filter((a) => a.tier >= 0).length} answers.`}</p>` : ""}
+      <div class="kv-examples"><h3>${s.practice ? (fact ? "Every answer on the list, most obvious first" : (ex.length >= v.length ? `All ${v.length} teams that fit, best-known first` : `${ex.length} of the ${v.length.toLocaleString()} teams that fit, best-known first`)) : "Answers that would have worked"}</h3><ul class="${s.practice ? "kv-all" : ""}">${ex.map(({ t, k }) => `<li style="--tc:${TIERS[k].color}"${t === mine && tier >= 0 ? ' class="mine"' : ""}><span>${TIERS[k].name}</span>${esc(t.name)}${fact ? "" : ` <small>#${t.number} · ${esc(where(t))}</small>`}</li>`).join("")}</ul><p>${fact ? `${v.length} answers were on the list.` : `${v.length.toLocaleString()} teams fit this prompt.`}</p></div>
+      <button class="btn primary" type="button" data-next>${(s.endless ? s.lives <= 0 : s.i + 1 >= s.prompts.length) ? "See results" : "Next prompt"}</button>`;
     ui.querySelector(".kv-meter")?.replaceWith(Object.assign(document.createElement("div"), { innerHTML: meterHtml() }).firstElementChild);
     ui.querySelector(".kv-timer i").style.width = "0%";
     const next = ui.querySelector("[data-next]");
     next.addEventListener("click", () => nextPrompt()); setTimeout(() => next.focus({ preventScroll: true }), 30);
   }
+  /** Practice mode: every answer on a knowledge list, or 30 teams spread from best-known to deepest cut. */
+  function answerList(c) {
+    if (c.facts) return c.items.map((t) => ({ t, k: factTier(c, t) }));
+    const v = validFor(c), n = Math.min(30, v.length), out = [];
+    for (let i = 0; i < n; i++) { const t = v[Math.floor((i / n) * v.length)]; out.push({ t, k: tierFor(c, t) }); }
+    return out;
+  }
   /** A few real answers from different tiers, so every prompt teaches you some teams. */
   function examples(c, mine) {
+    if (c.facts) {
+      const out = [];
+      for (const k of [0, 2, 3, 5]) { const pool = c.items.filter((it) => it !== mine && factTier(c, it) === k && !out.some((o) => o.t === it)); if (pool.length) out.push({ t: pool[Math.floor(Math.random() * pool.length)], k }); }
+      return out;
+    }
     const v = validFor(c), out = [], seen = new Set(mine ? [mine.number] : []), names = new Set(mine ? [mine.k2] : []);
     for (const k of [0, 2, 3, 5]) {
       const lo = k ? Math.floor(CUTS[k - 1] * v.length) : 0, hi = Math.max(lo + 1, Math.floor(CUTS[k] * v.length));
@@ -371,7 +514,14 @@
 
   function finishRound() {
     s.phase = "done"; game.stop();
-    const total = s.total, record = { mode: s.mode, total, tiers: s.answers.map((a) => a.tier), answers: s.answers, level: levelName(), day: dayNumber() };
+    if (s.practice) {
+      // Practice isn't scored or saved: no best, streak, trophies, or weekly challenge
+      return showSummary({ mode: "practice", total: s.total, len: s.prompts.length, correct: s.answers.filter((a) => a.tier >= 0).length, tiers: s.answers.map((a) => a.tier), answers: s.answers, level: levelName() }, false);
+    }
+    const total = s.total, n = s.endless ? s.answers.length : s.prompts.length, correct = s.answers.filter((a) => a.tier >= 0).length;
+    let newBest = false;
+    if (s.endless && (correct > (saved.bestEndless?.correct || 0) || (correct === (saved.bestEndless?.correct || 0) && total > (saved.bestEndless?.total || 0)))) { saved.bestEndless = { correct, total }; newBest = correct > 0; }
+    const record = { mode: s.mode, total, len: n, endless: s.endless, correct, newBest, custom: s.custom, cfg: s.custom ? optsLabel(s.cfg) : "", tiers: s.answers.map((a) => a.tier), answers: s.answers, level: levelName(), day: dayNumber() };
     saved.rounds++;
     if (s.mode === "daily") {
       saved.days[s.key] = record;
@@ -379,31 +529,87 @@
       const yk = `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, "0")}-${String(y.getDate()).padStart(2, "0")}`;
       saved.streak = saved.lastDay === yk ? saved.streak + 1 : 1; saved.lastDay = s.key;
       if (saved.streak >= 3) game.trophy("kv-streak");
-    } else saved.bestUnlimited = Math.max(saved.bestUnlimited, total);
+    } else if (!s.custom) saved.bestUnlimited = Math.max(saved.bestUnlimited, total);
     save();
     game.trophy("kv-first");
-    if (total * 10 >= 3000) game.trophy("kv-3000"); if (total * 10 >= 5000) game.trophy("kv-5000");
-    if (level() === 4 && total * 10 >= 2500) game.trophy("kv-extreme");
-    game.submitBest(total, volts(total));
+    // Trophies compare rounds of any length fairly, as if they had seven prompts (and only with a timer)
+    const even = per7(total, n);
+    if (timed()) { if (even * 10 >= 3000) game.trophy("kv-3000"); if (even * 10 >= 5000) game.trophy("kv-5000"); if (level() === 4 && even * 10 >= 2500) game.trophy("kv-extreme"); }
+    if (!s.custom) game.submitBest(total, volts(total));
     game.setHud("streak", String(saved.streak));
     showSummary(record, false);
   }
 
   function shareText(r) {
-    return `⚡ Kilovolt #${r.day} · ${volts(r.total)}\n${r.tiers.map((k) => (k >= 0 ? TIERS[k].emoji : "⬛")).join("")}\nSteel Surge Arcade · FTC 27254`;
+    const row = (tiers) => tiers.map((k) => (k >= 0 ? TIERS[k].emoji : "⬛")).join("");
+    if (r.endless) {
+      // Long runs: one line of up to 15 squares per row, at most 3 rows
+      const rows = []; for (let i = 0; i < Math.min(r.tiers.length, 45); i += 15) rows.push(row(r.tiers.slice(i, i + 15)));
+      return `⚡ Kilovolt Endless · ${r.correct} answer${r.correct === 1 ? "" : "s"} · ${volts(r.total)}\n${rows.join("\n")}${r.tiers.length > 45 ? " …" : ""}\n${r.level} · Steel Surge Arcade · FTC 27254`;
+    }
+    return `⚡ Kilovolt #${r.day} · ${volts(r.total)}\n${row(r.tiers)}\nSteel Surge Arcade · FTC 27254`;
+  }
+
+  /* ---------------- Daily Charge stats ---------------- */
+  const dayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  function dailyStats() {
+    const days = Object.entries(saved.days || {}).sort(([a], [b]) => a.localeCompare(b)), totals = days.map(([, r]) => r.total);
+    const counts = TIERS.map(() => 0); let misses = 0;
+    for (const [, r] of days) for (const k of r.tiers || []) k >= 0 ? counts[k]++ : misses++;
+    // Longest run of back-to-back days
+    let best = 0, run = 0, prev = null;
+    for (const [k] of days) { const d = new Date(k + "T12:00"); run = prev && Math.round((d - prev) / 864e5) === 1 ? run + 1 : 1; best = Math.max(best, run); prev = d; }
+    const today = new Date(), yest = new Date(); yest.setDate(yest.getDate() - 1);
+    const current = [dayKey(today), dayKey(yest)].includes(saved.lastDay) ? saved.streak : 0;
+    const fav = counts.some(Boolean) ? counts.indexOf(Math.max(...counts)) : -1;
+    const answers = counts.reduce((a, b) => a + b, 0) + misses;
+    return { played: days.length, best: totals.length ? Math.max(...totals) : 0, avg: totals.length ? Math.round(totals.reduce((a, b) => a + b, 0) / totals.length) : 0,
+      bestStreak: Math.max(best, current), current, fav, counts, misses, hitRate: answers ? Math.round(((answers - misses) / answers) * 100) : 0 };
+  }
+  function showStats(back) {
+    const st = dailyStats(), cells = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const r = saved.days?.[dayKey(d)], label = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      const tier = r ? Math.min(5, Math.floor(per7(r.total, r.len || ROUND) / 120)) : -1;
+      cells.push(`<i class="${r ? "on" : ""}${i === 0 ? " today" : ""}" style="${r ? `--h:${Math.max(12, Math.min(100, (r.total / 700) * 100))}%;--tc:${TIERS[tier].color}` : ""}" title="${esc(label)}: ${r ? `${volts(r.total)} (${rankFor(per7(r.total, r.len || ROUND) * 10)})` : "not played"}"></i>`);
+    }
+    const tile = (v, l) => `<div class="kv-stat"><b>${v}</b><span>${l}</span></div>`, max = Math.max(1, ...st.counts, st.misses);
+    game.showOverlay(`<span class="kicker">Kilovolt · Daily Charge</span><h2>Your stats</h2>
+      ${st.played ? `<div class="kv-stats">${tile(st.played, "Days played")}${tile(st.current, "Current streak")}${tile(st.bestStreak, "Best streak")}${tile(volts(st.best), "Best day")}${tile(volts(st.avg), "Average")}${tile(`${st.hitRate}%`, "Answers that scored")}</div>
+      <div class="kv-cal-wrap"><span class="kv-set-h">Last 30 days</span><div class="kv-cal" role="img" aria-label="Daily Charge scores for the last 30 days">${cells.join("")}</div><div class="kv-cal-axis"><span>30 days ago</span><span>Today</span></div></div>
+      <div class="kv-dist"><span class="kv-set-h">Your answers by tier${st.fav >= 0 ? ` · most often ${TIERS[st.fav].name}` : ""}</span>
+        ${TIERS.map((T, k) => `<div style="--tc:${T.color}"><span>${T.name}</span><i style="width:${(st.counts[k] / max) * 100}%"></i><b>${st.counts[k]}</b></div>`).join("")}<div style="--tc:#4a5b70"><span>Miss</span><i style="width:${(st.misses / max) * 100}%"></i><b>${st.misses}</b></div></div>`
+      : `<p>Play your first Daily Charge to start your stats. Everyone gets the same seven prompts each day.</p>`}
+      <p class="kv-small">Stats are saved in this browser.</p>
+      <div class="overlay-actions"><button class="btn primary" data-primary>Back</button></div>`, { onPrimary: back });
   }
   function showSummary(r, again) {
     ui.hidden = true;
-    const isDaily = r.mode !== "unlimited";
-    const rows = (r.answers || []).map((a) => { const T = a.tier >= 0 ? TIERS[a.tier] : null; return `<li style="--tc:${T ? T.color : "#4a5b70"}"><span>${T ? T.name : "Miss"}</span><b>${esc(a.answer || "No answer")}</b><small>${esc(a.prompt)}</small></li>`; }).join("");
-    game.showOverlay(`<span class="kicker">${isDaily ? `Daily Charge #${r.day}` : "Unlimited round"} · ${esc(r.level || levelName())}</span>
-      <h2>${rankFor(r.total * 10)}</h2>
+    const isDaily = r.mode === "daily" || !r.mode, practice = r.mode === "practice";
+    const shown = r.endless ? (r.answers || []).slice(-25) : r.answers || [];
+    const rows = shown.map((a) => { const T = a.tier >= 0 ? TIERS[a.tier] : null; return `<li style="--tc:${T ? T.color : "#4a5b70"}"><span>${T ? T.name : "Miss"}</span><b>${esc(a.answer || "No answer")}</b><small>${esc(a.prompt)}</small></li>`; }).join("");
+    if (practice) {
+      game.showOverlay(`<span class="kicker">Practice round · ${esc(r.level || levelName())}</span><h2>${r.correct} of ${r.len} right</h2>
+        <div class="kv-emoji" aria-hidden="true">${r.tiers.map((k) => (k >= 0 ? TIERS[k].emoji : "⬛")).join("")}</div>
+        <ol class="kv-recap">${rows}</ol><p class="kv-small">Practice rounds aren't scored or saved. Ready? Try today's Daily Charge.</p>
+        <div class="overlay-actions"><button class="btn primary" data-primary>Practice again</button><button class="btn" data-daily>Daily Charge</button><button class="btn ghost" data-settings>Round settings</button></div>`, { onPrimary: () => startRound("practice") });
+      game.overlay.querySelector("[data-daily]").addEventListener("click", () => { Sound.select(); startRound("daily"); });
+      game.overlay.querySelector("[data-settings]").addEventListener("click", () => { Sound.select(); showSettings(() => showSummary(r, again)); });
+      return;
+    }
+    game.showOverlay(`<span class="kicker">${isDaily ? `Daily Charge #${r.day}` : r.endless ? "Endless run" : "Unlimited round"} · ${esc(r.level || levelName())}</span>
+      <h2>${r.endless ? `${r.correct} answer${r.correct === 1 ? "" : "s"}` : rankFor(per7(r.total, r.len || ROUND) * 10)}</h2>
       <div class="big-score">${volts(r.total)}</div>
+      ${r.endless ? `${r.newBest ? '<span class="record">New best run</span>' : ""}<p>You charged up ${r.correct} of ${r.len} prompts before your third miss. Average quality: <b>${rankFor(per7(r.total, r.len) * 10)}</b>.</p>` : ""}
       <div class="kv-emoji" aria-hidden="true">${r.tiers.map((k) => (k >= 0 ? TIERS[k].emoji : "⬛")).join("")}</div>
       ${again ? "<p>You've already charged up today. A new Daily Charge unlocks at midnight.</p>" : ""}
-      <ol class="kv-recap">${rows}</ol>
-      <p>${isDaily ? `Daily streak: <b>${saved.streak}</b>` : `Best Unlimited round: <b>${volts(saved.bestUnlimited)}</b>`}</p>
-      <div class="overlay-actions">${isDaily ? '<button class="btn" data-share>Copy result</button>' : ""}<button class="btn primary" data-primary>Play Unlimited</button><a class="btn ghost" href="../arcade.html">More games</a></div>`, { onPrimary: () => startRound("unlimited") });
+      ${r.custom && !r.endless ? `<p class="kv-small">Custom round: ${esc(r.cfg)}. Custom rounds don't count toward your best score.</p>` : ""}
+      ${r.endless && r.answers.length > shown.length ? `<p class="kv-small">Your last ${shown.length} prompts:</p>` : ""}<ol class="kv-recap">${rows}</ol>
+      <p>${isDaily ? `Daily streak: <b>${saved.streak}</b>` : r.endless ? `Best Endless run: <b>${saved.bestEndless?.correct || 0} answers</b> (${volts(saved.bestEndless?.total || 0)})` : `Best Unlimited round: <b>${volts(saved.bestUnlimited)}</b>`}</p>
+      <div class="overlay-actions">${isDaily || r.endless ? '<button class="btn" data-share>Copy result</button>' : ""}${isDaily ? '<button class="btn" data-stats>My stats</button>' : ""}<button class="btn primary" data-primary>${r.endless ? "New Endless run" : "Play Unlimited"}</button><button class="btn" data-settings>Round settings</button><a class="btn ghost" href="../arcade.html">More games</a></div>`, { onPrimary: () => startRound("unlimited") });
+    game.overlay.querySelector("[data-settings]")?.addEventListener("click", () => { Sound.select(); showSettings(() => showSummary(r, again)); });
+    game.overlay.querySelector("[data-stats]")?.addEventListener("click", () => { Sound.select(); showStats(() => showSummary(r, again)); });
     game.overlay.querySelector("[data-share]")?.addEventListener("click", async (e) => {
       try { await navigator.clipboard.writeText(shareText(r)); e.target.textContent = "Copied!"; } catch { e.target.textContent = "Couldn't copy"; }
     });
@@ -411,7 +617,7 @@
 
   /* ---------------- Loop and rendering ---------------- */
   game.update = (dt) => {
-    if (!s || s.phase !== "ask") return;
+    if (!s || s.phase !== "ask" || !timed()) return;
     s.t -= dt;
     const bar = ui.querySelector(".kv-timer i");
     if (bar) { const p = Math.max(0, s.t / timeLimit()); bar.style.width = `${p * 100}%`; bar.classList.toggle("low", s.t < 5); }
@@ -430,22 +636,66 @@
     ctx.globalAlpha = 1;
     game.particles.draw(ctx); game.floaters.draw(ctx);
   };
-  game.onDifficulty = () => { if (s?.phase === "ask") s.t = Math.min(s.t, timeLimit()); };
+  game.onDifficulty = () => { if (s?.phase === "ask" && timed()) s.t = Math.min(s.t, timeLimit()); };
 
   /* ---------------- Start screen ---------------- */
   function intro() {
     const done = saved.days[todayKey()];
     game.setHud("streak", String(saved.streak || 0));
     game.showOverlay(`<span class="kicker">Steel Surge Arcade</span><h2>Kilovolt</h2>
-      <p>Seven prompts, one answer each. Name a real FTC team that fits, like “a team from Ohio.” Any correct team charges you up, but <b>the less famous your answer, the more it's worth</b>.</p>
+      <p>Seven prompts, one answer each. Most ask for a real FTC team, like “a team from Ohio.” Others ask about FTC itself: game elements from past seasons, awards, robot parts, and more. Any right answer charges you up, but <b>the less obvious your answer, the more it's worth</b>.</p>
       <div class="kv-legend">${TIERS.map((T) => `<span style="--tc:${T.color}"><b>${T.name}</b>${volts(T.pts)}</span>`).join("")}</div>
-      <p class="kv-small">Team data covers all ${TEAMS.length.toLocaleString()} FTC teams that have competed since 2019–20, from FTCScout. It updates every week.</p>
-      <div class="overlay-actions"><button class="btn primary" data-primary>${done ? "See today's result" : `Daily Charge #${dayNumber()}`}</button><button class="btn" data-unlimited>Unlimited</button></div>`, { onPrimary: () => startRound("daily") });
+      <p class="kv-small">Team data covers all ${TEAMS.length.toLocaleString()} FTC teams that have competed since 2019–20, from FTCScout, and updates every week. Plus ${CATS.filter((c) => c.facts && !c.own).length} FTC knowledge prompts${CATS.some((c) => c.own) ? ` and ${CATS.filter((c) => c.own).length} Steel Surge trivia prompt${CATS.filter((c) => c.own).length === 1 ? "" : "s"}` : ""}. <b>Practice</b> has no timer or score and shows every answer.</p>
+      <div class="overlay-actions"><button class="btn primary" data-primary>${done ? "See today's result" : `Daily Charge #${dayNumber()}`}</button><button class="btn" data-unlimited>${opts.length ? `Unlimited${isStandard() ? "" : " · Custom"}` : "Endless"}</button><button class="btn" data-practice>Practice</button><button class="btn ghost" data-settings>Round settings</button>${Object.keys(saved.days || {}).length ? '<button class="btn ghost" data-stats>My stats</button>' : ""}</div>`, { onPrimary: () => startRound("daily") });
+    game.overlay.querySelector("[data-stats]")?.addEventListener("click", () => { Sound.select(); showStats(intro); });
     game.overlay.querySelector("[data-unlimited]").addEventListener("click", () => { Sound.select(); startRound("unlimited"); });
+    game.overlay.querySelector("[data-settings]").addEventListener("click", () => { Sound.select(); showSettings(intro); });
+    game.overlay.querySelector("[data-practice]").addEventListener("click", () => { Sound.select(); startRound("practice"); });
+  }
+
+  /** Unlimited round settings. The Daily Charge always uses the standard round so everyone gets the same one. */
+  function showSettings(back) {
+    const tog = (k, label, sub) => `<label class="kv-tog"><input type="checkbox" data-opt="${k}"${opts[k] ? " checked" : ""}><i></i><span><b>${label}</b><small>${sub}</small></span></label>`;
+    const ov = game.showOverlay(`<span class="kicker">Kilovolt · Unlimited</span><h2>Round settings</h2>
+      <div class="kv-set">
+        <div class="kv-set-row"><span class="kv-set-h">Prompts per round</span><div class="kv-seg" role="radiogroup" aria-label="Prompts per round">${LENGTHS.map((n) => `<button type="button" role="radio" data-len="${n}">${n || "Endless"}</button>`).join("")}</div></div>
+        <div class="kv-set-row"><span class="kv-set-h">Mix</span><div class="kv-seg" role="radiogroup" aria-label="Mix">${MIXES.map(([k, lab]) => `<button type="button" role="radio" data-mix="${k}">${lab}</button>`).join("")}</div><small class="kv-set-sub" data-mixnote></small></div>
+        <div class="kv-set-row"><span class="kv-set-h">Topics <button type="button" class="kv-link" data-alltopics>All</button></span><div class="kv-topics">${TOPICS.map(([k, lab, sub]) => `<label class="kv-topic" data-topic-row="${k}"><input type="checkbox" data-topic="${k}"${opts.topics.includes(k) ? " checked" : ""}><span><b>${lab}</b><small>${sub}</small></span></label>`).join("")}</div></div>
+        <div class="kv-set-row kv-togs">
+          ${tog("shaped", "Match prompts to the difficulty", "Super Easy and Easy ask broad prompts. Hard and Extreme ask narrow ones and older seasons, with no hints.")}
+          ${tog("timer", "Answer timer", "Off lets you take as long as you like.")}
+          ${tog("noRepeat", "Skip recent prompts", "Avoids prompts from your last few Unlimited rounds.")}
+        </div>
+        <p class="kv-set-status" data-status aria-live="polite"></p>
+      </div>
+      <div class="overlay-actions"><button class="btn primary" data-primary>${opts.length ? "Play Unlimited" : "Start Endless run"}</button><button class="btn" data-std>Standard round</button><button class="btn ghost" data-back>Back</button></div>`, { onPrimary: () => startRound("unlimited") });
+    ov.classList.add("kv-settings");
+    const $$ = (q) => [...ov.querySelectorAll(q)];
+    const draw = () => {
+      $$("[data-len]").forEach((b) => { const on = +b.dataset.len === opts.length; b.classList.toggle("on", on); b.setAttribute("aria-checked", String(on)); });
+      $$("[data-mix]").forEach((b) => { const on = b.dataset.mix === opts.mix; b.classList.toggle("on", on); b.setAttribute("aria-checked", String(on)); });
+      ov.querySelector("[data-mixnote]").textContent = MIXES.find(([k]) => k === opts.mix)[2];
+      $$("[data-topic]").forEach((i) => { i.checked = opts.topics.includes(i.dataset.topic); i.closest(".kv-topic").classList.toggle("off", !CATS.some((c) => topicOf(c) === i.dataset.topic && inMix(c))); });
+      $$("[data-opt]").forEach((i) => (i.checked = !!opts[i.dataset.opt]));
+      const n = matching().length, st = ov.querySelector("[data-status]");
+      st.classList.toggle("warn", !n);
+      st.innerHTML = !n ? "None of the checked topics fit this mix. Check a topic that isn't dimmed."
+        : `<b>${n}</b> prompts match. ${!opts.length ? `Endless: prompts keep coming until your third miss (skips count). Your longest run is saved.` : isStandard() ? "This is a standard round, so it counts toward your best score." : "Custom round: it won't count toward your best score."} Difficulty: <b>${esc(levelName())}</b> (change it with the difficulty button above the game).`;
+      const go = ov.querySelector("[data-primary]"); go.disabled = !n; go.textContent = opts.length ? "Play Unlimited" : "Start Endless run";
+    };
+    const change = () => { saveOpts(); draw(); Sound.tone({ f: 660, dur: 0.04, type: "triangle", vol: 0.05 }); };
+    $$("[data-len]").forEach((b) => b.addEventListener("click", () => { opts.length = +b.dataset.len; change(); }));
+    $$("[data-mix]").forEach((b) => b.addEventListener("click", () => { opts.mix = b.dataset.mix; change(); }));
+    $$("[data-topic]").forEach((i) => i.addEventListener("change", () => { opts.topics = i.checked ? [...new Set([...opts.topics, i.dataset.topic])] : opts.topics.filter((k) => k !== i.dataset.topic); change(); }));
+    $$("[data-opt]").forEach((i) => i.addEventListener("change", () => { opts[i.dataset.opt] = i.checked; change(); }));
+    ov.querySelector("[data-alltopics]").addEventListener("click", () => { opts.topics = STANDARD.topics.slice(); change(); });
+    ov.querySelector("[data-std]").addEventListener("click", () => { Object.assign(opts, { ...STANDARD, topics: STANDARD.topics.slice() }); change(); });
+    ov.querySelector("[data-back]").addEventListener("click", () => { Sound.select(); back(); });
+    draw();
   }
 
   game.setHudBest(game.best()?.label ?? "—");
-  game.setMessage("Name real FTC teams. Obscure answers are worth more.");
+  game.setMessage("Name real FTC teams, game elements, and more. Obscure answers are worth more.");
   game.showOverlay(`<span class="kicker">Steel Surge Arcade</span><h2>Kilovolt</h2><p>Loading every FTC team…</p>`);
   ui.hidden = true;
   loadData().then(intro).catch(() => {

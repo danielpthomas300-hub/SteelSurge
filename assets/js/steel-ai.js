@@ -146,6 +146,9 @@
     if (c) {
       const T = c.team;
       // Answers the team wrote in the editor (Site → Steel AI answers) win over everything else.
+      // Upcoming events (competitions from FTCScout are answered from live results elsewhere)
+      const today = new Date().toISOString().slice(0, 10);
+      (c.calendar || []).filter((e) => e.title && e.date && (e.end || e.date) >= today).forEach((e) => add(`Upcoming: ${e.title}`, `${e.title} is on ${fmtDate(e.date)}${e.place ? ` at ${e.place}` : ""}.${e.detail ? " " + e.detail : ""}`, "team.html#calendar", "event calendar upcoming when next schedule demo", "team"));
       (c.faq || []).filter((f) => f.q && f.a).forEach((f) => add(f.q, f.a, f.link || "contact.html", `${f.q} ${f.keywords || ""} faq question`, "faq"));
       add(`About ${T.name}`, `${T.intro} We're FTC team ${T.number} from ${T.location}, and our rookie season was ${label(T.rookieYear)}. Our motto is "${T.motto}".`, "team.html", "team about who us steel surge history number location school", "team");
       (c.values || []).forEach((v) => add(`Our value: ${v.title}`, v.body, "team.html", "value", "team"));

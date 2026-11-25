@@ -1,0 +1,68 @@
+/* ==========================================================================
+   KILOVOLT — FTC knowledge prompts (everything that isn't a team name).
+   Each list is ordered from the most obvious answer to the deepest cut, so
+   answers near the end are worth more. Write answers as "Name|other name|…";
+   plurals, capitals, and small typos are accepted automatically.
+   type "game": things from a specific FTC game.  type "ftc": general FTC know-how.
+   ========================================================================== */
+window.KilovoltFacts = [
+  /* ---------------- Game elements and field parts, one prompt per season ---------------- */
+  { id: "g-2026", type: "game", season: "BIOBUZZ (2026–27)", text: "Name a game element or part of the field from BIOBUZZ (2026–27).",
+    items: "Pollen|Hive|Flower|Nectar|Garden|Loading zone" },
+  { id: "g-2025", type: "game", season: "DECODE (2025–26)", text: "Name a game element or part of the field from DECODE (2025–26).",
+    items: "Artifact|Goal|Obelisk|Ramp|Classifier|Gate|Motif|Base|Base zone|Launch zone|Depot|Loading zone|Secret tunnel|AprilTag" },
+  { id: "g-2024", type: "game", season: "INTO THE DEEP (2024–25)", text: "Name a game element or part of the field from INTO THE DEEP (2024–25).",
+    items: "Sample|Specimen|Submersible|Basket|High basket|Chamber|High chamber|Net zone|Observation zone|Low basket|Low chamber|Rung|Ascent|Clip|Barrier|Tape mark|Level 3 ascent" },
+  { id: "g-2023", type: "game", season: "CENTERSTAGE (2023–24)", text: "Name a game element or part of the field from CENTERSTAGE (2023–24).",
+    items: "Pixel|Backdrop|Drone|Truss|Stage door|Rigging|Mosaic|Spike mark|Team prop|Wing|Backstage|Set line|Pixel stack|Landing zone|Suspend|Hang|Purple pixel|Yellow pixel" },
+  { id: "g-2022", type: "game", season: "POWERPLAY (2022–23)", text: "Name a game element or part of the field from POWERPLAY (2022–23).",
+    items: "Cone|Junction|High junction|Beacon|Signal|Signal sleeve|Terminal|Substation|Ground junction|Low junction|Medium junction|Circuit|Cone stack|Owned junction" },
+  { id: "g-2021", type: "game", season: "FREIGHT FRENZY (2021–22)", text: "Name a game element or part of the field from FREIGHT FRENZY (2021–22).",
+    items: "Duck|Freight|Carousel|Shipping hub|Warehouse|Cargo|Box|Alliance shipping hub|Shared shipping hub|Team shipping element|Barrier|Storage unit|Capping|Barcode|Rubber duck" },
+  { id: "g-2020", type: "game", season: "ULTIMATE GOAL (2020–21)", text: "Name a game element or part of the field from ULTIMATE GOAL (2020–21).",
+    items: "Ring|Wobble goal|Tower goal|Power shot|High goal|Launch line|Target zone|Starter stack|Starter ring|Mid goal|Low goal|Start line|Drop zone" },
+  { id: "g-2019", type: "game", season: "SKYSTONE (2019–20)", text: "Name a game element or part of the field from SKYSTONE (2019–20).",
+    items: "Stone|Skystone|Foundation|Skybridge|Capstone|Quarry|Skyscraper|Building zone|Loading zone|Depot|Building site|Neutral skybridge|Tower" },
+  { id: "g-2018", type: "game", season: "ROVER RUCKUS (2018–19)", text: "Name a game element or part of the field from ROVER RUCKUS (2018–19).",
+    items: "Mineral|Gold mineral|Silver mineral|Lander|Crater|Depot|Team marker|Sampling|Latch|Cargo hold|Sample field|Lander lift|Navigation target" },
+  { id: "g-2017", type: "game", season: "RELIC RECOVERY (2017–18)", text: "Name a game element or part of the field from RELIC RECOVERY (2017–18).",
+    items: "Relic|Glyph|Cryptobox|Jewel|Balancing stone|Cipher|Pictograph|VuMark|Recovery zone|Safe zone|Glyph pit|Relic recovery zone" },
+  { id: "g-old", type: "game", season: "", text: "Name a game element from an FTC game before 2017 (Velocity Vortex, RES-Q, or Cascade Effect).",
+    items: "Particle|Cap ball|Beacon|Vortex|Center vortex|Corner vortex|Debris|Climber|Mountain|Rescue beacon|Zip line|Shelter|Rolling goal|Center goal|Kickstand|IR beacon|All clear signal|Floor goal" },
+  { id: "g-ball", type: "game", season: "", text: "Name an FTC game from 2014–15 to 2025–26 where robots scored balls.",
+    items: "DECODE|Velocity Vortex|Rover Ruckus|Freight Frenzy|Cascade Effect" },
+  { id: "g-hang", type: "game", season: "", text: "Name an FTC game since 2017 where robots could hang or lift themselves off the floor at the end.",
+    items: "Into the Deep|CENTERSTAGE|Rover Ruckus" },
+
+  /* ---------------- General FTC knowledge ---------------- */
+  { id: "f-games", type: "ftc", text: "Name an FTC game (any season).",
+    items: "Into the Deep|CENTERSTAGE|DECODE|POWERPLAY|Freight Frenzy|Ultimate Goal|SKYSTONE|Rover Ruckus|Relic Recovery|BIOBUZZ|Velocity Vortex|RES-Q|Cascade Effect|Block Party|Ring It Up|Bowled Over|Get Over It|Hot Shot|Face Off|Quad Quandary|Hangin-A-Round|Half-Pipe Hustle" },
+  { id: "f-oldgames", type: "ftc", text: "Name an FTC game from before 2017.",
+    items: "Velocity Vortex|RES-Q|Cascade Effect|Block Party|Ring It Up|Bowled Over|Get Over It|Hot Shot|Face Off|Quad Quandary|Hangin-A-Round|Half-Pipe Hustle" },
+  { id: "f-awards", type: "ftc", text: "Name an award given at FTC events.",
+    items: "Inspire Award|Think Award|Connect Award|Innovate Award|Control Award|Motivate Award|Design Award|Winning Alliance|Finalist Alliance|Judges' Choice Award|Dean's List|Compass Award|Promote Award|Reach Award|Sustain Award" },
+  { id: "f-parts", type: "ftc", text: "Name a part or mechanism you might find on an FTC robot.",
+    items: "Wheel|Motor|Servo|Claw|Intake|Arm|Linear slide|Drivetrain|Mecanum wheel|Lift|Gripper|Battery|Chain|Belt|Gear|Pulley|Bearing|Channel|Extrusion|Odometry pod|Outtake|Turret|Roller|Hook|Viper slide|Omni wheel|Shooter|Flywheel|Ratchet|Spool|Bumper|Hub|Encoder|Sprocket|Linkage|Dead wheel|Surgical tubing|Pivot|Wrist|Differential|Scissor lift" },
+  { id: "f-drive", type: "ftc", text: "Name a kind of drivetrain or wheel an FTC robot could use.",
+    items: "Mecanum|Tank drive|Omni wheel|Swerve|Holonomic|X-drive|H-drive|Traction wheel|West Coast drive|Six-wheel drive|Butterfly drive|Kiwi drive|Differential swerve|Tread|Grip wheel" },
+  { id: "f-elec", type: "ftc", text: "Name an electronic part, sensor, or controller used in FTC.",
+    items: "Control Hub|Expansion Hub|Driver Hub|Gamepad|Servo|Motor|Battery|Webcam|Color sensor|Distance sensor|Touch sensor|IMU|Encoder|Limit switch|Gyro|Limelight|Servo Hub|Magnetic limit switch|Potentiometer|Odometry pod|Ultrasonic sensor|Power switch|SPARK Mini|Servo power module|OctoQuad|Pinpoint|Otos|Robot Controller phone|Driver Station phone|Core Hex motor" },
+  { id: "f-code", type: "ftc", text: "Name a tool, library, or app FTC teams use to program their robots.",
+    items: "Android Studio|Blocks|OnBot Java|Java|Road Runner|FTC Dashboard|Pedro Pathing|FTCLib|REV Hardware Client|MeepMeep|Kotlin|Driver Station app|Robot Controller app|EasyOpenCV|AprilTag|Vision Portal|Limelight|NextFTC|Dairy|SolversLib" },
+  { id: "f-sdk", type: "ftc", text: "Name something you'd write in FTC Java code (a class, method, or keyword).",
+    items: "LinearOpMode|waitForStart|opModeIsActive|telemetry|hardwareMap|DcMotor|Servo|gamepad1|setPower|sleep|OpMode|TeleOp|Autonomous|setPosition|getCurrentPosition|ElapsedTime|while|if|update|addData|DcMotorEx|IMU|setTargetPosition|RUN_TO_POSITION|setDirection|ColorSensor|DistanceSensor|init|loop|idle|isStopRequested|BNO055IMU|ZeroPowerBehavior" },
+  { id: "f-cad", type: "ftc", text: "Name a tool FTC teams use to design (CAD) or make parts.",
+    items: "Onshape|Fusion 360|SolidWorks|3D printer|Inventor|Tinkercad|CNC|Laser cutter|Creo|FreeCAD|Bambu Lab|Prusa|Cura|Router|Band saw|Drill press|KeyShot|OrcaSlicer|Lathe|Mill" },
+  { id: "f-brands", type: "ftc", text: "Name a company that sells parts FTC teams build robots with.",
+    items: "goBILDA|REV Robotics|AndyMark|ServoCity|TETRIX|Studica|McMaster-Carr|Pitsco|Axon|Swyft Robotics|Actobotics|Misumi|Vex Robotics|West Coast Products" },
+  { id: "f-match", type: "ftc", text: "Name a word you'd hear during an FTC match.",
+    items: "Autonomous|TeleOp|Endgame|Alliance|Penalty|Driver|Red alliance|Blue alliance|Park|Foul|Major foul|Minor foul|Ranking points|Field|Referee|Head referee|Drive coach|Human player|Match timer|Yellow card|Red card|Disabled|Driver Station|Init|Field reset|Pin|Tile|Transition period" },
+  { id: "f-events", type: "ftc", text: "Name a kind of FTC event or a step in an FTC season.",
+    items: "Kickoff|Qualifier|League meet|State championship|World Championship|Scrimmage|Premier event|Super-regional|League tournament|Regional championship|Interview|Judging|Alliance selection|Inspection|Practice match|Playoffs|Qualification match|Semifinal|Final|Pit|Outreach" },
+  { id: "f-judging", type: "ftc", text: "Name something judges look at, or a value FIRST teaches.",
+    items: "Gracious Professionalism|Coopertition|Engineering portfolio|Outreach|Engineering notebook|Teamwork|Inclusion|Discovery|Innovation|Impact|Fun|Sustainability|Team plan|Interview|Business plan|Mentoring|Core Values" },
+  { id: "f-programs", type: "ftc", text: "Name a FIRST program or a well-known FIRST event.",
+    items: "FIRST Robotics Competition|FIRST Tech Challenge|FIRST LEGO League|World Championship|FIRST LEGO League Challenge|FIRST LEGO League Explore|FIRST LEGO League Discover|FIRST Global Challenge|Festival of Champions|FIRST Championship|FIRST LEGO League Jr" },
+  { id: "f-auto", type: "ftc", text: "Name something an FTC robot does or uses in autonomous.",
+    items: "Odometry|Encoder|AprilTag|Path following|Camera|IMU|Webcam|Parking|PID|Trajectory|Color sensor|Spline|Localization|Vision|Gyro|Feedforward|Dead wheel|Motion profile|Kalman filter|Pure pursuit|Distance sensor|Limelight|Heading correction" },
+];

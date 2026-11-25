@@ -63,7 +63,7 @@ def head(title, desc, page, root=".", noindex=False, path="", css=(), js=(), jso
   <script>try{{var t=JSON.parse(localStorage.getItem("ss-theme"));if(!t){{var d=localStorage.getItem("ss-theme-default");t=d==="light"||(d==="system"&&matchMedia("(prefers-color-scheme: light)").matches)?"light":"dark"}}document.documentElement.dataset.theme=t==="light"?"light":"dark";var l=localStorage.getItem("ss-look-css");if(l){{var st=document.createElement("style");st.id="ss-look";st.textContent=l;document.head.appendChild(st)}}if(localStorage.getItem("ss-no-motion")==="1")document.documentElement.classList.add("no-motion")}}catch(e){{document.documentElement.dataset.theme="dark"}}</script>
   <script src="{r}/assets/js/site.js?v={V}" defer></script>
   <script src="{r}/assets/js/trophies.js?v={V}" defer></script>
-  <script src="{r}/assets/js/steel-ai.js?v={V}" defer></script>{extra_js}{ld}{extra_head}
+{extra_js}{ld}{extra_head}
 </head>
 <body data-page="{page}">
   <noscript><div class="noscript">This site needs JavaScript for live stats and games. You can still reach us at <a href="mailto:surgesteel1@gmail.com">surgesteel1@gmail.com</a>.</div></noscript>
@@ -113,7 +113,7 @@ JSONLD = '{"@context":"https://schema.org","@type":"SportsTeam","name":"Steel Su
 pages["index.html"] = shell("Steel Surge — FTC Robotics Team 27254", "Steel Surge is FIRST Tech Challenge team 27254 from Kennett Square, PA. Meet the team, follow our season live, and play our robot arcade.", "home", f'''    <section class="hero">
       <canvas class="hero-canvas" aria-hidden="true"></canvas>
       <div class="wrap">
-        <div class="hero-emblem" aria-hidden="true"><img class="logo-dark" src="assets/img/logo-hero.webp" alt="" width="560" height="560" fetchpriority="high"><img class="logo-light" src="assets/img/logo-tile.webp" alt="" width="560" height="560"></div>
+        <div class="hero-emblem" aria-hidden="true"><img class="logo-dark" src="assets/img/logo-hero.webp" alt="" width="560" height="560" fetchpriority="high"><img class="logo-light" src="assets/img/logo-tile.webp" alt="" width="560" height="560" loading="lazy"></div>
         <span class="hero-badge" id="hero-badge"><b>FTC #27254</b> Kennett Square, PA</span>
         <h1>Steel<br><span class="surge-text">Surge</span></h1>
         <p class="lead" id="hero-lead"></p>
@@ -147,6 +147,7 @@ pages["team.html"] = shell("Team" + T, "Meet the students behind Steel Surge, FT
   + section(head_block("Made by Steel Surge", "Designed by our team", "Beyond the robot, we design our own merch, 3D-printed team gear, and shop tools.") + '\n        <div class="projects-grid" id="projects-grid"></div>', attrs=' id="projects" hidden')
   + section(head_block("Giving back", "Outreach log", "Every event where we shared robotics with our community, newest first.") + '\n        <div class="outreach-summary" id="outreach-summary"></div>\n        <div class="outreach-list" id="outreach-list"></div>', attrs=' id="outreach" hidden')
   + section(head_block("Mentors", "The people who guide us") + '\n        <div class="grid cols-3" id="mentor-grid"></div>', attrs=' id="mentors" hidden')
+  + section(head_block("What's coming up", "Season calendar", "Competitions appear here automatically as soon as we register. Add any event to your own calendar.", '<button class="btn sm" type="button" id="calendar-all" hidden>Add all to my calendar (.ics)</button>') + '\n        <div class="events" id="calendar-list"></div>', cls="section alt", attrs=' id="calendar"')
   + section(head_block("Our story", "Milestones and awards", "Official awards appear here automatically from FTCScout.", f'<a class="link-arrow" id="results-link" href="https://ftcscout.org/teams/27254" target="_blank" rel="noopener">Every event and match on FTCScout {A}</a>') + '\n        <div class="timeline" id="timeline"></div>', attrs=' id="milestones"')
   + section(f'''        <div class="cta-band reveal">
           <div><h2>Want to join Steel Surge?</h2><p>Builders, coders, designers, and storytellers welcome. No experience needed, just curiosity and commitment.</p></div>
@@ -487,11 +488,11 @@ pages["arcade/odometry.html"] = game_page(
     f'<div class="touch-pad">{dpad()}<div class="pad-col"><button class="pad-btn" type="button" data-act="replay">{ICO["rewind"]}Replay</button></div></div>', "Odometry: a robot on a 6 by 6 field following a route")
 
 pages["arcade/kilovolt.html"] = game_page(
-    "kilovolt", "Kilovolt", "Trivia · Daily", "Kilovolt: a daily FTC team-name trivia game from Steel Surge, FTC team 27254. Name real teams; the rarer the answer, the bigger the charge.",
+    "kilovolt", "Kilovolt", "Trivia · Daily", "Kilovolt: a daily FTC trivia game from Steel Surge, FTC team 27254. Name real teams, old game elements, awards, and robot parts; the rarer the answer, the bigger the charge.",
     [("round", "Prompt", "1/7"), ("charge", "Charge", "0 V"), ("streak", "Streak", "0")], [],
-    ["Each round has 7 prompts, like “Name an FTC team from Ohio” or “Name an FTC team with an animal in its name.”", "Type the <b>name</b> of a real FTC team that fits. Small typos are OK. You get one answer per prompt, and the clock is running.", "Any correct answer charges you up, but the less famous the team, the more it's worth: <b>Spark</b> (100 V), Static, Current, Voltage, Overload, and <b>Full Surge</b> (1,000 V).", "Fame is based on each team's awards, seasons, and events, using official data from FTCScout. Answers cover every FTC team that has competed since 2019–20.", "Everyone gets the same <b>Daily Charge</b>, once a day. Want more? Play <b>Unlimited</b> rounds as often as you like."],
+    ["Each round has 7 prompts. Five ask for a team, like “Name an FTC team from Ohio.” One asks about a past FTC game, like “Name a game element from SKYSTONE,” and one about FTC in general: awards, robot parts, sensors, code, and more.", "For team prompts, type the <b>name</b> of a real FTC team that fits. Small typos are OK. You get one answer per prompt, and the clock is running.", "Any correct answer charges you up, but the less famous the team, the more it's worth: <b>Spark</b> (100 V), Static, Current, Voltage, Overload, and <b>Full Surge</b> (1,000 V).", "Team fame is based on each team's awards, seasons, and events, using official data from FTCScout, and covers every FTC team since 2019–20. On the other prompts, the less obvious answers are worth more.", "Everyone gets the same <b>Daily Charge</b>, once a day. Want more? Play <b>Unlimited</b> rounds as often as you like.", "<b>Round settings</b> shape Unlimited rounds: 5 to 15 prompts or <b>Endless</b> (keep going until your third miss), teams only or FTC knowledge only, the topics you want, prompts that match your difficulty, no timer, and no repeats. Custom rounds don't count toward your best score.", "<b>Practice</b> has no timer and no score, and shows every answer after each prompt, so it's a good way to study FTC history.", "<b>My stats</b> shows your Daily Charge history: streaks, best and average days, the last 30 days, and how your answers spread across the tiers."],
     [("Submit an answer", ["Enter"]), ("Next prompt", ["Enter"]), ("Skip", ["Click Skip"])],
-    "", "Kilovolt: a team-name trivia game")
+    "", "Kilovolt: an FTC trivia game", extra_js=("arcade/kilovolt-facts.js",))
 
 pages["editor.html"] = head("Team editor · Steel Surge", "Team-only content editor.", "editor", noindex=True, css=("editor.css",), js=("editor.js",)) + '''  <div id="app"><div class="ed-lock"><p class="muted">Loading editor…</p></div></div>
 </body>

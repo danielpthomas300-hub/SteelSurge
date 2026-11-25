@@ -52,7 +52,7 @@
   --text: #0d1520;
   --muted: #4c5a6b;
   --dim: #66748a;
-  --surge: #0a6fd8;
+  --surge: #0a6cd2;
   --surge-2: #0a5bb3;
   --surge-ink: #ffffff;
   --surge-soft: rgba(10, 111, 216, 0.09);
@@ -1141,3 +1141,22 @@ a, button { -webkit-tap-highlight-color: transparent; }
 html.no-motion { scroll-behavior: auto; }
 html.no-motion .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
 html.no-motion *, html.no-motion *::before, html.no-motion *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
+
+/* ---------- Season calendar ---------- */
+.cal-event { grid-template-columns: 84px minmax(0, 1fr) auto; }
+.cal-info { display: grid; gap: 6px; justify-items: start; min-width: 0; }
+.cal-info h3 a { color: inherit; }
+.cal-info h3 a:hover { color: var(--surge); }
+.cal-info p { margin: 0; }
+.cal-detail { font-size: 13.5px !important; }
+.cal-event.is-comp { border-color: color-mix(in srgb, var(--ok) 30%, var(--line)); }
+.cal-add { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.cal-add .btn { justify-content: center; white-space: nowrap; }
+.cal-add svg { width: 15px; height: 15px; }
+.next-event .cal-add { flex-direction: row; flex-wrap: wrap; margin-top: 4px; }
+.next-event .cal-more { justify-self: start; }
+@media (max-width: 720px) {
+  .cal-event { grid-template-columns: 64px minmax(0, 1fr); }
+  .cal-event .cal-add { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; }
+  .cal-add .btn { flex: 1; }
+}
