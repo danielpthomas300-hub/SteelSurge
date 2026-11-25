@@ -22,7 +22,7 @@
   const GROUPS = {
     site: "Exploring the site", overclock: "Overclock", gridlock: "Gridlock", echo: "Echo", pitcrew: "Pit Crew",
     autonomous: "Autonomous", signal: "Signal Lost", flywheel: "Flywheel", mecanum: "Mecanum Rush", wireup: "Wire Up",
-    stackup: "Stack Up", balance: "Balance", odometry: "Odometry", kilovolt: "Kilovolt", all: "Steel Surge",
+    stackup: "Stack Up", balance: "Balance", odometry: "Odometry", kilovolt: "Kilovolt", codelab: "Code Lab", all: "Steel Surge",
   };
   const MAIN_PAGES = ["home", "team", "ftc", "calculator", "media", "arcade", "sponsors", "contact", "trophies"];
   const GAME_IDS = ["overclock", "gridlock", "echo", "pitcrew", "autonomous", "signal", "flywheel", "mecanum", "wireup", "stackup", "balance", "odometry", "kilovolt"];
@@ -117,6 +117,18 @@
     ["kv-streak", "kilovolt", "silver", "Daily Current", "Play the Kilovolt Daily Charge 3 days in a row."],
     ["kv-extreme", "kilovolt", "gold", "Lightning Round", "Reach 2,500 V in one Kilovolt round on Extreme."],
     // Platinum
+    // Code Lab
+    ["cl-learn-all", "codelab", "silver", "Bookworm", "Read every Code Lab lesson."],
+    ["cl-first-bug", "codelab", "bronze", "Bug Spotter", "Solve your first Debug It question in the Code Lab."],
+    ["cl-step", "codelab", "bronze", "Line by Line", "Step through your code one line at a time."],
+    ["cl-teleop", "codelab", "silver", "In the Driver's Seat", "Finish a TeleOp challenge by driving the robot yourself."],
+    ["cl-export", "codelab", "bronze", "Ship It", "Download your OpMode as a .java file for Android Studio."],
+    ["cl-debug-all", "codelab", "gold", "Exterminator", "Solve every Debug It question."],
+    ["cl-first-drill", "codelab", "bronze", "Green Tests", "Pass every test on a Code Lab drill."],
+    ["cl-drills-all", "codelab", "gold", "Method Master", "Pass every Write It drill."],
+    ["cl-first-run", "codelab", "bronze", "Hello, Robot", "Run your code on the Code Lab field."],
+    ["cl-first-auto", "codelab", "silver", "Autonomous Rookie", "Complete a Drive It challenge."],
+    ["cl-auto-all", "codelab", "gold", "Auto Ace", "Complete every Drive It challenge."],
     ["platinum", "all", "platinum", "Surge Ahead", "Earn every other trophy."],
   ].map(([id, group, tier, name, desc, hidden]) => ({ id, group, tier, name, desc, hidden: !!hidden }));
   const BY_ID = Object.fromEntries(LIST.map((t) => [t.id, t]));
@@ -213,7 +225,7 @@
     const fmt = (ts) => new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
     let filter = "all";
     const draw = () => {
-      const groups = Object.keys(GROUPS).filter((g) => filter === "all" || (filter === "site" ? g === "site" || g === "all" : g !== "site" && g !== "all"));
+      const groups = Object.keys(GROUPS).filter((g) => filter === "all" || (filter === "site" ? g === "site" || g === "all" : filter === "codelab" ? g === "codelab" : g !== "site" && g !== "all" && g !== "codelab"));
       host.innerHTML = `
         <div class="tc-summary reveal in">
           <div class="tc-level"><span>Level</span><b>${s.level}</b></div>
@@ -223,7 +235,7 @@
             <div class="tc-tiers">${Object.keys(TIERS).map((k) => `<span>${cup(k, 22)} ${s.counts[k]}</span>`).join("")}</div>
           </div>
         </div>
-        <div class="tc-filters" role="group" aria-label="Show trophies">${[["all", "All"], ["site", "Site"], ["games", "Games"]].map(([k, l]) => `<button class="chip" type="button" data-f="${k}" aria-pressed="${filter === k}">${l}</button>`).join("")}</div>
+        <div class="tc-filters" role="group" aria-label="Show trophies">${[["all", "All"], ["site", "Site"], ["games", "Games"], ["codelab", "Code Lab"]].map(([k, l]) => `<button class="chip" type="button" data-f="${k}" aria-pressed="${filter === k}">${l}</button>`).join("")}</div>
         ${groups.map((g) => {
           const ts = LIST.filter((t) => t.group === g), got = ts.filter((t) => e[t.id]).length;
           return `<section class="tc-group"><h2>${GROUPS[g]} <span>${got}/${ts.length}</span></h2><div class="tc-list">${ts.map((t) => {

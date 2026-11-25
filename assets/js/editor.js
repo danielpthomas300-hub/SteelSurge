@@ -21,37 +21,47 @@
 
   /* ---------------- Sidebar groups and "view on site" links ---------------- */
   const GROUPS = [
-    ["Site", ["controls"]],
+    ["Site", ["overview", "controls"]],
     ["Team", ["team", "members", "values", "projects", "mentors"]],
     ["Season", ["achievements", "outreach"]],
     ["Media", ["featuredVideos", "updates"]],
     ["Sponsors & contact", ["sponsors", "tiers", "contact"]],
     ["Settings", ["settings"]],
   ];
-  const PAGE_FOR = { team: "index.html", members: "team.html", values: "team.html", projects: "team.html", mentors: "team.html", outreach: "index.html", achievements: "team.html", featuredVideos: "media.html", updates: "media.html", sponsors: "sponsors.html", tiers: "sponsors.html", contact: "contact.html" };
+  const PAGE_FOR = { overview: "index.html", controls: "index.html", team: "index.html", members: "team.html", values: "team.html", projects: "team.html", mentors: "team.html", outreach: "index.html", achievements: "team.html", featuredVideos: "media.html", updates: "media.html", sponsors: "sponsors.html", tiers: "sponsors.html", contact: "contact.html" };
   const eye = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
   const lockIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+  const searchIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
+  const redoIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>';
+  const themeIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg>';
+  const extIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+  const trashIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>';
   const undoIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>';
 
   /* ---------------- Schema: what can be edited, in plain words ---------------- */
   const DEPTS = ["Mechanical", "Programming", "Outreach", "Leadership", "Other"];
   const SECTIONS = [
+    { id: "overview", title: "Overview", icon: "chart", desc: "Everything at a glance: what's on the site, what needs attention, and quick ways to post something new.", get: () => null, set: () => {}, custom: true },
     { id: "controls", title: "Master controls", icon: "gear", desc: "Switches for the whole site: maintenance mode, a site-wide announcement, and which features are turned on. Like every change here, they go live when you publish.",
       get: (c) => ({ ...(window.SS?.CONTROL_DEFAULTS || {}), ...(c.controls || {}) }), set: (c, v) => (c.controls = v),
       fields: [
         { k: "_mx", label: "Maintenance mode", type: "heading", hint: "Shows a 'we'll be right back' page on every page of the site. The Team editor keeps working, and on this device you can still view the site." },
         { k: "maintenance", label: "Turn on maintenance mode", type: "bool" },
         { k: "maintenanceTitle", label: "Headline", type: "text", hint: "e.g. We'll be right back" },
-        { k: "maintenanceMessage", label: "Message", type: "textarea" },
+        { k: "maintenanceMessage", label: "Message", type: "textarea", max: 240 },
         { k: "maintenanceUntil", label: "Expected back (optional)", type: "text", hint: "e.g. Sunday evening. Leave empty to hide." },
         { k: "_banner", label: "Announcement banner", type: "heading", hint: "A strip across the top of every page. Visitors can hide it; it comes back for them when you change the text." },
         { k: "banner", label: "Show the announcement banner", type: "bool" },
         { k: "bannerText", label: "Announcement", type: "text", hint: "e.g. We're competing at the Chester County Qualifier this Saturday!" },
         { k: "bannerLink", label: "Link (optional)", type: "text", hint: "A full web address, or a page on this site like ftc.html. Adds a 'Learn more' link." },
         { k: "bannerTone", label: "Style", type: "select", options: [["info", "Info (steel blue)"], ["celebrate", "Celebrate (gold)"], ["warning", "Heads up (orange)"]] },
+        { k: "bannerUntil", label: "Hide it after (optional)", type: "date", hint: "The banner stops showing after this day, so an event reminder never goes stale." },
         { k: "_features", label: "Features", type: "heading", hint: "Switch parts of the site off. Their links disappear, and their pages say they're taking a break." },
         { k: "arcade", label: "Arcade games", type: "bool" },
-        { k: "calculator", label: "Score Calculator", type: "bool" },
+        { k: "calculator", label: "Match tools page (score calculator and scouting)", type: "bool" },
+        { k: "codelab", label: "Code Lab (programming practice)", type: "bool" },
+        { k: "scouting", label: "Scouting tool (on the Match tools page)", type: "bool" },
+        { k: "weekly", label: "Weekly arcade challenge", type: "bool" },
         { k: "media", label: "Media page", type: "bool" },
         { k: "trophies", label: "Trophies and trophy case", type: "bool" },
         { k: "steelAI", label: "Steel AI assistant", type: "bool" },
@@ -59,12 +69,12 @@
         { k: "searchEngines", label: "Let search engines list the site", type: "bool", hint: "Turn off to ask Google and others not to show the site in search results." },
       ] },
     { id: "team", title: "Team info", icon: "flag", desc: "Your name, intro, location, and links used across the whole site.",
-      get: (c) => c.team, set: (c, v) => (c.team = v),
+      get: (c) => ({ ...c.team, _showRecords: !!c.showRecords }), set: (c, v) => { const { _showRecords, ...t } = v; c.team = t; c.showRecords = !!_showRecords; },
       fields: [
         { k: "name", label: "Team name", type: "text", required: true },
         { k: "number", label: "FTC team number", type: "number", required: true, hint: "Live stats and awards are pulled from FTCScout using this number." },
         { k: "motto", label: "Team motto", type: "text", hint: "e.g. Surge Ahead" },
-        { k: "intro", label: "Intro paragraph", type: "textarea", hint: "Shown on the home page under the big title." },
+        { k: "intro", label: "Intro paragraph", type: "textarea", max: 320, hint: "Shown on the home page under the big title." },
         { k: "location", label: "Location", type: "text" },
         { k: "school", label: "Schools", type: "text" },
         { k: "rookieYear", label: "Rookie year", type: "number" },
@@ -73,23 +83,26 @@
         { k: "instagram", label: "Instagram handle", type: "text", hint: "e.g. @steelsurge27254. Leave empty to hide. When set, Instagram appears on the Media and Contact pages and in the footer." },
         { k: "youtubeChannelId", label: "YouTube channel ID", type: "text", hint: "Starts with UC… — find it in your channel's URL. Videos update automatically." },
         { k: "socials", label: "Social links", type: "list", itemLabel: "link", summary: (i) => i.label || "New link", fields: [{ k: "label", label: "Label", type: "text" }, { k: "url", label: "Link", type: "url" }] },
+        { k: "_showRecords", label: "Show win-loss records from FTCScout", type: "bool", hint: "Adds each event's rank and W-L-T. Off shows matches played instead." },
       ] },
     { id: "members", title: "Team members", icon: "users", desc: "Everyone on the team page. Use the arrows to change the order. No personal phone numbers or emails, please.",
-      get: (c) => c.members, set: (c, v) => (c.members = v), list: true, itemLabel: "member", summary: (m) => m.name || "New member", sub: (m) => m.role,
+      get: (c) => c.members, set: (c, v) => (c.members = v), list: true, itemLabel: "member", summary: (m) => m.name || "New member", sub: (m) => (m.alumni ? `Alumni${m.gradYear ? " · Class of " + m.gradYear : ""}` : m.role),
       fields: [
         { k: "name", label: "Full name", type: "text", required: true },
         { k: "role", label: "Role", type: "text", hint: "e.g. Programming Lead" },
         { k: "dept", label: "Department", type: "select", options: DEPTS, hint: "Used for the filter buttons on the team page." },
         { k: "photo", label: "Photo", type: "image", folder: "assets/img/team" },
-        { k: "bio", label: "Short bio", type: "textarea", hint: "2–3 sentences. Avoid grade levels so it doesn't go out of date." },
+        { k: "bio", label: "Short bio", type: "textarea", max: 400, hint: "2–3 sentences. Avoid grade levels so it doesn't go out of date." },
         { k: "funFact", label: "Fun fact (optional)", type: "text", hint: "Shown under the bio. e.g. 'Undefeated ping pong champion of the build room.'" },
+        { k: "alumni", label: "Alumni (graduated or moved on)", type: "bool", hint: "Moves them to a small Alumni list at the bottom of the Team page instead of the main grid." },
+        { k: "gradYear", label: "Class of (optional)", type: "number", hint: "e.g. 2027. Shown next to alumni names." },
       ] },
     { id: "values", title: "Team values", icon: "heart", desc: "The 'What Steel Surge stands for' cards on the team page.",
       get: (c) => c.values || [], set: (c, v) => (c.values = v), list: true, itemLabel: "value", summary: (v) => v.title || "New value",
-      fields: [{ k: "title", label: "Title", type: "text", required: true }, { k: "body", label: "Description", type: "textarea" }] },
+      fields: [{ k: "title", label: "Title", type: "text", required: true }, { k: "body", label: "Description", type: "textarea", max: 220 }] },
     { id: "projects", title: "Team projects", icon: "gear", desc: "The 'Made by Steel Surge' gallery on the team page: things you've designed and built besides the robot.",
       get: (c) => c.projects || [], set: (c, v) => (c.projects = v), list: true, itemLabel: "project", summary: (p) => p.title || "New project",
-      fields: [{ k: "title", label: "Title", type: "text", required: true }, { k: "body", label: "Description", type: "textarea" }, { k: "image", label: "Image", type: "image", folder: "assets/img/projects", square: false }] },
+      fields: [{ k: "title", label: "Title", type: "text", required: true }, { k: "body", label: "Description", type: "textarea", max: 260 }, { k: "image", label: "Image", type: "image", folder: "assets/img/projects", square: false }] },
     { id: "outreach", title: "Outreach", icon: "users", desc: "Log each outreach event. The home and sponsor pages add up this season's hours automatically, and the Team page lists every event.",
       get: (c) => c.outreach || {}, set: (c, v) => (c.outreach = v),
       fields: [
@@ -120,7 +133,7 @@
       fields: [{ k: "id", label: "YouTube link or video ID", type: "text", required: true, hint: "Paste the video's link, e.g. https://youtu.be/IZyD3Pkvvr4" }, { k: "title", label: "Title", type: "text" }] },
     { id: "updates", title: "Team updates", icon: "pencil", desc: "Short build-log posts on the Media page. Dated posts are shown newest first.",
       get: (c) => c.updates, set: (c, v) => (c.updates = v), list: true, itemLabel: "update", summary: (u) => u.title || "New update", sub: (u) => u.date,
-      fields: [{ k: "date", label: "Date", type: "date", hint: "Optional. Dated posts are shown newest first." }, { k: "title", label: "Title", type: "text", required: true }, { k: "body", label: "Text", type: "textarea" }] },
+      fields: [{ k: "date", label: "Date", type: "date", hint: "Optional. Dated posts are shown newest first." }, { k: "title", label: "Title", type: "text", required: true }, { k: "body", label: "Text", type: "textarea", max: 700 }] },
     { id: "sponsors", title: "Sponsors", icon: "heart", desc: "The sponsor wall and the scrolling sponsor strip on the home page.",
       get: (c) => c.sponsors, set: (c, v) => (c.sponsors = v), list: true, itemLabel: "sponsor", summary: (s) => s.name || "New sponsor", sub: (s) => s.tier,
       fields: [
@@ -132,7 +145,7 @@
     { id: "tiers", title: "Sponsor tiers", icon: "chart", desc: "The pitch and pricing on the Sponsors page.",
       get: (c) => ({ sponsorPitch: c.sponsorPitch, sponsorPacketUrl: c.sponsorPacketUrl || "", sponsorTiers: c.sponsorTiers }), set: (c, v) => { c.sponsorPitch = v.sponsorPitch; c.sponsorPacketUrl = v.sponsorPacketUrl; c.sponsorTiers = v.sponsorTiers; },
       fields: [
-        { k: "sponsorPitch", label: "Sponsor pitch", type: "textarea" },
+        { k: "sponsorPitch", label: "Sponsor pitch", type: "textarea", max: 600 },
         { k: "sponsorPacketUrl", label: "Sponsor packet link (optional)", type: "url", hint: "A Google Drive or PDF link. Adds a 'Download our sponsor packet' button." },
         { k: "sponsorTiers", label: "Tiers", type: "list", itemLabel: "tier", summary: (t) => `${t.name || "New tier"}${t.amount ? " · $" + Number(t.amount).toLocaleString() : ""}`, fields: [
           { k: "name", label: "Tier name", type: "text", required: true }, { k: "amount", label: "Amount ($ per season)", type: "number" },
@@ -145,7 +158,7 @@
         { k: "reasons", label: "Topics", type: "strings", itemLabel: "topic" },
         { k: "formEndpoint", label: "Form delivery address", type: "url", hint: "Advanced. FormSubmit endpoint that emails messages to the team. Leave as is unless the team email changes." },
       ] },
-    { id: "settings", title: "Editor settings", icon: "gear", desc: "Change the editor passcode. The new passcode works once you publish.",
+    { id: "settings", title: "Editor settings", icon: "gear", desc: "Change the editor passcode, and back up or restore your draft.",
       get: (c) => c.dev, set: (c, v) => (c.dev = v), custom: true },
   ];
 
@@ -156,8 +169,29 @@
         <div class="field"><label for="np2">Type it again</label><input class="input" id="np2" type="password" autocomplete="new-password"></div>
         <p class="field-error" id="np-err" aria-live="polite"></p>
         <div><button class="btn primary sm" type="button" id="np-save">Set new passcode</button></div>
-        <p class="hint">Only a scrambled fingerprint of the passcode is stored in the site files — never the passcode itself. Share it only with team members who update the site.</p>
-      </div>`;
+        <p class="hint">Only a scrambled fingerprint of the passcode is stored in the site files — never the passcode itself. Share it only with team members who update the site. The new passcode works once you publish.</p>
+      </div>
+      <div class="ed-group-head ed-settings-gap"><h3>Back up and restore</h3><p class="hint">Drafts are saved in this browser only. Download a backup to move a draft to another computer, or to keep a copy before big changes.</p></div>
+      <div class="ed-backup">
+        <button class="btn sm" type="button" id="bk-save">${icon("copy")} Download a backup of my draft</button>
+        <label class="btn sm ghost">${undoIco} Restore from a backup<input type="file" accept="application/json,.json" id="bk-load" hidden></label>
+      </div>
+      <p class="field-error" id="bk-err" aria-live="polite"></p>`;
+    $("#bk-save", host).addEventListener("click", () => {
+      const day = new Date().toISOString().slice(0, 10);
+      download(JSON.stringify(draft, null, 2) + "\n", `steel-surge-draft-${day}.json`);
+      window.SS?.toast("Backup downloaded");
+    });
+    $("#bk-load", host).addEventListener("change", async (e) => {
+      const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+      const err = $("#bk-err", host);
+      try {
+        const data = JSON.parse(await f.text());
+        if (!data || typeof data !== "object" || !data.team || !Array.isArray(data.members)) throw new Error("That file isn't a Steel Surge content backup.");
+        if (!confirm("Replace your current draft with this backup? (You can undo this with Ctrl+Z.)")) return;
+        draft = data; changed(); record(true); renderNav(); renderPanel(); err.textContent = ""; window.SS?.toast("Backup restored into your draft");
+      } catch (x) { err.textContent = x.message || "Couldn't read that file."; }
+    });
     $("#np-save", host).addEventListener("click", async () => {
       const a = $("#np1", host).value.trim(), b = $("#np2", host).value.trim(), err = $("#np-err", host);
       if (a.length < 6) { err.textContent = "Use at least 6 characters."; return; }
@@ -165,6 +199,151 @@
       draft.dev = { ...draft.dev, passcodeHash: await sha256(a) }; err.textContent = "";
       $("#np1", host).value = $("#np2", host).value = ""; changed(); window.SS?.toast("Passcode updated in your draft — publish to make it live");
     });
+  }
+
+  /* ---------------- Overview dashboard ---------------- */
+  const today = () => new Date().toISOString().slice(0, 10);
+  const seasonStart = () => { const n = new Date(), y = n.getMonth() >= 8 ? n.getFullYear() : n.getFullYear() - 1; return { y, start: `${y}-09-01`, label: `${y}–${String(y + 1).slice(2)}` }; };
+  const daysAgo = (d) => Math.floor((Date.now() - new Date(d)) / 864e5);
+  const fmtDay = (d) => new Date(d + (d.length === 7 ? "-01" : "") + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: d.length === 7 ? undefined : "numeric", year: "numeric" });
+  /** Things worth fixing, newest problems first: [level, text, section] */
+  function attention(c) {
+    const out = [], ctl = { ...(window.SS?.CONTROL_DEFAULTS || {}), ...(c.controls || {}) }, se = seasonStart();
+    if (ctl.maintenance) out.push(["warn", "Maintenance mode is on. Visitors only see the “We'll be right back” page.", "controls"]);
+    if (ctl.searchEngines === false) out.push(["warn", "Search engines are switched off, so Google won't list the site.", "controls"]);
+    if (ctl.banner && ctl.bannerUntil && ctl.bannerUntil < today()) out.push(["info", "The announcement banner's end date has passed, so it's hidden. Turn it off or pick a new date.", "controls"]);
+    if (ctl.banner && !String(ctl.bannerText || "").trim()) out.push(["warn", "The announcement banner is on but has no text.", "controls"]);
+    const evs = (c.outreach?.events || []).filter((e) => String(e.date || "") >= se.start);
+    if (!evs.length) out.push(["warn", `No outreach logged for ${se.label} yet. The home page shows “${c.outreach?.hours || "nothing"}” until you do.`, "outreach"]);
+    const last = (c.updates || []).map((u) => u.date).filter(Boolean).sort().pop();
+    if (!last) out.push(["info", "No dated team updates yet. Dates show visitors the build log is current.", "updates"]);
+    else if (daysAgo(last) > 45) out.push(["warn", `The last team update was ${daysAgo(last)} days ago. Post a quick build-log update.`, "updates"]);
+    const active = (c.members || []).filter((m) => !m.alumni);
+    const noPhoto = active.filter((m) => !m.photo).map((m) => m.name || "a member"), noBio = active.filter((m) => !String(m.bio || "").trim()).map((m) => m.name || "a member");
+    if (noPhoto.length) out.push(["info", `No photo yet for ${noPhoto.slice(0, 3).join(", ")}${noPhoto.length > 3 ? ` and ${noPhoto.length - 3} more` : ""}.`, "members"]);
+    if (noBio.length) out.push(["info", `No bio yet for ${noBio.slice(0, 3).join(", ")}${noBio.length > 3 ? ` and ${noBio.length - 3} more` : ""}.`, "members"]);
+    const sp = c.sponsors || [];
+    if (!sp.length) out.push(["info", "No sponsors are listed yet. The sponsor wall shows a “become our first sponsor” message.", "sponsors"]);
+    else { const noLogo = sp.filter((x) => !x.logo).length; if (noLogo) out.push(["info", `${noLogo} sponsor${noLogo === 1 ? " has" : "s have"} no logo (their name is shown instead).`, "sponsors"]); }
+    if (!c.team?.instagram) out.push(["info", "No Instagram handle set. Social links appear across the site once it's added.", "team"]);
+    return out;
+  }
+  const QUICK = [
+    ["outreach", "events", "Log an outreach event", "users", () => ({ date: today(), title: "", place: "", hours: "", people: "", detail: "" }), "start"],
+    ["updates", null, "Post a team update", "pencil", () => ({ date: today(), title: "", body: "" }), "start"],
+    ["achievements", null, "Add a milestone or award", "trophy", () => ({ date: today().slice(0, 7), title: "", detail: "", icon: "milestone" }), "start"],
+    ["members", null, "Add a team member", "users", () => ({ name: "", role: "", dept: DEPTS[0], photo: "", bio: "", funFact: "" }), "end"],
+    ["sponsors", null, "Add a sponsor", "heart", () => ({ name: "", tier: "", url: "", logo: "" }), "end"],
+    ["controls", null, "Post an announcement", "flag", null, "field:banner"],
+  ];
+  function quickAdd([secId, nested, , , blank, where]) {
+    const sec = SECTIONS.find((x) => x.id === secId);
+    if (!blank) { jumpTo({ sec: secId, field: where.split(":")[1] }); return; }
+    if (nested) {
+      const obj = { ...(sec.get(draft) || {}) }, list = [...(obj[nested] || [])];
+      where === "start" ? list.unshift(blank()) : list.push(blank()); obj[nested] = list; sec.set(draft, obj);
+      sec.fields.find((f) => f.k === nested).__openIndex = where === "start" ? 0 : list.length - 1;
+    } else {
+      const list = [...(sec.get(draft) || [])]; where === "start" ? list.unshift(blank()) : list.push(blank()); sec.set(draft, list);
+      sec.__openIndex = where === "start" ? 0 : list.length - 1;
+    }
+    changed(); record(true);
+    current = secId; history.replaceState(null, "", "#" + current); renderNav(); renderPanel(); scrollTo(0, 0);
+    setTimeout(() => { const el = $("#panel .ed-item.open"); if (el) { el.scrollIntoView({ block: "center" }); el.classList.add("ed-flash"); setTimeout(() => el.classList.remove("ed-flash"), 1600); $("input:not([type=date]):not([type=month]), textarea", el)?.focus({ preventScroll: true }); } }, 60);
+  }
+  function overviewPanel(host) {
+    const c = draft, se = seasonStart();
+    const evs = (c.outreach?.events || []).filter((e) => String(e.date || "") >= se.start), hrs = Math.round(evs.reduce((t, e) => t + (Number(e.hours) || 0), 0) * 10) / 10;
+    const active = (c.members || []).filter((m) => !m.alumni), alumni = (c.members || []).length - active.length;
+    const last = (c.updates || []).map((u) => u.date).filter(Boolean).sort().pop();
+    const issues = attention(c), dirty = dirtySections().filter((x) => x.id !== "overview");
+    const tile = (n, label, sub, sec) => `<button type="button" class="ed-stat" data-go="${sec}"><b>${n}</b><span>${label}</span><small>${sub}</small></button>`;
+    host.innerHTML = `
+      <div class="ed-ov">
+        <div class="ed-stats">
+          ${tile(active.length, "Team members", alumni ? `+ ${alumni} alumni` : "on the Team page", "members")}
+          ${tile(hrs || 0, "Outreach hours", `${evs.length} event${evs.length === 1 ? "" : "s"} in ${se.label}`, "outreach")}
+          ${tile((c.sponsors || []).length, "Sponsors", `${(c.sponsorTiers || []).length} tiers`, "sponsors")}
+          ${tile(last ? fmtDay(last) : "—", "Latest update", last ? `${daysAgo(last)} days ago` : "none dated yet", "updates")}
+        </div>
+        <div class="ed-ov-grid">
+          <section class="ed-ov-card"><h2>Quick actions</h2><div class="ed-quick">${QUICK.map((q, i) => `<button type="button" class="ed-quick-btn" data-q="${i}"><i>${icon(q[3])}</i><span>${q[2]}</span></button>`).join("")}</div></section>
+          <section class="ed-ov-card"><h2>Needs attention ${issues.length ? `<span class="ed-pill">${issues.length}</span>` : ""}</h2>
+            ${issues.length ? `<ul class="ed-issues">${issues.map(([lv, t, sec]) => `<li class="${lv}"><span class="ed-issue-dot"></span><p>${esc(t)}</p><button type="button" class="btn ghost sm" data-go="${sec}">Fix</button></li>`).join("")}</ul>`
+              : `<p class="ed-allgood">${icon("check")} Everything looks good.</p>`}</section>
+          <section class="ed-ov-card"><h2>Your draft</h2>
+            ${dirty.length ? `<p class="muted">Changed on this device and not live yet:</p><ul class="ed-dirty-list">${dirty.map((d) => `<li><button type="button" data-go="${d.id}">${icon(d.icon)} ${esc(d.title)}</button></li>`).join("")}</ul>
+              <div class="ed-ov-actions"><button type="button" class="btn primary sm" id="ov-publish">Review and publish</button><a class="btn sm" href="index.html?preview=1" target="_blank" rel="noopener">${extIco} Preview</a></div>`
+              : `<p class="muted">No unpublished changes. Everything here matches the live site.</p>`}</section>
+          <section class="ed-ov-card ed-ov-tips"><h2>Tips</h2><ul>
+            <li><kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">K</kbd> searches every section, field, member, and sponsor.</li>
+            <li><b>Live preview</b> shows the real page next to the form as you type.</li>
+            <li><kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">Z</kbd> undoes any change, even a deleted item.</li>
+            <li>Back up your draft under <button type="button" class="ed-link" data-go="settings">Editor settings</button> before big changes.</li></ul></section>
+        </div>
+      </div>`;
+    $$("[data-go]", host).forEach((b) => b.addEventListener("click", () => jumpTo({ sec: b.dataset.go })));
+    $$("[data-q]", host).forEach((b) => b.addEventListener("click", () => quickAdd(QUICK[+b.dataset.q])));
+    $("#ov-publish", host)?.addEventListener("click", openPublish);
+  }
+
+  /* ---------------- Reviewing changes before publishing ---------------- */
+  const short = (v, f = {}) => {
+    if (f.type === "bool" || typeof v === "boolean") return v ? "on" : "off";
+    if (v === "" || v == null) return "(empty)";
+    if (Array.isArray(v)) return `${v.length} item${v.length === 1 ? "" : "s"}`;
+    const t = String(v); return `“${t.length > 60 ? t.slice(0, 58) + "…" : t}”`;
+  };
+  function fieldDiff(fields, a = {}, b = {}) {
+    const out = [];
+    for (const f of fields || []) {
+      if (f.type === "heading") continue;
+      const x = a?.[f.k], y = b?.[f.k]; if (JSON.stringify(x ?? "") === JSON.stringify(y ?? "")) continue;
+      if (f.type === "list" && f.summary) {
+        const xs = (x || []).map((i) => f.summary(i)), ys = (y || []).map((i) => f.summary(i));
+        ys.filter((n) => !xs.includes(n)).forEach((n) => out.push(["add", `${f.label}: added “${n}”`]));
+        xs.filter((n) => !ys.includes(n)).forEach((n) => out.push(["del", `${f.label}: removed “${n}”`]));
+        if (out.length === 0) out.push(["chg", `${f.label}: edited`]);
+      } else out.push(["chg", `${f.label.replace(/ \(optional\)$/, "")}: ${short(x, f)} → ${short(y, f)}`]);
+    }
+    return out;
+  }
+  function diffSection(sec) {
+    if (sec.custom) return sec.id === "settings" ? [["chg", "Passcode changed"]] : [];
+    const a = sec.get(published), b = sec.get(draft);
+    if (!sec.list) return fieldDiff(sec.fields, a, b);
+    const out = [], name = (x) => sec.summary(x || {}), A = a || [], B = b || [], an = A.map(name), bn = B.map(name);
+    B.forEach((it) => { const j = an.indexOf(name(it)); if (j < 0) out.push(["add", `Added ${sec.itemLabel} “${name(it)}”`]); else fieldDiff(sec.fields, A[j], it).forEach(([k, t]) => out.push([k, `${name(it)} › ${t}`])); });
+    A.forEach((it) => { if (!bn.includes(name(it))) out.push(["del", `Removed ${sec.itemLabel} “${name(it)}”`]); });
+    if (!out.length) out.push(["chg", "Changed the order"]);
+    return out;
+  }
+  /** Problems worth fixing before publishing. Image files are checked on the live site. */
+  async function validate() {
+    const out = [], images = [];
+    const urlOk = (u) => !u || /^https?:\/\/[^\s]+\.[^\s]+/.test(u) || /^(?!https?:)[\w./#?=-]+$/.test(u);
+    const check = (fields, obj, where) => {
+      for (const f of fields || []) {
+        const v = obj?.[f.k];
+        if (f.required && (v === "" || v == null)) out.push(`${where}: “${f.label}” is empty.`);
+        if (f.type === "url" && v && !urlOk(v)) out.push(`${where}: “${f.label}” doesn't look like a web address (${String(v).slice(0, 40)}).`);
+        if (f.type === "email" && v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) out.push(`${where}: “${f.label}” doesn't look like an email address.`);
+        if (f.type === "image" && v) images.push([v, where]);
+        if (f.type === "list" && Array.isArray(v)) v.forEach((it, i) => check(f.fields, it, `${where} › ${f.summary ? f.summary(it) : `${f.itemLabel} ${i + 1}`}`));
+      }
+    };
+    for (const sec of SECTIONS) {
+      if (sec.custom) continue;
+      const v = sec.get(draft);
+      if (sec.list) (v || []).forEach((it, i) => check(sec.fields, it, `${sec.title} › ${sec.summary(it) || `#${i + 1}`}`));
+      else check(sec.fields, v, sec.title);
+    }
+    const seen = new Set(); for (const m of draft.members || []) { const n = (m.name || "").trim().toLowerCase(); if (n && seen.has(n)) out.push(`Team members: “${m.name}” is listed twice.`); seen.add(n); }
+    await Promise.all(images.map(async ([path, where]) => {
+      if (/^https?:/.test(path)) return;
+      try { const r = await fetch(path, { method: "HEAD", cache: "no-cache" }); if (!r.ok) out.push(`${where}: the image ${path} isn't uploaded yet. Upload it to GitHub before or right after publishing.`); } catch {}
+    }));
+    return out;
   }
 
   /* ---------------- State ---------------- */
@@ -213,15 +392,24 @@
     draft = d?.content ? d.content : clone(published);
     savedAt = d?.savedAt || null;
     for (const k of ["mentors", "achievements", "updates", "sponsors", "sponsorTiers", "members", "values", "featuredVideos", "projects"]) if (!Array.isArray(draft[k])) draft[k] = [];
-    current = (location.hash.slice(1) && SECTIONS.some((s) => s.id === location.hash.slice(1))) ? location.hash.slice(1) : "team";
+    current = (location.hash.slice(1) && SECTIONS.some((s) => s.id === location.hash.slice(1))) ? location.hash.slice(1) : "overview";
+    hist.past = []; hist.future = []; hist.last = JSON.stringify(draft);
     $("#app").innerHTML = `
       <div class="ed">
         <header class="ed-bar">
           <a class="brand" href="index.html" title="Back to the website">${window.SS?.LOGO || ""}<span>Steel Surge<small>TEAM EDITOR</small></span></a>
           <div class="ed-status" id="status" aria-live="polite"></div>
+          <div class="ed-tools" role="group" aria-label="Editor tools">
+            <button class="icon-btn" id="search-btn" type="button" title="Search (Ctrl+K)" aria-label="Search the editor">${searchIco}</button>
+            <button class="icon-btn" id="undo" type="button" title="Undo (Ctrl+Z)" aria-label="Undo" disabled>${undoIco}</button>
+            <button class="icon-btn" id="redo" type="button" title="Redo (Ctrl+Shift+Z)" aria-label="Redo" disabled>${redoIco}</button>
+            <button class="icon-btn" id="theme-btn" type="button" title="Light or dark" aria-label="Switch light or dark mode">${themeIco}</button>
+            <button class="icon-btn" id="help-btn" type="button" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">?</button>
+          </div>
           <div class="ed-actions">
-            <button class="btn ghost sm" id="discard" type="button">${undoIco} Discard draft</button>
-            <a class="btn sm" id="preview" href="index.html?preview=1" target="_blank" rel="noopener">${eye} Preview site</a>
+            <button class="btn ghost sm" id="discard" type="button" title="Throw away all unpublished changes">${trashIco} Discard</button>
+            <button class="btn sm" id="live" type="button" aria-pressed="false" title="Show the page next to the form and refresh it as you type">${eye} Live preview</button>
+            <a class="btn sm" id="preview" href="index.html?preview=1" target="_blank" rel="noopener" title="Open the whole site with your draft in a new tab">${extIco} Preview</a>
             <button class="btn primary sm" id="publish" type="button">Publish<span class="ed-count" id="pub-count"></span></button>
           </div>
         </header>
@@ -231,19 +419,138 @@
             <div class="ed-side-foot"><button type="button" class="btn ghost sm" id="lock">${lockIco} Lock editor</button></div>
           </aside>
           <main class="ed-main" id="panel"></main>
+          <aside class="ed-live" id="live-pane" hidden>
+            <div class="ed-live-bar"><b id="live-title">Preview</b><span class="ed-live-note">Updates as you type</span>
+              <button class="btn ghost sm" type="button" id="live-phone" aria-pressed="false">Phone size</button></div>
+            <div class="ed-live-frame"><iframe id="live-frame" title="Live preview of the site with your draft"></iframe></div>
+          </aside>
         </div>
       </div>
-      <dialog class="ed-dialog" id="publish-dialog"></dialog>`;
+      <dialog class="ed-dialog" id="publish-dialog"></dialog>
+      <dialog class="ed-dialog ed-search" id="search-dialog"></dialog>
+      <dialog class="ed-dialog" id="help-dialog"></dialog>`;
     $("#discard").addEventListener("click", discard);
     $("#lock").addEventListener("click", () => { save(true); try { sessionStorage.removeItem(UNLOCK_KEY); } catch {} lockScreen(); window.SS?.toast("Editor locked. Your draft is saved on this device."); });
     $("#publish").addEventListener("click", openPublish);
     $("#preview").addEventListener("click", () => save(true));
-    renderNav(); renderPanel(); updateStatus();
+    $("#undo").addEventListener("click", undo); $("#redo").addEventListener("click", redo);
+    $("#search-btn").addEventListener("click", openSearch);
+    $("#help-btn").addEventListener("click", openHelp);
+    $("#theme-btn").addEventListener("click", () => { const t = window.SS?.theme; if (t) t.set(t.get() === "light" ? "dark" : "light"); });
+    $("#live").addEventListener("click", () => setLive(!liveOn));
+    $("#live-phone").addEventListener("click", (e) => { const on = e.currentTarget.getAttribute("aria-pressed") !== "true"; e.currentTarget.setAttribute("aria-pressed", String(on)); $("#live-pane").classList.toggle("phone", on); });
+    if (!keysWired) { keysWired = true; addEventListener("keydown", onKey); }
+    renderNav(); renderPanel(); updateStatus(); updateUndo();
+    if (store.get("ss-editor-live") && innerWidth >= 1280) setLive(true);
   }
+
+  /* ---------------- Undo / redo (whole draft) ---------------- */
+  const hist = { past: [], future: [], last: null, timer: 0 };
+  /** Saves a history step. Typing is grouped: a step is recorded after a short pause. */
+  function record(now = false) {
+    clearTimeout(hist.timer);
+    const commit = () => {
+      const cur = JSON.stringify(draft);
+      if (hist.last !== null && cur !== hist.last) { hist.past.push(hist.last); if (hist.past.length > 100) hist.past.shift(); hist.future = []; }
+      hist.last = cur; updateUndo();
+    };
+    if (now) commit(); else hist.timer = setTimeout(commit, 600);
+  }
+  function restore(json, msg) { draft = JSON.parse(json); hist.last = json; save(); renderNav(); renderPanel(); updateUndo(); reloadLive(); window.SS?.toast(msg); }
+  function undo() { record(true); if (!hist.past.length) return; hist.future.push(hist.last); restore(hist.past.pop(), "Undone"); }
+  function redo() { if (!hist.future.length) return; hist.past.push(hist.last); restore(hist.future.pop(), "Redone"); }
+  function updateUndo() { const u = $("#undo"), rd = $("#redo"); if (u) u.disabled = !hist.past.length && JSON.stringify(draft) === hist.last; if (rd) rd.disabled = !hist.future.length; }
+
+  /* ---------------- Keyboard shortcuts ---------------- */
+  let keysWired = false;
+  function onKey(e) {
+    if (!$(".ed")) return;
+    const typing = e.target.closest?.("input, textarea, select, [contenteditable]"), mod = e.ctrlKey || e.metaKey;
+    if (mod && e.key.toLowerCase() === "k") { e.preventDefault(); openSearch(); return; }
+    if (mod && e.key.toLowerCase() === "s") { e.preventDefault(); save(); record(true); window.SS?.toast("Draft saved on this device"); return; }
+    if (mod && !typing && e.key.toLowerCase() === "z") { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+    if (mod && !typing && e.key.toLowerCase() === "y") { e.preventDefault(); redo(); return; }
+    if (!typing && !mod && e.key === "?") { e.preventDefault(); openHelp(); }
+  }
+  function openHelp() {
+    const dlg = $("#help-dialog");
+    const row = (k, t) => `<div class="ed-key"><span>${k.split("+").map((x) => `<kbd class="kbd">${x}</kbd>`).join(" + ")}</span><span>${t}</span></div>`;
+    dlg.innerHTML = `<form method="dialog" class="ed-dialog-inner"><div class="ed-dialog-head"><h2>Keyboard shortcuts</h2><button class="icon-btn" value="close" aria-label="Close">${icon("close")}</button></div>
+      <div class="ed-keys">${row("Ctrl+K", "Search sections, fields, members, sponsors…")}${row("Ctrl+Z", "Undo (when you're not typing in a box)")}${row("Ctrl+Shift+Z", "Redo")}${row("Ctrl+S", "Save the draft now")}${row("?", "Show this list")}</div>
+      <p class="hint">On a Mac, use ⌘ instead of Ctrl. Inside a text box, Ctrl+Z undoes your typing in that box.</p></form>`;
+    dlg.showModal();
+  }
+
+  /* ---------------- Search (Ctrl+K) ---------------- */
+  function searchIndex() {
+    const out = [];
+    for (const sec of SECTIONS) {
+      out.push({ label: sec.title, sub: "Section", sec: sec.id, kind: "section" });
+      for (const f of sec.fields || []) if (f.type !== "heading" && !f.k.startsWith("_")) out.push({ label: f.label, sub: sec.title, sec: sec.id, field: f.k, kind: "field" });
+      if (sec.list) (sec.get(draft) || []).forEach((it, i) => out.push({ label: sec.summary(it), sub: sec.title, sec: sec.id, item: i, kind: "item" }));
+    }
+    (draft.outreach?.events || []).forEach((e, i) => out.push({ label: e.title || "Outreach event", sub: `Outreach log${e.date ? " · " + e.date : ""}`, sec: "outreach", nested: "events", item: i, kind: "item" }));
+    return out;
+  }
+  function openSearch() {
+    const dlg = $("#search-dialog"); if (!dlg || dlg.open) return;
+    dlg.innerHTML = `<div class="ed-search-box">${searchIco}<input class="input" type="search" placeholder="Search sections, fields, members, sponsors…" aria-label="Search the editor" autocomplete="off"><kbd class="kbd">Esc</kbd></div><div class="ed-search-results" role="listbox"></div>`;
+    const input = $("input", dlg), list = $(".ed-search-results", dlg), all = searchIndex();
+    let hits = [], sel = 0;
+    const draw = () => {
+      const q = input.value.trim().toLowerCase();
+      hits = (q ? all.filter((h) => `${h.label} ${h.sub}`.toLowerCase().includes(q)) : all.filter((h) => h.kind === "section")).slice(0, 40);
+      sel = Math.min(sel, Math.max(0, hits.length - 1));
+      list.innerHTML = hits.length ? hits.map((h, i) => `<button type="button" role="option" class="ed-hit${i === sel ? " on" : ""}" data-i="${i}" aria-selected="${i === sel}"><span class="ed-hit-kind k-${h.kind}">${h.kind === "section" ? "Section" : h.kind === "field" ? "Field" : "Item"}</span><b>${esc(h.label)}</b><small>${esc(h.sub)}</small></button>`).join("") : `<p class="ed-hit-none">Nothing matches “${esc(input.value)}”.</p>`;
+      $(".ed-hit.on", list)?.scrollIntoView({ block: "nearest" });
+    };
+    const go = (h) => { dlg.close(); jumpTo(h); };
+    input.addEventListener("input", () => { sel = 0; draw(); });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); sel = (sel + (e.key === "ArrowDown" ? 1 : -1) + hits.length) % Math.max(1, hits.length); draw(); }
+      else if (e.key === "Enter" && hits[sel]) { e.preventDefault(); go(hits[sel]); }
+    });
+    list.addEventListener("click", (e) => { const b = e.target.closest("[data-i]"); if (b) go(hits[+b.dataset.i]); });
+    dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+    draw(); dlg.showModal(); input.focus();
+  }
+  /** Opens a section, optionally a list item or a field, and highlights it. */
+  function jumpTo(h) {
+    const sec = SECTIONS.find((x) => x.id === h.sec); if (!sec) return;
+    if (h.item != null) { const spec = h.nested ? sec.fields.find((f) => f.k === h.nested) : sec; spec.__openIndex = h.item; }
+    current = sec.id; history.replaceState(null, "", "#" + current); renderNav(); renderPanel(); scrollTo(0, 0);
+    setTimeout(() => {
+      let el = null;
+      if (h.field) el = $(`#panel [data-k="${h.field}"]`);
+      else if (h.item != null) el = $$("#panel .ed-item.open")[0];
+      if (!el) return;
+      el.scrollIntoView({ block: "center", behavior: "smooth" }); el.classList.add("ed-flash"); setTimeout(() => el.classList.remove("ed-flash"), 1600);
+      $("input, textarea, select", el)?.focus({ preventScroll: true });
+    }, 60);
+  }
+
+  /* ---------------- Live preview pane ---------------- */
+  let liveOn = false, liveTimer = 0;
+  function setLive(on) {
+    if (on && innerWidth < 1100) { window.open(`${PAGE_FOR[current] || "index.html"}?preview=1`, "_blank", "noopener"); return; }
+    liveOn = on; store.set("ss-editor-live", on);
+    $("#live").setAttribute("aria-pressed", String(on)); $("#live-pane").hidden = !on; $(".ed-body").classList.toggle("with-live", on);
+    if (on) { save(true); loadLive(true); }
+  }
+  function loadLive(force) {
+    if (!liveOn) return;
+    const frame = $("#live-frame"), page = PAGE_FOR[current] || "index.html", src = `${page}?preview=1`;
+    $("#live-title").textContent = { "index.html": "Home page", "team.html": "Team page", "media.html": "Media page", "sponsors.html": "Sponsors page", "contact.html": "Contact page" }[page] || page;
+    if (force || !frame.src.endsWith(src)) { frame.src = src; return; }
+    let y = 0; try { y = frame.contentWindow.scrollY; } catch {}
+    frame.addEventListener("load", function back() { frame.removeEventListener("load", back); try { frame.contentWindow.scrollTo(0, y); } catch {} });
+    try { frame.contentWindow.location.reload(); } catch { frame.src = src; }
+  }
+  function reloadLive() { if (!liveOn) return; clearTimeout(liveTimer); liveTimer = setTimeout(() => loadLive(false), 700); }
 
   /* ---------------- Saving ---------------- */
   let saveTimer;
-  function changed() { clearTimeout(saveTimer); saveTimer = setTimeout(() => { save(); refreshHead(); }, 350); updateStatus(true); }
+  function changed() { clearTimeout(saveTimer); saveTimer = setTimeout(() => { save(); refreshHead(); reloadLive(); }, 350); updateStatus(true); record(); }
   /** Updates the section header's "Changed" badge and item count without rebuilding the form. */
   function refreshHead() {
     const sec = SECTIONS.find((x) => x.id === current); if (!sec || sec.custom) return;
@@ -261,7 +568,7 @@
       tools.insertAdjacentHTML("afterbegin", `<button type="button" class="btn ghost sm" id="undo-sec">${undoIco} Undo changes</button>`);
       $("#undo-sec", tools).addEventListener("click", () => {
         if (!confirm(`Undo your unpublished changes to “${sec.title}”?`)) return;
-        sec.set(draft, clone(sec.get(published))); save(); renderNav(); renderPanel(); window.SS?.toast(`${sec.title} restored`);
+        sec.set(draft, clone(sec.get(published))); save(); record(true); renderNav(); renderPanel(); reloadLive(); window.SS?.toast(`${sec.title} restored`);
       });
     }
   }
@@ -278,13 +585,13 @@
     const el = $("#status"); if (!el) return;
     const n = dirtySections().length;
     el.className = `ed-status ${saving ? "is-saving" : n ? "is-draft" : "is-live"}`;
-    el.innerHTML = saving ? `<span class="dot saving"></span>Saving…` : n ? `<span class="dot draft"></span>Draft saved on this device · ${n} section${n === 1 ? "" : "s"} changed` : `<span class="dot ok"></span>Everything matches the live site`;
+    el.innerHTML = saving ? `<span class="dot saving"></span>Saving…` : n ? `<span class="dot draft"></span>Draft saved · ${n} section${n === 1 ? "" : "s"} changed` : `<span class="dot ok"></span>Matches the live site`;
     $("#publish").disabled = !n; $("#discard").disabled = !n;
     const c = $("#pub-count"); if (c) { c.textContent = n || ""; c.hidden = !n; }
   }
   function discard() {
     if (!confirm("Throw away all unpublished changes on this device?")) return;
-    store.del(DRAFT_KEY); draft = clone(published); renderNav(); renderPanel(); updateStatus(); window.SS?.toast("Draft discarded");
+    store.del(DRAFT_KEY); draft = clone(published); record(true); renderNav(); renderPanel(); updateStatus(); reloadLive(); window.SS?.toast("Draft discarded. Ctrl+Z brings it back.");
   }
 
   /* ---------------- Nav & panel ---------------- */
@@ -295,7 +602,7 @@
     const grouped = new Set(GROUPS.flatMap(([, ids]) => ids));
     $("#nav").innerHTML = GROUPS.map(([label, ids]) => `<div class="ed-nav-group"><span class="ed-nav-label">${label}</span>${ids.filter((id) => byId[id]).map((id) => item(byId[id])).join("")}</div>`).join("")
       + SECTIONS.filter((s) => !grouped.has(s.id)).map(item).join("");
-    $$("[data-sec]", $("#nav")).forEach((b) => b.addEventListener("click", () => { current = b.dataset.sec; history.replaceState(null, "", "#" + current); renderNav(); renderPanel(); $("#panel").scrollTo?.(0, 0); scrollTo(0, 0); }));
+    $$("[data-sec]", $("#nav")).forEach((b) => b.addEventListener("click", () => { current = b.dataset.sec; history.replaceState(null, "", "#" + current); renderNav(); renderPanel(); $("#panel").scrollTo?.(0, 0); scrollTo(0, 0); if (liveOn) loadLive(false); }));
   }
 
   function renderPanel() {
@@ -313,10 +620,12 @@
         </div></div><div id="form" class="${sec.list ? "" : "ed-card"}"></div>`;
     $("#undo-sec", panel)?.addEventListener("click", () => {
       if (!confirm(`Undo your unpublished changes to “${sec.title}”?`)) return;
-      sec.set(draft, clone(sec.get(published))); save(); renderNav(); renderPanel(); window.SS?.toast(`${sec.title} restored`);
+      sec.set(draft, clone(sec.get(published))); save(); record(true); renderNav(); renderPanel(); reloadLive(); window.SS?.toast(`${sec.title} restored`);
     });
     const host = $("#form", panel);
-    if (sec.custom) {
+    if (sec.id === "overview") {
+      host.className = ""; overviewPanel(host);
+    } else if (sec.custom) {
       settingsPanel(host);
     } else if (sec.list) {
       host.append(listEditor(sec.get(draft), sec, (v) => { sec.set(draft, v); changed(); }));
@@ -333,7 +642,7 @@
     const value = { ...obj };
     for (const f of fields) {
       const id = `f${++uid}`, row = document.createElement("div");
-      row.className = `field ed-field ed-${f.type}`;
+      row.className = `field ed-field ed-${f.type}`; row.dataset.k = f.k;
       const label = `<label for="${id}">${esc(f.label)}${f.required ? ' <span class="req">*</span>' : ""}</label>`;
       const hint = f.hint ? `<span class="hint">${esc(f.hint)}</span>` : "";
       const set = (v) => { value[f.k] = v; onChange({ ...value }); };
@@ -342,8 +651,13 @@
         row.className = "ed-group-head";
         row.innerHTML = `<h3>${esc(f.label)}</h3>${f.hint ? `<p class="hint">${esc(f.hint)}</p>` : ""}`;
       } else if (f.type === "textarea") {
-        row.innerHTML = `${label}<textarea class="textarea" id="${id}" rows="4">${esc(v)}</textarea>${hint}`;
-        $("textarea", row).addEventListener("input", (e) => set(e.target.value));
+        const counter = f.max ? `<span class="ed-chars" aria-live="off"></span>` : "";
+        row.innerHTML = `${label}<textarea class="textarea" id="${id}" rows="4">${esc(v)}</textarea><div class="ed-under">${hint}${counter}</div>`;
+        const ta = $("textarea", row), cnt = $(".ed-chars", row);
+        const count = () => { if (!cnt) return; const n = ta.value.length; cnt.textContent = `${n} / ${f.max}`; cnt.classList.toggle("over", n > f.max); cnt.title = n > f.max ? "A bit long. Shorter reads better on phones." : "Suggested length"; };
+        const grow = () => { ta.style.height = "auto"; ta.style.height = `${Math.min(520, ta.scrollHeight + 2)}px`; };
+        ta.addEventListener("input", (e) => { set(e.target.value); count(); grow(); });
+        count(); requestAnimationFrame(grow);
       } else if (f.type === "select") {
         const opts = f.options.map((o) => (Array.isArray(o) ? o : [o, o]));
         if (v && !opts.some(([val]) => val === v)) opts.push([v, v]);
@@ -398,12 +712,23 @@
     const items = arr.map((x) => ({ ...x }));
     const box = document.createElement("div"); box.className = "ed-list";
     const open = new Set();
+    if (spec.__openIndex != null) { if (spec.__openIndex < items.length) open.add(spec.__openIndex); delete spec.__openIndex; }
+    let filter = "", dragFrom = null;
     const emit = () => onChange(items.map((x) => ({ ...x })));
     const draw = () => {
       box.innerHTML = "";
-      if (!items.length) box.insertAdjacentHTML("beforeend", `<div class="empty-state">No ${spec.itemLabel}s yet.</div>`);
+      if (items.length > 1) {
+        const bar = document.createElement("div"); bar.className = "ed-list-bar";
+        bar.innerHTML = `${items.length > 5 ? `<input class="input ed-list-filter" type="search" placeholder="Filter ${esc(spec.itemLabel)}s…" value="${esc(filter)}" aria-label="Filter ${esc(spec.itemLabel)}s">` : "<span></span>"}
+          <div class="ed-list-bar-btns"><button type="button" class="btn ghost sm" data-all="open">Expand all</button><button type="button" class="btn ghost sm" data-all="close">Collapse all</button></div>`;
+        $(".ed-list-filter", bar)?.addEventListener("input", (e) => { filter = e.target.value.toLowerCase(); const pos = e.target.selectionStart; draw(); const nf = $(".ed-list-filter", box); nf.focus(); nf.setSelectionRange(pos, pos); });
+        $$("[data-all]", bar).forEach((b) => b.addEventListener("click", () => { open.clear(); if (b.dataset.all === "open") items.forEach((_, i) => open.add(i)); draw(); }));
+        box.append(bar);
+      }
+      if (!items.length) box.insertAdjacentHTML("beforeend", `<div class="ed-empty">${icon("plus") || "+"}<b>No ${esc(spec.itemLabel)}s yet</b><span>Add the first one below.</span></div>`);
       items.forEach((it, i) => {
-        const card = document.createElement("div"); card.className = `ed-item${open.has(i) ? " open" : ""}`;
+        if (filter && !JSON.stringify(it).toLowerCase().includes(filter)) return;
+        const card = document.createElement("div"); card.className = `ed-item${open.has(i) ? " open" : ""}`; card.dataset.i = i;
         const sub = spec.sub?.(it);
         const imgField = (spec.fields || []).find((f) => f.type === "image"), img = imgField ? it[imgField.k] : "";
         const thumb = imgField ? `<span class="ed-item-thumb${imgField.square === false ? " wide" : ""}">${img ? `<img src="${esc(img)}" alt="" loading="lazy" onerror="this.remove()">` : ""}<i>${esc((spec.summary(it) || "?").trim()[0] || "?")}</i></span>` : "";
@@ -411,6 +736,8 @@
           <div class="ed-item-head">
             <button type="button" class="ed-item-toggle" aria-expanded="${open.has(i)}">${thumb}<span class="ed-item-text"><b>${esc(spec.summary(it))}</b>${sub ? `<span>${esc(sub)}</span>` : ""}</span></button>
             <div class="ed-item-tools">
+              <span class="ed-drag" title="Drag to reorder" aria-hidden="true">${dragIcon}</span>
+              <button type="button" class="icon-btn" data-a="dup" aria-label="Duplicate" title="Duplicate">${dupIcon}</button>
               <button type="button" class="icon-btn" data-a="up" aria-label="Move up" ${i === 0 ? "disabled" : ""}>${upIcon}</button>
               <button type="button" class="icon-btn" data-a="down" aria-label="Move down" ${i === items.length - 1 ? "disabled" : ""}>${downIcon}</button>
               <button type="button" class="icon-btn danger" data-a="del" aria-label="Delete">${trashIcon}</button>
@@ -426,9 +753,23 @@
           card.append(body);
         }
         $(".ed-item-toggle", card).addEventListener("click", () => { open.has(i) ? open.delete(i) : open.add(i); draw(); });
+        // drag to reorder (by the handle)
+        const handle = $(".ed-drag", card);
+        handle.addEventListener("pointerdown", () => { card.draggable = true; });
+        card.addEventListener("dragstart", (e) => { dragFrom = i; card.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", String(i)); } catch {} });
+        card.addEventListener("dragend", () => { card.draggable = false; card.classList.remove("dragging"); $$(".ed-item", box).forEach((c) => c.classList.remove("drop-before", "drop-after")); });
+        card.addEventListener("dragover", (e) => { if (dragFrom == null) return; e.preventDefault(); const r = card.getBoundingClientRect(), after = e.clientY > r.top + r.height / 2; card.classList.toggle("drop-after", after); card.classList.toggle("drop-before", !after); });
+        card.addEventListener("dragleave", () => card.classList.remove("drop-before", "drop-after"));
+        card.addEventListener("drop", (e) => {
+          e.preventDefault(); if (dragFrom == null) return;
+          const r = card.getBoundingClientRect(); let to = i + (e.clientY > r.top + r.height / 2 ? 1 : 0);
+          const [moved] = items.splice(dragFrom, 1); if (dragFrom < to) to--; items.splice(to, 0, moved);
+          open.clear(); dragFrom = null; emit(); draw();
+        });
         $$("[data-a]", card).forEach((b) => b.addEventListener("click", () => {
           const a = b.dataset.a;
-          if (a === "del") { if (!confirm(`Delete "${spec.summary(it)}"?`)) return; items.splice(i, 1); open.clear(); }
+          if (a === "dup") { const copy = JSON.parse(JSON.stringify(it)); const nameKey = (spec.fields || []).find((f) => f.required && f.type === "text")?.k; if (nameKey && copy[nameKey]) copy[nameKey] += " (copy)"; items.splice(i + 1, 0, copy); open.clear(); open.add(i + 1); emit(); draw(); return; }
+          if (a === "del") { if (!confirm(`Delete "${spec.summary(it)}"? (Ctrl+Z can bring it back.)`)) return; items.splice(i, 1); open.clear(); }
           else { const j = a === "up" ? i - 1 : i + 1; [items[i], items[j]] = [items[j], items[i]]; const oi = open.has(i), oj = open.has(j); open.delete(i); open.delete(j); if (oi) open.add(j); if (oj) open.add(i); }
           emit(); draw();
         }));
@@ -470,6 +811,8 @@
 
   const svg = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
   const upIcon = svg('<path d="m6 15 6-6 6 6"/>'), downIcon = svg('<path d="m6 9 6 6 6-6"/>'), trashIcon = svg('<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>');
+  const dupIcon = svg('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>');
+  const dragIcon = svg('<circle cx="9" cy="6" r="1.2"/><circle cx="15" cy="6" r="1.2"/><circle cx="9" cy="12" r="1.2"/><circle cx="15" cy="12" r="1.2"/><circle cx="9" cy="18" r="1.2"/><circle cx="15" cy="18" r="1.2"/>');
 
   /** Crop to square (optional) and resize to 640px, returning a JPG. */
   function prepareImage(file, square) {
@@ -494,12 +837,13 @@
     save();
     const repo = draft.dev?.repo || "danielpthomas300-hub/SteelSurge", branch = draft.dev?.branch || "main";
     const json = JSON.stringify(draft, null, 2) + "\n";
-    const changedList = dirtySections().map((s) => `<li>${esc(s.title)}</li>`).join("");
+
     const dlg = $("#publish-dialog");
     dlg.innerHTML = `
       <form method="dialog" class="ed-dialog-inner">
         <div class="ed-dialog-head"><h2>Publish your changes</h2><button class="icon-btn" value="close" aria-label="Close">${icon("close")}</button></div>
-        <p class="muted">Changed: </p><ul class="ed-changed">${changedList}</ul>
+        <div class="ed-review">${dirtySections().map((sec) => { const ch = diffSection(sec); return `<details class="ed-review-sec"${ch.length <= 6 ? " open" : ""}><summary>${icon(sec.icon)} <b>${esc(sec.title)}</b><span class="ed-pill">${ch.length} change${ch.length === 1 ? "" : "s"}</span></summary><ul>${ch.slice(0, 30).map(([k, t]) => `<li class="${k}">${esc(t)}</li>`).join("")}${ch.length > 30 ? `<li class="chg">…and ${ch.length - 30} more</li>` : ""}</ul></details>`; }).join("")}</div>
+        <div class="ed-checks" id="pub-checks"><p class="muted">${icon("search") || ""} Checking for problems…</p></div>
         <ol class="ed-steps">
           <li><b>Copy your updated content</b><div class="ed-step-actions"><button type="button" class="btn primary sm" id="copy-json">${icon("copy")} Copy content</button><button type="button" class="btn sm" id="dl-json">Download file instead</button></div></li>
           <li><b>Open the content file on GitHub</b> (sign in with the team account)<div class="ed-step-actions"><a class="btn sm" href="https://github.com/${esc(repo)}/edit/${esc(branch)}/content/content.json" target="_blank" rel="noopener">${icon("ext")} Open content.json on GitHub</a></div></li>
@@ -513,6 +857,11 @@
         <div class="ed-dialog-foot"><button type="button" class="btn ghost sm" id="published-done">I've published — clear my draft</button></div>
       </form>`;
     dlg.showModal();
+    validate().then((probs) => {
+      const box = $("#pub-checks", dlg); if (!box) return;
+      box.className = `ed-checks ${probs.length ? "warn" : "ok"}`;
+      box.innerHTML = probs.length ? `<b>${probs.length} thing${probs.length === 1 ? "" : "s"} to check first</b><ul>${probs.slice(0, 12).map((p) => `<li>${esc(p)}</li>`).join("")}</ul><p class="hint">You can still publish. These are only warnings.</p>` : `<b>${icon("check")} No problems found.</b>`;
+    });
     $("#copy-json", dlg).addEventListener("click", async (e) => {
       try { await navigator.clipboard.writeText(json); e.currentTarget.innerHTML = `${icon("check")} Copied!`; }
       catch { download(json); }
@@ -520,11 +869,11 @@
     $("#dl-json", dlg).addEventListener("click", () => download(json));
     $("#published-done", dlg).addEventListener("click", () => {
       if (!confirm("Only do this after GitHub shows your commit. Clear the local draft?")) return;
-      published = clone(draft); store.del(DRAFT_KEY); dlg.close(); renderNav(); updateStatus(); window.SS?.toast("Draft cleared. Nice work!");
+      published = clone(draft); store.del(DRAFT_KEY); dlg.close(); renderNav(); renderPanel(); updateStatus(); window.SS?.toast("Draft cleared. Nice work!");
     });
   }
-  function download(text) {
-    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "application/json" })); a.download = "content.json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  function download(text, name = "content.json") {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "application/json" })); a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   }
 
   // Wait for site.js (icons, toast) when present, then start.

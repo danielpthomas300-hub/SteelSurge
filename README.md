@@ -42,7 +42,7 @@ A fast, static website (plain HTML, CSS, and JavaScript, with no build step need
 Switches for the whole site, saved in the `controls` block of `content/content.json`. Like every editor change, they go live when you publish.
 - **Maintenance mode:** every page shows a "We'll be right back" screen with your headline, message, optional "expected back" time, the team email, and social links. The editor keeps working. On a device where someone has used the editor, the maintenance screen has a **View the site anyway** button, and a reminder pill stays on screen while maintenance is on. This hides the site from visitors, but a static site can't truly lock anyone out, so don't rely on it to hide private information.
 - **Announcement banner:** a strip above the header on every page, with optional "Learn more" link and three styles (info, celebrate, heads up). Visitors can close it; it comes back for them when you change the text.
-- **Features:** turn the Arcade, Score Calculator, Media page, trophies, Steel AI, or the contact form off. Their menu, footer, and in-page links disappear, their pages say "taking a break", and the Contact page shows the team email when the form is off.
+- **Features:** turn the Arcade, Score Calculator, Code Lab, Media page, trophies, Steel AI, or the contact form off. Their menu, footer, and in-page links disappear, their pages say "taking a break", and the Contact page shows the team email when the form is off.
 - **Search engines:** turn off to add a `noindex` tag so Google and others stop listing the site.
 
 #### Outreach log (Season → Outreach in the editor)
@@ -55,7 +55,7 @@ Everything editable lives in that one file.
 
 ## Trophies
 
-Visitors earn 87 PlayStation-style trophies (bronze, silver, gold, and a platinum for collecting them all) for exploring the site and playing the arcade. Earned trophies pop up in the corner and are listed on **/trophies.html**. Trophy definitions live in `assets/js/trophies.js`; pages and games award them with `SS.trophy("id")`. Progress is saved per browser.
+Visitors earn 98 PlayStation-style trophies (bronze, silver, gold, and a platinum for collecting them all) for exploring the site and playing the arcade. Earned trophies pop up in the corner and are listed on **/trophies.html**. Trophy definitions live in `assets/js/trophies.js`; pages and games award them with `SS.trophy("id")`. Progress is saved per browser.
 
 ### Steel AI (site assistant)
 
@@ -110,6 +110,25 @@ Seven prompts a day, like "Name an FTC team from Ohio." Any real team that fits 
 - **FRC** isn't included yet: the free FRC data sources were down or need an API key. The game is built so another program's team list can be added later.
 
 Easter egg: type ↑ ↑ ↓ ↓ ← → ← → B A anywhere on the site.
+
+## Code Lab (programming practice)
+
+**/codelab.html** teaches the Java that runs FTC robots. Everything runs in the browser; progress and code are saved per browser. A home-page band and the FTC page link to it.
+
+- **Start here:** 12 short lessons (OpModes, variables and types, motors, loops and timing, the gamepad, telemetry, encoders, the IMU, servos, methods, feedback control, mecanum). Each lists the questions, drills, and challenges that practice it, and every question, drill, and challenge links back to its lesson.
+- **1 · Debug it:** 24 questions showing real FTC code with a classic bug. Pick the answer or click the bad line; the explanation appears after a correct answer or two misses.
+- **2 · Write it:** 16 drills where you finish a method (clipping, deadzones, encoder math, slow mode, arcade and mecanum drive, P control, angle wrapping, button edges, loops over arrays, acceleration ramps). Each run is checked against test inputs.
+- **3 · Drive it:** 13 challenges on a simulated field.
+  - **Autonomous (9):** drive and park, fix a spinning robot, encoders, RUN_TO_POSITION, IMU turns, picking up and scoring a sample, writing helper methods, strafing a **mecanum** robot, and planning a path around a **barrier**. The battery changes each run, so timing-only code isn't reliable.
+  - **TeleOp (4):** tank drive, arcade drive with slow mode, mecanum drive, and a claw toggle. Drive with the on-screen sticks and buttons, the keyboard (W A S D, arrow keys, J K U I for A B X Y, Q and E for the bumpers), or a real USB or Bluetooth controller.
+  - **Debugging tools:** **Pause** and **Step** run your code one line at a time, and the **Variables** panel shows every variable (and which method you're in) as it changes.
+  - The field shows the robot's position and heading, a dotted ghost of your best run, and a text description for screen readers.
+  - **Download .java** saves an OpMode with the right `package` and `import` lines for Android Studio's TeamCode folder. **Copy code** and **Share link** (the code is compressed into the link) work on drills too.
+- **Editor:** syntax colors, auto-indent, bracket pairing, Tab and Shift+Tab, Ctrl+Enter to run, and autocomplete: type a `.` after a motor, servo, IMU, gamepad, telemetry, `Math`, or `Range` (or press Ctrl+Space) to see its methods with a one-line explanation.
+
+**How it works:** `assets/js/minijava.js` is a small Java interpreter (int / long / double / boolean / String with Java's real rules, arrays, if / while / for / do / for-each, methods, classes with fields, casts, `String.format`, `Math`, `Range`) with plain-English errors and line numbers. `assets/js/codelab-sim.js` is the field and robot: tank or mecanum drive, motors with direction, encoders and run modes, IMU yaw, a claw servo, telemetry, gamepads, `sleep()`, `ElapsedTime`, barriers, and the autonomous (30 s) and TeleOp (2 min) timers. Both `LinearOpMode` and `OpMode` (init / loop) programs run.
+
+**Adding content:** lessons, questions, drills, and challenges live in `assets/js/codelab-data.js` (notes at the top). Then run `node tools/test_codelab.js`. It checks every answer, every drill's reference solution, every autonomous solution on a weak, medium, and full battery, and drives every TeleOp challenge with an autopilot to prove it can be finished. The same test runs on GitHub with every push. Code Lab trophies (11) are in their own group in the trophy case. Turn the page off in the editor under **Site → Master controls → Code Lab**.
 
 ## Score calculator
 
