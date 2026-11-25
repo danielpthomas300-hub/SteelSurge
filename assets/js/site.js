@@ -1362,7 +1362,9 @@
   /* ---------------- Steel AI loads after the page is ready, so it never slows the first paint ---------------- */
   const SELF_SRC = document.currentScript?.src || "";
   function loadSteelAI() {
-    if (window.SteelAI || document.getElementById("steel-ai-js") || !SELF_SRC) return;
+    // Steel AI stays out of the way on game pages and the editor, so don't download it there
+    const pg = document.body.dataset.page || "";
+    if (window.SteelAI || document.getElementById("steel-ai-js") || !SELF_SRC || pg === "editor" || pg.startsWith("game")) return;
     const go = () => { const s = document.createElement("script"); s.id = "steel-ai-js"; s.src = SELF_SRC.replace(/site\.js/, "steel-ai.js"); document.body.append(s); };
     if (/[?&]ask=/.test(location.search)) go(); else if ("requestIdleCallback" in window) requestIdleCallback(go, { timeout: 2500 }); else setTimeout(go, 1200);
   }
