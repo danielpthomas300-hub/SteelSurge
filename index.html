@@ -18,13 +18,12 @@
   <link rel="icon" href="./assets/img/favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="./assets/img/icon-180.png">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap">
-  <link rel="stylesheet" href="./assets/css/site.css?v=72a9d14a">
+  <link rel="preload" href="./assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./assets/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./assets/css/site.css?v=7fcc42b3">
   <script>try{var t=JSON.parse(localStorage.getItem("ss-theme"));if(!t){var d=localStorage.getItem("ss-theme-default");t=d==="light"||(d==="system"&&matchMedia("(prefers-color-scheme: light)").matches)?"light":"dark"}document.documentElement.dataset.theme=t==="light"?"light":"dark";var l=localStorage.getItem("ss-look-css");if(l){var st=document.createElement("style");st.id="ss-look";st.textContent=l;document.head.appendChild(st)}if(localStorage.getItem("ss-no-motion")==="1")document.documentElement.classList.add("no-motion")}catch(e){document.documentElement.dataset.theme="dark"}</script>
-  <script src="./assets/js/site.js?v=72a9d14a" defer></script>
-  <script src="./assets/js/trophies.js?v=72a9d14a" defer></script>
+  <script src="./assets/js/site.js?v=7fcc42b3" defer></script>
+  <script src="./assets/js/trophies.js?v=7fcc42b3" defer></script>
 
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsTeam","name":"Steel Surge","alternateName":"FTC Team 27254","sport":"Robotics","url":"https://danielpthomas300-hub.github.io/SteelSurge/","logo":"https://danielpthomas300-hub.github.io/SteelSurge/assets/img/icon-512.png","email":"surgesteel1@gmail.com","location":{"@type":"Place","address":{"@type":"PostalAddress","addressLocality":"Kennett Square","addressRegion":"PA","addressCountry":"US"}},"memberOf":{"@type":"SportsOrganization","name":"FIRST Tech Challenge"}}</script>
 </head>
@@ -36,7 +35,7 @@
     <section class="hero">
       <canvas class="hero-canvas" aria-hidden="true"></canvas>
       <div class="wrap">
-        <div class="hero-emblem" aria-hidden="true"><img class="logo-dark" src="assets/img/logo-hero.webp" alt="" width="560" height="560" fetchpriority="high"><img class="logo-light" src="assets/img/logo-tile.webp" alt="" width="560" height="560" loading="lazy"></div>
+        <div class="hero-emblem" aria-hidden="true"><div class="emblem-stage"><div class="emblem-rings"><i></i><i></i><i></i><i></i></div><img class="hero-logo" src="assets/img/logo-hero.webp" alt="" width="560" height="560" fetchpriority="high"></div></div>
         <span class="hero-badge" id="hero-badge"><b>FTC #27254</b> Kennett Square, PA</span>
         <h1>Steel<br><span class="surge-text">Surge</span></h1>
         <p class="lead" id="hero-lead"></p>
@@ -48,6 +47,7 @@
         <dl class="hero-meta" id="hero-meta"></dl>
       </div>
     </section>
+    <section class="season-strip" id="home-season-wrap" hidden><div class="wrap"><div id="home-season"></div></div></section>
     <section class="section">
       <div class="wrap">
         <div class="section-head"><div><span class="eyebrow">Our journey so far</span><h2>By the numbers</h2><p>Updated automatically from FTCScout after every event.</p></div><a class="link-arrow" href="https://ftcscout.org/teams/27254" target="_blank" rel="noopener">See every event on FTCScout <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>

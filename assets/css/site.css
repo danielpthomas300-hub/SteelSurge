@@ -1,3 +1,12 @@
+/* Fonts served from this site (Inter, Space Grotesk, JetBrains Mono — SIL Open Font License).
+   Latin and Latin Extended only. Downloaded from Google Fonts; no outside requests. */
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 400 700; font-display: swap; src: url("../fonts/inter-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 400 700; font-display: swap; src: url("../fonts/inter-latin-ext.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 500 600; font-display: swap; src: url("../fonts/jetbrains-mono-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 500 600; font-display: swap; src: url("../fonts/jetbrains-mono-latin-ext.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Space Grotesk"; font-style: normal; font-weight: 500 700; font-display: swap; src: url("../fonts/space-grotesk-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Space Grotesk"; font-style: normal; font-weight: 500 700; font-display: swap; src: url("../fonts/space-grotesk-latin-ext.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
 /* ==========================================================================
    Steel Surge — site styles
    Tokens first; everything else uses them. Dark is the default theme.
@@ -1160,3 +1169,110 @@ html.no-motion *, html.no-motion *::before, html.no-motion *::after { animation-
   .cal-event .cal-add { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; }
   .cal-add .btn { flex: 1; }
 }
+
+/* ==========================================================================
+   Home hero v2 — charged FTC field, power ring around the logo
+   ========================================================================== */
+.hero { isolation: isolate; }
+.hero::after { background:
+  linear-gradient(90deg, color-mix(in srgb, var(--bg) 70%, transparent) 0%, color-mix(in srgb, var(--bg) 30%, transparent) 36%, transparent 58%),
+  linear-gradient(to top, var(--bg) 0%, transparent 7%),
+  linear-gradient(to bottom, var(--bg) 0%, transparent 12%); }
+.hero-emblem { perspective: 1000px; }
+.emblem-stage { position: relative; transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transform-style: preserve-3d; transition: transform .5s cubic-bezier(.2,.8,.2,1); }
+.emblem-stage img { position: relative; z-index: 1; animation: emblem-in .9s cubic-bezier(.2,.8,.2,1) both, emblem-float 7s ease-in-out .9s infinite; }
+.hero-emblem .hero-logo { display: block; filter: drop-shadow(0 0 34px color-mix(in srgb, var(--surge) 38%, transparent)) drop-shadow(0 24px 40px rgba(0, 0, 0, .45)); }
+:root[data-theme="light"] .hero-emblem .hero-logo { filter: drop-shadow(0 12px 24px rgba(10, 40, 80, .32)) drop-shadow(0 0 18px color-mix(in srgb, var(--surge) 30%, transparent)); }
+@keyframes emblem-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -10px; } }
+.emblem-rings { position: absolute; inset: -9%; pointer-events: none; }
+.emblem-rings i { position: absolute; border-radius: 50%; }
+/* outer dial ticks */
+.emblem-rings i:nth-child(1) { inset: 0; background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--surge) 70%, transparent) 0 .6deg, transparent .6deg 6deg);
+  -webkit-mask: radial-gradient(closest-side, transparent 93%, #000 93.5%, #000 98%, transparent 98.5%); mask: radial-gradient(closest-side, transparent 93%, #000 93.5%, #000 98%, transparent 98.5%);
+  opacity: .55; animation: ring-spin 120s linear infinite reverse; }
+/* thin dashed orbit */
+.emblem-rings i:nth-child(2) { inset: 6%; border: 1px dashed color-mix(in srgb, var(--surge) 40%, transparent); animation: ring-spin 60s linear infinite; }
+/* sweeping power arc */
+.emblem-rings i:nth-child(3) { inset: 3%; border: 2px solid transparent; border-top-color: var(--surge-2); border-right-color: color-mix(in srgb, var(--surge) 50%, transparent);
+  filter: drop-shadow(0 0 6px var(--surge)); animation: ring-spin 7s linear infinite; }
+/* soft inner halo */
+.emblem-rings i:nth-child(4) { inset: 14%; background: radial-gradient(closest-side, color-mix(in srgb, var(--surge) 16%, transparent), transparent 70%); animation: halo 5s ease-in-out infinite; }
+@keyframes ring-spin { to { rotate: 360deg; } }
+@keyframes halo { 0%, 100% { opacity: .6; scale: .97; } 50% { opacity: 1; scale: 1.03; } }
+:root[data-theme="light"] .emblem-rings { inset: -7%; }
+:root[data-theme="light"] .emblem-rings i:nth-child(1) { opacity: .4; }
+@media (max-width: 960px) { .emblem-rings i:nth-child(1) { display: none; } }
+@media (prefers-reduced-motion: reduce) { .emblem-stage img, .emblem-rings i { animation: none !important; } }
+html.no-motion .emblem-stage img, html.no-motion .emblem-rings i { animation: none !important; }
+
+/* Crew cards: big line-art icon behind the text */
+.crew-card { position: relative; overflow: hidden; isolation: isolate; transition: border-color .25s, transform .25s, box-shadow .25s; }
+.crew-card::before { content: ""; position: absolute; inset: 0 0 auto; height: 2px; background: linear-gradient(90deg, transparent, var(--surge), transparent); opacity: 0; transition: opacity .25s; }
+.crew-art { position: absolute; right: -26px; bottom: -30px; width: 150px; height: 150px; color: var(--surge); opacity: .07; z-index: -1; transition: opacity .3s, transform .5s cubic-bezier(.2,.8,.2,1); }
+.crew-art svg { width: 100%; height: 100%; stroke-width: 1.2; }
+.crew-card:hover { border-color: color-mix(in srgb, var(--surge) 45%, var(--line)); transform: translateY(-3px); box-shadow: 0 22px 50px -30px var(--surge-glow); }
+.crew-card:hover::before { opacity: 1; }
+.crew-card:hover .crew-art { opacity: .14; transform: rotate(-8deg) scale(1.06); }
+
+/* Build steps joined by a power line with a travelling pulse */
+.steps { position: relative; }
+@media (min-width: 1001px) {
+  .steps::before { content: ""; position: absolute; left: 6%; right: 6%; top: 47px; height: 2px; z-index: 0;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--surge) 45%, transparent) 8%, color-mix(in srgb, var(--surge) 45%, transparent) 92%, transparent); }
+  .steps::after { content: ""; position: absolute; top: 44px; left: 6%; width: 90px; height: 8px; z-index: 0; border-radius: 8px;
+    background: radial-gradient(closest-side, var(--surge-2), transparent); filter: blur(1px); animation: step-pulse 5s cubic-bezier(.5,0,.5,1) infinite; }
+  .step { z-index: 1; }
+  .step .card-icon { position: relative; box-shadow: 0 0 0 6px var(--surface), 0 0 18px -4px var(--surge-glow); }
+}
+@keyframes step-pulse { 0% { left: 4%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { left: calc(96% - 90px); opacity: 0; } }
+.step { transition: border-color .25s, transform .25s; }
+.step:hover { border-color: color-mix(in srgb, var(--surge) 40%, var(--line)); transform: translateY(-3px); }
+@media (prefers-reduced-motion: reduce) { .steps::after { animation: none; display: none; } }
+html.no-motion .steps::after { display: none; }
+
+@media (max-width: 960px) { .hero-emblem { margin: 14px 0 18px 18px; width: min(220px, 58vw); } }
+
+/* ---------- Home: this season's game ---------- */
+.season-strip { position: relative; margin-top: -44px; z-index: 3; padding-bottom: 8px; }
+.season-card { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: 24px 36px; flex-wrap: wrap;
+  padding: clamp(20px, 3vw, 30px) clamp(20px, 3.4vw, 36px); border-radius: var(--radius-lg); border: 1px solid color-mix(in srgb, var(--surge) 38%, var(--line));
+  background: radial-gradient(600px 220px at 0% 0%, color-mix(in srgb, var(--surge) 16%, transparent), transparent 70%), color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(10px); box-shadow: 0 30px 70px -40px var(--surge-glow); }
+.season-card::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(110deg, transparent 30%, color-mix(in srgb, var(--surge-2) 14%, transparent) 48%, transparent 66%);
+  translate: -100% 0; animation: season-shine 7s ease-in-out 1.2s infinite; }
+@keyframes season-shine { 0% { translate: -100% 0; } 35%, 100% { translate: 100% 0; } }
+.season-text { display: grid; gap: 6px; min-width: 0; }
+.season-kicker { display: inline-flex; align-items: center; gap: 8px; font: 600 11.5px/1 var(--font-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--surge); }
+.season-kicker i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 60%, transparent); animation: pulse 2s infinite; }
+.season-text h2 { font-size: clamp(30px, 4.4vw, 46px); letter-spacing: -0.03em; margin: 4px 0 0; }
+.season-meta { margin: 0; font: 500 13px/1.4 var(--font-mono); letter-spacing: .06em; color: var(--dim); text-transform: uppercase; }
+.season-tag { margin: 4px 0 0; color: var(--muted); max-width: 560px; }
+.season-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+@media (max-width: 720px) { .season-strip { margin-top: -28px; } .season-actions { width: 100%; } .season-actions .btn { flex: 1; justify-content: center; } }
+@media (prefers-reduced-motion: reduce) { .season-card::after, .season-kicker i { animation: none; } }
+html.no-motion .season-card::after { animation: none; }
+
+/* ---------- FTC page: FTC around the world ---------- */
+.ftc-live { margin-top: 18px; padding: clamp(18px, 2.6vw, 26px); border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); display: grid; gap: 18px; }
+.ftc-live-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ftc-live-head h3 { font-size: 18px; margin: 0; }
+.ftc-live-head small { margin-left: auto; color: var(--dim); font-size: 12.5px; }
+.ftc-live-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); animation: pulse 2s infinite; }
+.ftc-live-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.ftc-live-stat { padding: 14px 16px; border-radius: var(--radius); background: var(--bg); border: 1px solid var(--line); display: grid; gap: 4px; }
+.ftc-live-stat b { font: 700 clamp(24px, 3vw, 32px)/1 var(--font-display); color: var(--surge); font-variant-numeric: tabular-nums; }
+.ftc-live-stat span { font-size: 13px; color: var(--muted); }
+.ftc-live-today { display: grid; gap: 10px; }
+.ftc-live-sub { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.ftc-live-sub span { color: var(--muted); font-size: 14px; }
+.ftc-live-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.ftc-live-list li { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); min-width: 0; }
+.ftc-live-list a { display: grid; gap: 2px; color: var(--text); min-width: 0; flex: 1; }
+.ftc-live-list a:hover b { color: var(--surge); }
+.ftc-live-list b { font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ftc-live-list span { font-size: 12.5px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ftc-live-quiet { margin: 0; }
+@media (max-width: 720px) { .ftc-live-stats { grid-template-columns: 1fr; } .ftc-live-list { grid-template-columns: 1fr; } .ftc-live-head small { margin-left: 0; width: 100%; } }
+@media (prefers-reduced-motion: reduce) { .ftc-live-dot { animation: none; } }
+.ftc-live-foot { display: flex; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+.ftc-live-foot:empty { display: none; }

@@ -56,9 +56,8 @@ def head(title, desc, page, root=".", noindex=False, path="", css=(), js=(), jso
   <link rel="icon" href="{r}/assets/img/favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="{r}/assets/img/icon-180.png">
   <link rel="manifest" href="{r}/manifest.webmanifest">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap">
+  <link rel="preload" href="{r}/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{r}/assets/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{r}/assets/css/site.css?v={V}">{extra_css}
   <script>try{{var t=JSON.parse(localStorage.getItem("ss-theme"));if(!t){{var d=localStorage.getItem("ss-theme-default");t=d==="light"||(d==="system"&&matchMedia("(prefers-color-scheme: light)").matches)?"light":"dark"}}document.documentElement.dataset.theme=t==="light"?"light":"dark";var l=localStorage.getItem("ss-look-css");if(l){{var st=document.createElement("style");st.id="ss-look";st.textContent=l;document.head.appendChild(st)}}if(localStorage.getItem("ss-no-motion")==="1")document.documentElement.classList.add("no-motion")}}catch(e){{document.documentElement.dataset.theme="dark"}}</script>
   <script src="{r}/assets/js/site.js?v={V}" defer></script>
@@ -113,7 +112,7 @@ JSONLD = '{"@context":"https://schema.org","@type":"SportsTeam","name":"Steel Su
 pages["index.html"] = shell("Steel Surge — FTC Robotics Team 27254", "Steel Surge is FIRST Tech Challenge team 27254 from Kennett Square, PA. Meet the team, follow our season live, and play our robot arcade.", "home", f'''    <section class="hero">
       <canvas class="hero-canvas" aria-hidden="true"></canvas>
       <div class="wrap">
-        <div class="hero-emblem" aria-hidden="true"><img class="logo-dark" src="assets/img/logo-hero.webp" alt="" width="560" height="560" fetchpriority="high"><img class="logo-light" src="assets/img/logo-tile.webp" alt="" width="560" height="560" loading="lazy"></div>
+        <div class="hero-emblem" aria-hidden="true"><div class="emblem-stage"><div class="emblem-rings"><i></i><i></i><i></i><i></i></div><img class="hero-logo" src="assets/img/logo-hero.webp" alt="" width="560" height="560" fetchpriority="high"></div></div>
         <span class="hero-badge" id="hero-badge"><b>FTC #27254</b> Kennett Square, PA</span>
         <h1>Steel<br><span class="surge-text">Surge</span></h1>
         <p class="lead" id="hero-lead"></p>
@@ -125,7 +124,8 @@ pages["index.html"] = shell("Steel Surge — FTC Robotics Team 27254", "Steel Su
         <dl class="hero-meta" id="hero-meta"></dl>
       </div>
     </section>
-''' + section(head_block("Our journey so far", "By the numbers", "Updated automatically from FTCScout after every event.", f'<a class="link-arrow" href="https://ftcscout.org/teams/27254" target="_blank" rel="noopener">See every event on FTCScout {A}</a>') + '\n        <div id="home-stats"></div>')
+''' + '    <section class="season-strip" id="home-season-wrap" hidden><div class="wrap"><div id="home-season"></div></div></section>\n'
+  + section(head_block("Our journey so far", "By the numbers", "Updated automatically from FTCScout after every event.", f'<a class="link-arrow" href="https://ftcscout.org/teams/27254" target="_blank" rel="noopener">See every event on FTCScout {A}</a>') + '\n        <div id="home-stats"></div>')
   + section(head_block("What we do", "Three crews, one robot") + '\n        <div class="grid cols-3" id="pillars"></div>')
   + section(head_block("How we build", "From kickoff to competition", "Every season starts from scratch. Here's how a new robot comes together.") + '\n        <ol class="steps" id="build-steps"></ol>', cls="section alt")
   + section(head_block("Watch", "Latest from our channel", "Builds, matches, and moments from the build room. New videos appear here as soon as we post them.", f'<a class="link-arrow" href="media.html">All videos {A}</a>') + '\n        <div class="latest-videos" id="latest-videos"></div>')
@@ -282,13 +282,15 @@ pages["ftc.html"] = shell("What is FTC?" + T, "New to FIRST Tech Challenge? How 
   open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ftc_page.html"), encoding="utf-8").read(), path="ftc.html",
   extra_head='\n  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>\n  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>')
 
-pages["calculator.html"] = shell("Score calculator and scouting" + T, "Free FTC match tools: a score calculator for every FIRST Tech Challenge game since 2017–18, and an event scouting tool with live FTCScout stats, team notes, and an alliance pick list.", "calculator",
-  page_hero("Match tools", "Score calculator and scouting", "Score any FTC match since 2017–18 with point values from the official manuals, or scout an event: live stats for every team, notes on your phone, and an alliance pick list.")
+pages["calculator.html"] = shell("Score calculator and scouting" + T, "Free FTC match tools: a score calculator for every FIRST Tech Challenge game since 2017–18, an event scouting tool with live FTCScout stats and rank projections, and an engineering portfolio check.", "calculator",
+  page_hero("Match tools", "Score calculator and scouting", "Score any FTC match since 2017–18 with point values from the official manuals, or scout an event: live stats for every team, notes on your phone, and an alliance pick list. Or check your engineering portfolio before judging.")
   + section(f"""        <div class="mt-tabs" role="tablist" aria-label="Match tools">
           <button type="button" role="tab" class="mt-tab" id="mt-tab-calc" aria-controls="mt-calc" aria-selected="true" data-mt="calc">{I('<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h8"/>')}<span><b>Score calculator</b><small>Tap what an alliance scored</small></span></button>
           <button type="button" role="tab" class="mt-tab" id="mt-tab-scout" aria-controls="mt-scout" aria-selected="false" data-mt="scout">{I('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M8 11h6M11 8v6"/>')}<span><b>Event scouting</b><small>Stats, notes, and pick list</small></span></button>
+          <button type="button" role="tab" class="mt-tab" id="mt-tab-port" aria-controls="mt-port" aria-selected="false" data-mt="port">{I('<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 14l2 2 4-4"/>')}<span><b>Portfolio check</b><small>Get ready for judging</small></span></button>
         </div>
         <div id="mt-scout" role="tabpanel" aria-labelledby="mt-tab-scout" hidden><div id="scout"><noscript><p>Scouting needs JavaScript.</p></noscript></div></div>
+        <div id="mt-port" role="tabpanel" aria-labelledby="mt-tab-port" hidden><div id="portfolio"><noscript><p>The portfolio check needs JavaScript.</p></noscript></div></div>
         <div id="mt-calc" role="tabpanel" aria-labelledby="mt-tab-calc">
         <div class="calc">
           <div class="calc-pick">
@@ -317,7 +319,7 @@ pages["calculator.html"] = shell("Score calculator and scouting" + T, "Free FTC 
           </div>
         </div>
         <div class="calc-mobile-bar"><span>Total</span><b id="calc-bar-total">0</b><button class="btn sm" type="button" id="calc-jump">Breakdown</button></div>
-        </div>"""), path="calculator.html", css=("scouting.css",), js=("calc-data.js", "calculator.js", "scouting.js"))
+        </div>"""), path="calculator.html", css=("scouting.css", "portfolio.css"), js=("calc-data.js", "calculator.js", "scouting.js", "portfolio.js"))
 
 pages["codelab.html"] = shell("Code Lab" + T, "Practice FTC Java programming in your browser: find bugs in real robot code, write methods that are checked instantly, and program a simulated robot's autonomous.", "codelab",
   page_hero("Code Lab", "Practice FTC programming", "Learn the Java that runs FTC robots, right in your browser: find bugs in real robot code, write methods that get checked instantly, then program a robot and drive it. Plus short CAD and outreach lessons for the whole team. No setup and no account needed.")

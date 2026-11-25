@@ -150,7 +150,7 @@
       }
     } catch {}
   }
-  const HOME_DEFAULTS = { stats: true, crews: true, build: true, videos: true, arcade: true, codelab: true, sponsors: true, cta: true };
+  const HOME_DEFAULTS = { season: true, stats: true, crews: true, build: true, videos: true, arcade: true, codelab: true, sponsors: true, cta: true };
   /** Someone who uses the Team editor on this device (they get a "view the site anyway" button). */
   const isTeamDevice = (c) => { if (isPreview() || store.get(DRAFT_KEY)) return true; try { return !!c?.dev?.passcodeHash && sessionStorage.getItem("ss-editor-unlocked") === c.dev.passcodeHash; } catch { return false; } };
   const mxBypassed = () => { try { return sessionStorage.getItem("ss-mx-bypass") === "1"; } catch { return false; } };
@@ -595,66 +595,156 @@
   }
 
   /* ---------------- Hero canvas: current running through a circuit grid ---------------- */
+  /* ---------------- Home hero: an FTC field in perspective, charged with energy ----------------
+     Layers, back to front: horizon glow behind the logo, field tiles rolling toward you with
+     pulses running along the seams, rising sparks, and the occasional lightning arc off the
+     logo's power ring. Colors follow the site's accent (Appearance). Move the mouse for sparks;
+     click for a shockwave. */
   function heroCanvas(canvas) {
-    const ctx = canvas.getContext("2d");
-    let w, h, dpr, cell, sparks = [], raf, visible = true, colors;
+    const ctx = canvas.getContext("2d"), hero = canvas.parentElement;
+    let w = 0, h = 0, dpr = 1, raf = 0, visible = true, C = null, last = performance.now(), time = 0;
+    let fx = 0, fy = 0, fr = 0, hy = 0, sparks = [], pulses = [], bolts = [], ripples = [], nextBolt = 2, nextPulse = 0.4;
+    const hexRgb = (hex) => { const m = /^#?([\da-f]{6})$/i.exec(String(hex).trim()); if (!m) return [59, 168, 255]; const n = parseInt(m[1], 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
+    const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${Math.max(0, Math.min(1, a))})`;
     const readColors = () => {
-      const cs = getComputedStyle(document.documentElement);
-      colors = { line: cs.getPropertyValue("--line").trim(), surge: cs.getPropertyValue("--surge").trim(), amber: cs.getPropertyValue("--amber").trim() };
+      const cs = getComputedStyle(document.documentElement), g = (k) => cs.getPropertyValue(k).trim();
+      C = { surge: hexRgb(g("--surge")), surge2: hexRgb(g("--surge-2")), amber: hexRgb(g("--amber")), light: document.documentElement.dataset.theme === "light" };
     };
-    const resize = () => {
+    const layout = () => {
       dpr = Math.min(2, devicePixelRatio || 1);
       w = canvas.clientWidth; h = canvas.clientHeight;
-      canvas.width = w * dpr; canvas.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      cell = w < 700 ? 36 : 48;
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const em = hero.querySelector(".hero-emblem"), r = canvas.getBoundingClientRect();
+      if (em && getComputedStyle(em).position === "absolute") { const e = em.getBoundingClientRect(); fx = e.left - r.left + e.width / 2; fy = e.top - r.top + e.height / 2; fr = e.width * 0.5; hy = Math.min(h - 90, fy + fr * 0.8); }
+      else { fx = w * 0.5; fy = h * 0.2; fr = 0; hy = h * 0.6; }
     };
-    const spawn = (x, y) => {
-      const gx = Math.round((x ?? Math.random() * w) / cell) * cell, gy = Math.round((y ?? Math.random() * h) / cell) * cell;
-      const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-      const [dx, dy] = dirs[(Math.random() * 4) | 0];
-      sparks.push({ x: gx, y: gy, dx, dy, trail: [[gx, gy]], life: 1, speed: 2.2 + Math.random() * 2.4, amber: Math.random() < 0.12, turns: 0 });
-    };
-    const drawGrid = () => {
-      ctx.strokeStyle = colors.line; ctx.globalAlpha = 0.5; ctx.lineWidth = 1; ctx.beginPath();
-      for (let x = 0; x <= w; x += cell) { ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, h); }
-      for (let y = 0; y <= h; y += cell) { ctx.moveTo(0, y + 0.5); ctx.lineTo(w, y + 0.5); }
-      ctx.stroke(); ctx.globalAlpha = 1;
-      ctx.fillStyle = colors.line;
-      for (let x = 0; x <= w; x += cell * 2) for (let y = 0; y <= h; y += cell * 2) ctx.fillRect(x - 1, y - 1, 3, 3);
-    };
-    const frame = () => {
-      ctx.clearRect(0, 0, w, h); drawGrid();
-      const od = document.documentElement.classList.contains("overdrive");
-      if (sparks.length < (w < 700 ? 7 : 14) * (od ? 3 : 1) && Math.random() < (od ? 0.4 : 0.08)) spawn();
-      for (const s of sparks) {
-        s.x += s.dx * s.speed; s.y += s.dy * s.speed;
-        if (Math.abs(s.x % cell) < s.speed && Math.abs(s.y % cell) < s.speed && Math.random() < 0.18) {
-          s.x = Math.round(s.x / cell) * cell; s.y = Math.round(s.y / cell) * cell; s.trail.push([s.x, s.y]);
-          if (s.dx) { s.dy = Math.random() < 0.5 ? 1 : -1; s.dx = 0; } else { s.dx = Math.random() < 0.5 ? 1 : -1; s.dy = 0; }
-          s.turns++;
-        }
-        if (s.turns > 5 || s.x < -cell || s.x > w + cell || s.y < -cell || s.y > h + cell) s.life -= 0.03;
-        const pts = [...s.trail, [s.x, s.y]].slice(-6);
-        const col = s.amber ? colors.amber : colors.surge;
-        ctx.save(); ctx.globalAlpha = Math.max(0, s.life) * 0.85; ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.shadowColor = col; ctx.shadowBlur = 12;
-        ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke();
-        ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(s.x, s.y, 2.2, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    const z2y = (z) => hy + (h - hy) / (1 + z * 0.55);        // depth → screen y (z = 0 at the bottom edge)
+    const LANES = 16, laneX = (i, y) => fx + (i * (w / LANES) * 1.35) * ((y - hy) / (h - hy));
+    const intensity = () => (document.documentElement.classList.contains("overdrive") ? 2.4 : 1);
+
+    function drawGlow() {
+      const a = C.light ? 0.16 : 0.22;
+      let g = ctx.createRadialGradient(fx, hy, 0, fx, hy, Math.max(w, h) * 0.55);
+      g.addColorStop(0, rgba(C.surge, a)); g.addColorStop(0.35, rgba(C.surge, a * 0.35)); g.addColorStop(1, rgba(C.surge, 0));
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      if (fr) { g = ctx.createRadialGradient(fx, fy, fr * 0.4, fx, fy, fr * 1.25); g.addColorStop(0, rgba(C.surge2, C.light ? 0.10 : 0.16)); g.addColorStop(1, rgba(C.surge2, 0)); ctx.fillStyle = g; ctx.fillRect(fx - fr * 1.3, fy - fr * 1.3, fr * 2.6, fr * 2.6); }
+    }
+    function drawFloor() {
+      const base = C.light ? 0.42 : 0.62;
+      ctx.lineWidth = 1;
+      // Lanes running into the distance
+      for (let i = -LANES; i <= LANES; i++) {
+        const g = ctx.createLinearGradient(0, hy, 0, h); g.addColorStop(0, rgba(C.surge, 0)); g.addColorStop(1, rgba(C.surge, base * (i % 3 === 0 ? 1 : 0.55)));
+        ctx.strokeStyle = g; ctx.beginPath(); ctx.moveTo(fx, hy); ctx.lineTo(laneX(i, h), h); ctx.stroke();
       }
-      sparks = sparks.filter((s) => s.life > 0);
+      // Tile seams rolling toward the viewer
+      const off = (time * 0.42) % 1;
+      for (let k = 0; k < 22; k++) {
+        const z = k + 1 - off, y = z2y(z); if (y <= hy + 1) continue;
+        ctx.strokeStyle = rgba(C.surge, base * (k % 3 === 0 ? 1.15 : 0.7) / (1 + z * 0.22));
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+      // Horizon line
+      const g = ctx.createLinearGradient(0, 0, w, 0); g.addColorStop(0, rgba(C.surge, 0)); g.addColorStop(fx / w, rgba(C.surge2, C.light ? 0.55 : 0.8)); g.addColorStop(1, rgba(C.surge, 0));
+      ctx.strokeStyle = g; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, hy); ctx.lineTo(w, hy); ctx.stroke();
+    }
+    function spawnPulse() { pulses.push({ lane: Math.round((Math.random() * 2 - 1) * LANES * 0.8), p: 0, speed: 0.22 + Math.random() * 0.2, amber: Math.random() < 0.15 }); }
+    function drawPulses(dt) {
+      for (const q of pulses) {
+        q.p += q.speed * dt;
+        const col = q.amber ? C.amber : C.surge2;
+        for (let k = 6; k >= 0; k--) {
+          const p = Math.max(0, q.p - k * 0.018), y = z2y((1 - p) * 20), x = laneX(q.lane, y), s = 1 + p * 2.6;
+          ctx.fillStyle = rgba(col, (1 - k / 7) * 0.9); ctx.beginPath(); ctx.arc(x, y, s * (k ? 0.7 : 1), 0, Math.PI * 2); ctx.fill();
+        }
+        const y = z2y((1 - q.p) * 20), x = laneX(q.lane, y), g = ctx.createRadialGradient(x, y, 0, x, y, 18 * (1 + q.p));
+        g.addColorStop(0, rgba(col, 0.5)); g.addColorStop(1, rgba(col, 0)); ctx.fillStyle = g; ctx.fillRect(x - 40, y - 40, 80, 80);
+      }
+      pulses = pulses.filter((q) => q.p < 1.02);
+    }
+    function spawnSpark(x, y, burst = false) {
+      sparks.push({ x: x ?? Math.random() * w, y: y ?? hy + Math.random() * (h - hy), vx: (Math.random() - 0.5) * (burst ? 80 : 14), vy: -(burst ? 30 + Math.random() * 90 : 12 + Math.random() * 26),
+        life: 0, max: burst ? 0.6 + Math.random() * 0.6 : 2.5 + Math.random() * 3.5, r: Math.random() < 0.15 ? 2 : 1.2, amber: Math.random() < 0.12, seed: Math.random() * 10 });
+    }
+    function drawSparks(dt) {
+      for (const p of sparks) {
+        p.life += dt; p.x += (p.vx + Math.sin(time * 1.3 + p.seed) * 8) * dt; p.y += p.vy * dt;
+        const a = Math.sin(Math.PI * Math.min(1, p.life / p.max)) * (0.55 + 0.45 * Math.sin(time * 9 + p.seed * 7));
+        ctx.fillStyle = rgba(p.amber ? C.amber : C.surge2, a); ctx.fillRect(p.x - p.r / 2, p.y - p.r / 2, p.r, p.r);
+      }
+      sparks = sparks.filter((p) => p.life < p.max && p.y > -10);
+    }
+    function bolt(x1, y1, x2, y2, rough) {
+      const pts = [[x1, y1], [x2, y2]];
+      for (let pass = 0; pass < 5; pass++) for (let i = pts.length - 1; i > 0; i--) {
+        const [ax, ay] = pts[i - 1], [bx, by] = pts[i], len = Math.hypot(bx - ax, by - ay), nx = -(by - ay) / (len || 1), ny = (bx - ax) / (len || 1), d = (Math.random() - 0.5) * len * rough;
+        pts.splice(i, 0, [(ax + bx) / 2 + nx * d, (ay + by) / 2 + ny * d]);
+      }
+      return pts;
+    }
+    function spawnBolt() {
+      if (!fr) return;
+      const a = Math.random() * Math.PI * 2, b = a + (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 0.9), R1 = fr * 0.98, R2 = fr * (1.05 + Math.random() * 0.25);
+      bolts.push({ pts: bolt(fx + Math.cos(a) * R1, fy + Math.sin(a) * R1, fx + Math.cos(b) * R2, fy + Math.sin(b) * R2, 0.35), t: 0 });
+    }
+    function drawBolts(dt) {
+      for (const b of bolts) {
+        b.t += dt; const a = Math.max(0, 1 - b.t / 0.45) * (0.6 + 0.4 * Math.random());
+        ctx.save(); ctx.lineJoin = "round"; ctx.shadowColor = rgba(C.surge2, 1); ctx.shadowBlur = 14;
+        ctx.strokeStyle = rgba(C.surge2, a); ctx.lineWidth = 2; ctx.beginPath(); b.pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke();
+        ctx.shadowBlur = 0; ctx.strokeStyle = `rgba(255,255,255,${a * 0.9})`; ctx.lineWidth = 0.8; ctx.stroke(); ctx.restore();
+      }
+      bolts = bolts.filter((b) => b.t < 0.45);
+    }
+    function drawRipples(dt) {
+      for (const r of ripples) {
+        r.t += dt; const k = r.t / 0.9, rad = 10 + k * 160;
+        ctx.strokeStyle = rgba(C.surge2, (1 - k) * 0.7); ctx.lineWidth = 2 * (1 - k) + 0.5;
+        ctx.beginPath(); ctx.ellipse(r.x, r.y, rad, rad * (r.y > hy ? 0.35 : 1), 0, 0, Math.PI * 2); ctx.stroke();
+      }
+      ripples = ripples.filter((r) => r.t < 0.9);
+    }
+    function frame(now) {
+      const dt = Math.min(0.05, (now - last) / 1000); last = now; time += dt;
+      const k = intensity();
+      ctx.clearRect(0, 0, w, h);
+      drawGlow(); drawFloor();
+      if ((nextPulse -= dt * k) <= 0) { spawnPulse(); nextPulse = 0.35 + Math.random() * 0.7; }
+      drawPulses(dt);
+      if (sparks.length < (w < 700 ? 22 : 48) * k && Math.random() < 0.5) spawnSpark();
+      drawSparks(dt); drawRipples(dt);
+      if ((nextBolt -= dt * k) <= 0) { spawnBolt(); if (Math.random() < 0.4) spawnBolt(); nextBolt = 2.2 + Math.random() * 3.5; }
+      drawBolts(dt);
       if (visible) raf = requestAnimationFrame(frame);
-    };
-    readColors(); resize();
-    addEventListener("resize", resize);
-    addEventListener("ss:theme", () => requestAnimationFrame(readColors));
-    if (reducedMotion) { drawGrid(); return; }
-    let lastSpawn = 0;
-    canvas.parentElement.addEventListener("pointermove", (e) => {
-      const now = performance.now(); if (now - lastSpawn < 140 || sparks.length > 22) return; lastSpawn = now;
-      const r = canvas.getBoundingClientRect(); spawn(e.clientX - r.left, e.clientY - r.top);
+    }
+    readColors(); layout();
+    const relayout = () => { layout(); if (reducedMotion) staticFrame(); };
+    addEventListener("resize", relayout);
+    addEventListener("ss:theme", () => requestAnimationFrame(() => { readColors(); if (reducedMotion) staticFrame(); }));
+    function staticFrame() { ctx.clearRect(0, 0, w, h); drawGlow(); drawFloor(); }
+    if (reducedMotion) { staticFrame(); return; }
+    // Logo tilt and sparks follow the pointer; a click sends a shockwave
+    const stage = hero.querySelector(".emblem-stage");
+    let lastSpark = 0;
+    hero.addEventListener("pointermove", (e) => {
+      const r = canvas.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+      if (stage) { stage.style.setProperty("--ry", `${((x / w) - 0.5) * 14}deg`); stage.style.setProperty("--rx", `${(0.5 - y / h) * 10}deg`); }
+      const t = performance.now(); if (t - lastSpark > 60 && sparks.length < 140) { lastSpark = t; for (let i = 0; i < 2; i++) spawnSpark(x, y, true); }
     });
-    new IntersectionObserver(([en]) => { visible = en.isIntersecting; if (visible) { cancelAnimationFrame(raf); raf = requestAnimationFrame(frame); } }).observe(canvas);
-    document.addEventListener("visibilitychange", () => { visible = !document.hidden; if (visible) { cancelAnimationFrame(raf); raf = requestAnimationFrame(frame); } });
-    for (let i = 0; i < 6; i++) spawn();
+    hero.addEventListener("pointerleave", () => { stage?.style.setProperty("--rx", "0deg"); stage?.style.setProperty("--ry", "0deg"); });
+    hero.addEventListener("pointerdown", (e) => {
+      if (e.target.closest("a, button")) return;
+      const r = canvas.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+      ripples.push({ x, y, t: 0 }); for (let i = 0; i < 14; i++) spawnSpark(x, y, true);
+      if (fr && Math.hypot(x - fx, y - fy) < fr * 1.2) { spawnBolt(); spawnBolt(); }
+    });
+    const resume = () => { cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(frame); };
+    new IntersectionObserver(([en]) => { visible = en.isIntersecting; if (visible) resume(); }).observe(canvas);
+    document.addEventListener("visibilitychange", () => { visible = !document.hidden; if (visible) resume(); });
+    // The logo settles in after its entrance animation, so measure again once it has
+    setTimeout(layout, 1000);
+    for (let i = 0; i < 30; i++) { spawnSpark(); sparks[sparks.length - 1].life = Math.random() * 2; }
+    for (let i = 0; i < 3; i++) { spawnPulse(); pulses[pulses.length - 1].p = Math.random() * 0.8; }
     raf = requestAnimationFrame(frame);
   }
 
@@ -806,6 +896,58 @@
      ====================================================================== */
   const pages = {};
 
+  /* ---------------- FTC around the world (FTC page) ----------------
+     Live from FTCScout: teams and matches this season, and the events happening today
+     (or the next day that has events). Loads when the section scrolls into view. */
+  function ftcLive(c) {
+    const host = $("#ftc-live"); if (!host) return;
+    let started = false; const go = () => { if (started) return; started = true; io.disconnect(); load(); };
+    const io = new IntersectionObserver(([en]) => { if (en.isIntersecting) go(); }, { rootMargin: "300px" });
+    io.observe(host.closest("section") || host.parentElement); // the strip itself is hidden until it has data
+    setTimeout(go, 6000); // in case the browser never reports it on screen (background tabs, some old browsers)
+    const pad = (n) => String(n).padStart(2, "0"), dayKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const home = (String(c.team.location || "").match(/,\s*([A-Z]{2})\b/) || [])[1] || "";
+    async function load() {
+      const season = currentSeason(), days = Array.from({ length: 8 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() + i); return d; });
+      const cacheKey = `ss-ftc-live-${dayKey(days[0])}`;
+      let data = null;
+      try { const c0 = JSON.parse(sessionStorage.getItem(cacheKey)); if (c0 && Date.now() - c0.at < 600000) data = c0; } catch {}
+      if (!data) {
+        const fields = "season code name type start end location { city state country }";
+        const q = `{ teams: activeTeamsCount(season:${season}) matches: matchesPlayedCount(season:${season}) ${days.map((d, i) => `d${i}: eventsOnDate(date:"${dayKey(d)}T12:00:00Z") { ${fields} }`).join(" ")} }`;
+        try {
+          const j = await ftcFetch("/graphql", { query: q });
+          if (!j?.data) throw new Error("no data");
+          data = { at: Date.now(), teams: j.data.teams, matches: j.data.matches, days: days.map((d, i) => ({ day: dayKey(d), events: (j.data[`d${i}`] || []).filter((e) => e.type !== "Practice") })) };
+          try { sessionStorage.setItem(cacheKey, JSON.stringify(data)); } catch {}
+        } catch { return; }
+      }
+      draw(data, season);
+    }
+    function draw(d, season) {
+      const today = d.days[0], next = d.days.slice(1).find((x) => x.events.length), show = today.events.length ? today : next;
+      const label = (k) => { const x = parseDate(k); return x.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" }); };
+      const where = (e) => [e.location?.city, e.location?.country === "USA" ? e.location?.state : [e.location?.state, e.location?.country].filter(Boolean).join(", ")].filter(Boolean).join(", ");
+      const rankOf = (e) => (home && e.location?.state === home && e.location?.country === "USA" ? 0 : e.location?.country === "USA" ? 1 : 2);
+      const list = show ? [...show.events].sort((a, b) => rankOf(a) - rankOf(b) || a.name.localeCompare(b.name)) : [];
+      const countries = {}; for (const e of list) { const k = e.location?.country || "Other"; countries[k] = (countries[k] || 0) + 1; }
+      const top = Object.entries(countries).sort((a, b) => b[1] - a[1]);
+      const dayOf = (e) => (e.end && e.end !== e.start ? ` · Day ${Math.round((parseDate(show.day) - parseDate(String(e.start).slice(0, 10))) / 864e5) + 1} of ${Math.round((parseDate(String(e.end).slice(0, 10)) - parseDate(String(e.start).slice(0, 10))) / 864e5) + 1}` : "");
+      const tile = (v, l) => `<div class="ftc-live-stat"><b>${Number(v).toLocaleString()}</b><span>${l}</span></div>`;
+      const busiest = d.days.slice(1).reduce((b, x) => (x.events.length > (b?.events.length || 0) ? x : b), null);
+      host.innerHTML = `
+        <div class="ftc-live-head"><span class="ftc-live-dot" aria-hidden="true"></span><h3>FTC around the world</h3><small>Live from <a href="https://ftcscout.org" target="_blank" rel="noopener">FTCScout</a> · updated ${new Date(d.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</small></div>
+        <div class="ftc-live-stats">${tile(d.teams || 0, `teams competing in ${seasonLabel(season)}`)}${tile(d.matches || 0, "matches played so far this season")}${tile(today.events.length, today.events.length === 1 ? "event happening today" : "events happening today")}</div>
+        ${show ? `<div class="ftc-live-today">
+          <div class="ftc-live-sub"><b>${show === today ? "Happening today" : `Next up: ${esc(label(show.day))}`}</b><span>${list.length} event${list.length === 1 ? "" : "s"}${top.length > 1 ? ` in ${top.length} countries` : ""}: ${top.slice(0, 5).map(([k, n]) => `${esc(k === "USA" ? "United States" : k)} ${n}`).join(" · ")}</span></div>
+          <ul class="ftc-live-list">${list.slice(0, 8).map((e) => `<li><a href="https://ftcscout.org/events/${esc(e.season)}/${esc(e.code)}" target="_blank" rel="noopener"><b>${esc(e.name)}</b><span>${esc(where(e))} · ${esc(EVENT_KINDS[e.type] || e.type || "Event")}${show === today ? esc(dayOf(e)) : ""}</span></a>${home && rankOf(e) === 0 ? `<i class="tag ok">Near us</i>` : ""}</li>`).join("")}</ul>
+          <div class="ftc-live-foot">${busiest && busiest !== show && busiest.events.length > list.length ? `<span>Busiest day this week: <b>${esc(label(busiest.day))}</b>, ${busiest.events.length} events</span>` : ""}
+          ${list.length > 8 ? `<a class="link-arrow" href="https://ftcscout.org/events/${season}" target="_blank" rel="noopener">See all ${list.length} on FTCScout ${ICON.arrow}</a>` : ""}</div>
+        </div>` : `<p class="muted ftc-live-quiet">No FTC events in the next week. Most events run on Saturdays from November to March.</p>`}`;
+      host.hidden = false;
+    }
+  }
+
   /* ---------------- Season calendar ----------------
      Competitions come from FTCScout as soon as the team registers; the team adds
      everything else (demos, kickoff parties, open houses) in the editor. */
@@ -872,6 +1014,28 @@
     const place = [e.venue, [e.city, e.state].filter(Boolean).join(", ")].filter(Boolean).join(" · ");
     return `<div class="next-event reveal"><span class="tag ok">Up next · ${esc(nextLabel(e))}</span><h3>${esc(e.name)}</h3><p>${fmtDate(e.start)}${place ? ` · ${esc(place)}` : ""}</p><a class="link-arrow" href="https://ftcscout.org/events/${esc(e.season)}/${esc(e.code)}" target="_blank" rel="noopener">Follow it live on FTCScout ${ICON.arrow}</a></div>`;
   }
+  /** "This season" banner under the home hero, from content/seasons.json (newest game first). */
+  async function seasonBanner() {
+    const wrap = $("#home-season-wrap"), host = $("#home-season"); if (!host) return;
+    let s;
+    try { s = (await (await fetch(url("content/seasons.json"), { cache: "no-cache" })).json()).seasons?.[0]; } catch { return; }
+    if (!s?.name) return;
+    const y = Number(s.year), now = currentSeason(), live = y === now;
+    host.innerHTML = `
+      <div class="season-card reveal">
+        <div class="season-text">
+          <span class="season-kicker"><i></i>${live ? "This season" : y > now ? "Next season" : "Latest game"} · ${seasonLabel(y)}</span>
+          <h2>${esc(s.name)}</h2>
+          <p class="season-meta">${[s.theme, s.presenter].filter(Boolean).map(esc).join(" · ")}</p>
+          ${s.tagline ? `<p class="season-tag">${esc(s.tagline)}</p>` : ""}
+        </div>
+        <div class="season-actions">
+          <a class="btn primary" href="${url(`ftc.html?season=${y}`)}#games">How ${esc(s.name)} works ${ICON.arrow}</a>
+          <a class="btn" href="${url(`calculator.html?season=${y}`)}">Score a match</a>
+        </div>
+      </div>`;
+    wrap.hidden = false; initReveal(host);
+  }
   const HOME_CREWS = [
     ["gear", "Engineer", "We design every subsystem in CAD, build it, and keep improving it until it holds up in real matches.", "Mechanical"],
     ["code", "Program", "From autonomous routines to driver controls, our code turns a pile of motors into a competitor.", "Programming"],
@@ -900,9 +1064,11 @@
     let pillars = HOME_CREWS;
     if (c.home?.crews?.length) pillars = c.home.crews.filter((x) => x.title).map((x, i) => [x.icon || ["gear", "code", "heart", "star"][i % 4], x.title, x.text || "", x.dept || ""]);
     $("#pillars").innerHTML = pillars.map(([i, t, d, dept]) => `
-      <a class="card reveal" href="${url("team.html")}${dept ? "#" + esc(dept.toLowerCase()) : ""}"><div class="card-icon">${ICON[i] || ICON.star}</div><h3>${esc(t)}</h3><p>${esc(d)}</p><span class="link-arrow">${dept ? `Meet the ${esc(dept.toLowerCase())} crew` : "Meet the team"} ${ICON.arrow}</span></a>`).join("");
+      <a class="card crew-card reveal" href="${url("team.html")}${dept ? "#" + esc(dept.toLowerCase()) : ""}"><span class="crew-art" aria-hidden="true">${ICON[i] || ICON.star}</span><div class="card-icon">${ICON[i] || ICON.star}</div><h3>${esc(t)}</h3><p>${esc(d)}</p><span class="link-arrow">${dept ? `Meet the ${esc(dept.toLowerCase())} crew` : "Meet the team"} ${ICON.arrow}</span></a>`).join("");
     const steps = c.home?.steps?.length ? c.home.steps.filter((x) => x.title).map((x, k) => [["flag", "pencil", "gear", "code", "trophy", "star"][k % 6], esc(x.title), esc(x.text || "")]) : BUILD_STEPS;
     $("#build-steps").innerHTML = steps.map(([i, t, d], k) => `<li class="step reveal"><span class="step-num">${String(k + 1).padStart(2, "0")}</span><div class="card-icon">${ICON[i] || ICON.star}</div><h3>${t}</h3><p>${d}</p></li>`).join("");
+
+    if (H.season) seasonBanner();
 
     // Latest videos: the newest upload is featured; the next few are listed. All automatic.
     const vids = (await loadVideos()).slice(0, 5);
@@ -1229,6 +1395,7 @@
 
   /* ---------------- FTC page: season explorer with 3D fields ---------------- */
   pages.ftc = async (c) => {
+    ftcLive(c);
     let data;
     for (let attempt = 0; attempt < 3 && !data; attempt++) {
       try { data = await (await fetch(url("content/seasons.json"), { cache: attempt ? "reload" : "no-cache" })).json(); }

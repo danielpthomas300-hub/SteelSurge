@@ -92,6 +92,7 @@
       set: (c, v) => { c.home = { sections: Object.fromEntries(Object.keys(window.SS?.HOME_DEFAULTS || {}).map((k) => [k, v["s_" + k] !== false])), crews: v.crews, steps: v.steps, games: v.games }; },
       fields: [
         { k: "_secs", label: "Sections", type: "heading", hint: "Switch a section off to hide it from the home page. The hero at the top always shows." },
+        { k: "s_season", label: "This season's game (banner under the top section)", type: "bool" },
         { k: "s_stats", label: "Live FTC stats and next event", type: "bool" },
         { k: "s_crews", label: "“What we do” cards", type: "bool" },
         { k: "s_build", label: "How a season works (build steps)", type: "bool" },
