@@ -138,7 +138,7 @@ pages["index.html"] = shell("Steel Surge — FTC Robotics Team 27254", "Steel Su
         <div class="cta-band reveal" id="home-cta">
           <div><h2>Power the surge</h2><p>Sponsors keep our robot running and our outreach growing. Every tier comes with real visibility for your business.</p></div>
           <div class="actions"><a class="btn primary" href="sponsors.html">See sponsor tiers {A}</a><a class="btn" href="contact.html">Get in touch</a></div>
-        </div>'''), jsonld=JSONLD, js=("ics.js",))
+        </div>'''), jsonld=JSONLD, js=("ics.js", "pages/calendar.js", "pages/home.js"))
 
 pages["team.html"] = shell("Team" + T, "Meet the students behind Steel Surge, FTC team 27254: mechanical, programming, and outreach.", "team",
   page_hero("The team", "Meet the crew", "Students who design, build, code, and promote our robot every season.", "team-lead")
@@ -152,7 +152,7 @@ pages["team.html"] = shell("Team" + T, "Meet the students behind Steel Surge, FT
   + section(f'''        <div class="cta-band reveal">
           <div><h2>Want to join Steel Surge?</h2><p>Builders, coders, designers, and storytellers welcome. No experience needed, just curiosity and commitment.</p></div>
           <div class="actions"><a class="btn primary" id="join-link" href="#" target="_blank" rel="noopener">Fill out the interest form {A}</a></div>
-        </div>'''), path="team.html", js=("ics.js",))
+        </div>'''), path="team.html", js=("ics.js", "pages/calendar.js", "pages/team.js"))
 
 # The old Competition page now forwards to the team's story on the Team page
 pages["achievements.html"] = f'''<!doctype html>
@@ -172,11 +172,11 @@ pages["media.html"] = shell("Media" + T, "Videos, highlights, and social media f
   + section(head_block("Latest uploads", "Recent videos", "Updated automatically every day from our channel.") + '\n        <div class="video-grid" id="video-grid"></div>')
   + section(head_block("Team favorites", "Our picks", "Hand-picked videos from the team.") + '\n        <div class="video-grid" id="fav-grid"></div>', attrs=' id="favorites" hidden')
   + section(head_block("Build log", "Team updates") + '\n        <div class="grid cols-2" id="updates"></div>')
-  + section(head_block("Follow along", "Find us online") + '\n        <div class="grid cols-3" id="socials"></div>'), path="media.html")
+  + section(head_block("Follow along", "Find us online") + '\n        <div class="grid cols-3" id="socials"></div>'), path="media.html", js=("pages/media.js",))
 
 pages["arcade.html"] = shell("Arcade" + T, "Thirteen original browser games from Steel Surge, FTC team 27254, each with trophies to earn.", "arcade",
   page_hero("Steel Surge Arcade", "Play something we built", 'Thirteen original robot games starring Surge, our mascot. They run in your browser on a computer or phone, remember your best scores on this device, and award <a href="trophies.html">trophies</a> as you play.')
-  + section('        <div id="weekly-challenge"></div>\n        <h2 class="sr-only">Games</h2>\n        <div id="arcade-progress"></div>\n        <div class="grid cols-3" id="arcade-games"></div>'), path="arcade.html")
+  + section('        <div id="weekly-challenge"></div>\n        <h2 class="sr-only">Games</h2>\n        <div id="arcade-progress"></div>\n        <div class="grid cols-3" id="arcade-games"></div>'), path="arcade.html", js=("pages/arcade.js",))
 
 WHY = [
     ("Reach local families", "Your name travels with us to events, outreach demos, and our online channels all season."),
@@ -213,7 +213,7 @@ pages["sponsors.html"] = shell("Sponsors" + T, "Sponsor Steel Surge, FTC team 27
   + section(f'''        <div class="cta-band reveal">
           <div><h2>Let's talk</h2><p>Questions about sponsoring, or want our sponsor packet? Send us a note and we'll get back to you.</p></div>
           <div class="actions"><a class="btn primary" href="contact.html?reason=Sponsorship">Contact us about sponsoring {A}</a></div>
-        </div>'''), path="sponsors.html")
+        </div>'''), path="sponsors.html", js=("pages/sponsors.js",))
 
 MAIL = I('<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/>')
 USERS = I('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>')
@@ -276,11 +276,11 @@ pages["contact.html"] = shell("Contact" + T, "Contact Steel Surge, FTC team 2725
           <details><summary>Can our robot visit my school or event?</summary><p>We love doing demos. Choose "Book a demo" above and tell us the date, location, and what kind of event it is.</p></details>
           <details><summary>Who can join Steel Surge?</summary><p>Students in grades 7–12 in our area. No experience is needed. Fill out the interest form or send us a message.</p></details>
           <details><summary>What is FTC?</summary><p>FIRST Tech Challenge is a robotics program for grades 7–12. Our <a href="ftc.html">FTC page</a> explains everything, including every recent game.</p></details>
-        </div>'''), path="contact.html")
+        </div>'''), path="contact.html", js=("pages/contact.js",))
 
 pages["ftc.html"] = shell("What is FTC?" + T, "New to FIRST Tech Challenge? How FTC seasons and matches work, judged awards, a glossary, and how to get involved.", "ftc",
   open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ftc_page.html"), encoding="utf-8").read(), path="ftc.html",
-  extra_head='\n  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>\n  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>')
+  extra_head='\n  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>\n  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>', js=("pages/ftc.js",))
 
 pages["calculator.html"] = shell("Score calculator and scouting" + T, "Free FTC match tools: a score calculator for every FIRST Tech Challenge game since 2017–18, an event scouting tool with live FTCScout stats and rank projections, and an engineering portfolio check.", "calculator",
   page_hero("Match tools", "Score calculator and scouting", "Score any FTC match since 2017–18 with point values from the official manuals, or scout an event: live stats for every team, notes on your phone, and an alliance pick list. Or check your engineering portfolio before judging.")

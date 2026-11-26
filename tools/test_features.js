@@ -108,6 +108,27 @@ test("Scouting: mid-event projection is sensible and repeatable", () => {
   for (const k of a.keys) { ok(k.pWin >= 0 && k.pWin <= 1, "win chance between 0 and 1"); ok(k.m.red.includes(8) || k.m.blue.includes(8), "key matches are ours"); }
 });
 
+test("Alliances: captains are the top teams, picking the best available in order", () => {
+  const order = [8, 7, 6, 5, 4, 3, 2, 1];
+  eq(SM.draft({ order, K: 2, size: 2, value: oprOf }), [[8, 6], [7, 5]]);
+});
+test("Alliances: 3-team alliances pick in a snake (round 2 reversed)", () => {
+  eq(SM.draft({ order: [8, 7, 6, 5, 4, 3, 2, 1], K: 2, size: 3, value: oprOf }), [[8, 6, 3], [7, 5, 4]]);
+});
+test("Alliances: a forced pick is used, and crossed-off teams are skipped", () => {
+  const order = [8, 7, 6, 5, 4, 3, 2, 1];
+  eq(SM.draft({ order, K: 2, size: 2, value: oprOf, forced: { 8: [2] } }), [[8, 2], [7, 6]]);
+  eq(SM.draft({ order, K: 2, size: 2, value: oprOf, taken: new Set([6]) }), [[8, 5], [7, 4]]);
+});
+test("Alliances: first-pick suggestions are ranked by win chance, and only for captains", () => {
+  const order = [8, 7, 6, 5, 4, 3, 2, 1], cons = SM.consistency(TEAMS, schedule(), oprOf);
+  const picks = SM.firstPicks({ order, K: 2, size: 2, us: 8, oprOf, cons });
+  eq(picks[0].n, 6, "the strongest non-captain is the best pick");
+  ok(picks.every((p, i) => i === 0 || Math.round(p.avg * 100) <= Math.round(picks[i - 1].avg * 100)), "sorted by win chance");
+  ok(picks.every((p) => p.ours[0] === 8 && p.ours[1] === p.n), "our alliance includes the pick");
+  eq(SM.firstPicks({ order, K: 2, size: 2, us: 3, oprOf, cons }), null, "not a captain");
+});
+
 /* ---------------- Calendar ---------------- */
 const lines = (ics) => ics.split("\r\n");
 test("Calendar: an all-day event ends the day after its last day", () => {

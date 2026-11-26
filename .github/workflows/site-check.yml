@@ -24,7 +24,7 @@ jobs:
           node-version: 20
 
       - name: Scripts have no syntax errors
-        run: for f in assets/js/*.js assets/js/arcade/*.js tools/*.mjs tools/*.js; do node --check "$f" || exit 1; done
+        run: for f in assets/js/*.js assets/js/arcade/*.js assets/js/pages/*.js tools/*.mjs tools/*.js sw.js; do node --check "$f" || exit 1; done
 
       - name: Content files are valid
         run: python tools/check_content.py

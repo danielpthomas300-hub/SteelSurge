@@ -220,3 +220,25 @@
 html.a11y-cb .sc-al-col.red { background-image: repeating-linear-gradient(45deg, rgba(255, 93, 93, .12) 0 5px, transparent 5px 11px); }
 html.a11y-cb .sc-al-col.blue { background-image: radial-gradient(rgba(59, 168, 255, .25) 1.4px, transparent 1.6px); background-size: 8px 8px; }
 @media (max-width: 720px) { .sc-brief-head, .sc-brief-sides { grid-template-columns: 1fr; } }
+
+/* ---------- Alliance selection helper ---------- */
+.sc-al-controls { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: flex-end; margin-bottom: 12px; }
+.sc-al-controls .fine { flex-basis: 100%; margin: 0; }
+.sc-h3 { font-size: 18px; margin: 0 0 6px; }
+.sc-card + .sc-card { margin-top: 12px; }
+.sc-alpicks tbody tr { cursor: pointer; }
+.sc-alpicks tbody tr.sel { background: var(--surge-soft); box-shadow: inset 3px 0 0 var(--surge); }
+.sc-alpicks td small { color: var(--dim); }
+.sc-allist { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
+.sc-allist li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); }
+.sc-allist li.mine { border-color: color-mix(in srgb, var(--surge) 55%, var(--line)); background: var(--surge-soft); }
+.sc-seed { font: 700 15px/1 var(--font-mono); color: var(--dim); text-align: center; }
+.sc-teams { display: flex; flex-wrap: wrap; gap: 6px; }
+.sc-chip { display: inline-grid; gap: 1px; padding: 5px 9px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; text-align: left; }
+.sc-chip b { font: 700 13px/1.1 var(--font-mono); }
+.sc-chip small { font: 500 10.5px/1 var(--font-mono); color: var(--dim); }
+.sc-chip.us { border-color: var(--surge); }
+.sc-chip.taken { opacity: .5; text-decoration: line-through; }
+.sc-alscore { font: 600 14px/1 var(--font-mono); color: var(--muted); }
+.sc-alwin { font: 600 13px/1 var(--font-mono); }
+@media (max-width: 560px) { .sc-allist li { grid-template-columns: 26px minmax(0, 1fr); } .sc-alscore, .sc-alwin { grid-column: 2; } }

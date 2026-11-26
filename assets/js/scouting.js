@@ -166,13 +166,13 @@
         </div>
         <p class="sc-src">${ev.offline ? `<b>Offline:</b> showing the copy saved ${new Date(ev.fetched).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}. ` : ""}${anyEvent ? "Stats are from matches at this event" : "No matches played here yet, so stats are each team's best from the season so far"}${anyEvent && seasonSrc ? " (teams marked · haven't played here yet, so their season numbers are shown)" : ""}. Data from <a href="https://ftcscout.org/events/${ev.season}/${esc(ev.code)}" target="_blank" rel="noopener">FTCScout</a>.</p>
       </div>
-      <div class="sc-views" role="tablist" aria-label="Scouting views">${[["teams", "Teams"], ...(ours ? [["brief", "Next match"]] : []), ["matches", ours ? "Our matches" : "Matches"], ["proj", "Projection"], ["picks", "Pick list"], ["share", "Share notes"]].map(([k, l]) => `<button type="button" role="tab" aria-selected="${S.view === k}" data-view="${k}">${l}</button>`).join("")}</div>
+      <div class="sc-views" role="tablist" aria-label="Scouting views">${[["teams", "Teams"], ...(ours ? [["brief", "Next match"]] : []), ["matches", ours ? "Our matches" : "Matches"], ["proj", "Projection"], ["alli", "Alliances"], ["picks", "Pick list"], ["share", "Share notes"]].map(([k, l]) => `<button type="button" role="tab" aria-selected="${S.view === k}" data-view="${k}">${l}</button>`).join("")}</div>
       <div class="sc-body" data-body></div>
       <dialog class="sc-dialog" data-dialog></dialog>`;
     $("[data-refresh]", host).addEventListener("click", () => refresh());
     $("[data-change]", host).addEventListener("click", () => { S.last = null; save(); picker(); });
     $$("[data-view]", host).forEach((b) => b.addEventListener("click", () => { S.view = b.dataset.view; save(); draw(); }));
-    ({ teams: viewTeams, brief: ours ? viewBrief : viewTeams, matches: viewMatches, proj: viewProjection, picks: viewPicks, share: viewShare }[S.view] || viewTeams)();
+    ({ teams: viewTeams, brief: ours ? viewBrief : viewTeams, matches: viewMatches, proj: viewProjection, alli: viewAlliances, picks: viewPicks, share: viewShare }[S.view] || viewTeams)();
   }
 
   /* ---- Teams ---- */
@@ -394,6 +394,69 @@
       <p class="fine">Predictions use each team's OPR and how much their scores usually swing. Your notes come from this phone and from teammates' shared links. Tap a team to add notes.</p>`;
     $("[data-pick-match]", body)?.addEventListener("change", (e) => { S.briefMatch = e.target.value; save(); viewBrief(); });
     $$("[data-team]", body).forEach((b) => b.addEventListener("click", () => teamDialog(Number(b.dataset.team))));
+  }
+
+  /* ---- Alliance selection helper ----
+     Simulates selection from the projected (or final) ranking. If Steel Surge would be a captain, it
+     ranks first picks by how often the resulting alliance would beat the others. If not, it shows
+     which captain would most likely pick us. Teams crossed off in the pick list are treated as taken. */
+  function viewAlliances() {
+    const body = $("[data-body]", host), K = S.captains, size = S.alSize || 2, cons = consAll(), pc = (v) => `${Math.round(v * 100)}%`;
+    const tOf = (n) => ev.teams.find((t) => t.n === n) || { n, name: "", opr: 0 };
+    const order = project(K).rows.map((r) => r.n), ours = ev.teams.some((t) => t.n === team);
+    const taken = new Set(Object.entries(S.picks[evKey()] || {}).filter(([, v]) => v === "picked").map(([n]) => Number(n)));
+    const projRank = order.indexOf(team) + 1, seed = ours ? S.alSeed || 0 : 0;
+    const seedOrder = seed ? (() => { const o = order.filter((n) => n !== team); o.splice(seed - 1, 0, team); return o; })() : order;
+    const value = (n) => oprOf(n);
+    const chips = (teams) => teams.map((n) => `<button type="button" class="sc-chip${n === team ? " us" : ""}${taken.has(n) ? " taken" : ""}" data-team="${n}"><b>${n}</b><small>${fmt1(oprOf(n))}</small></button>`).join("");
+    const controls = `
+      <div class="sc-card sc-al-controls">
+        <label class="sc-captains"><span>Alliances</span><select class="input select" data-k>${[4, 6, 8].map((k) => `<option value="${k}"${k === K ? " selected" : ""}>${k}</option>`).join("")}</select></label>
+        <label class="sc-captains"><span>Teams per alliance</span><select class="input select" data-size>${[2, 3].map((k) => `<option value="${k}"${k === size ? " selected" : ""}>${k}</option>`).join("")}</select></label>
+        ${ours ? `<label class="sc-captains"><span>Plan as</span><select class="input select" data-seed><option value="0">Projected (#${projRank})</option>${Array.from({ length: K }, (_, i) => `<option value="${i + 1}"${seed === i + 1 ? " selected" : ""}>Captain #${i + 1}</option>`).join("")}</select></label>` : ""}
+        <p class="fine">Captains are the top ${K} of the ${project(K).left ? "projected" : "final"} ranking. Other captains are assumed to pick the highest-OPR team left. Teams you cross off in the <b>Pick list</b> count as taken (${taken.size}).</p>
+      </div>`;
+    const isCap = ours && seedOrder.slice(0, K).includes(team) && !taken.has(team);
+    let main = "";
+    if (isCap) {
+      const picks = ScoutModel.firstPicks({ order: seedOrder, K, size, us: team, oprOf, cons, taken, value }) || [];
+      const sel = picks.find((p) => p.n === S.alPick) || picks[0];
+      if (!picks.length) main = `<div class="sc-card sc-empty">No teams are left to pick. Clear some crossed-off teams in the Pick list.</div>`;
+      else {
+        const usT = tOf(team), selT = tOf(sel.n);
+        const fit = [];
+        if ((selT.auto ?? 0) > (usT.auto ?? 0) + 5) fit.push(`covers our autonomous (${fmt1(selT.auto)} vs our ${fmt1(usT.auto)})`);
+        if ((selT.dc ?? 0) > (usT.dc ?? 0) + 8) fit.push(`adds TeleOp scoring (${fmt1(selT.dc)})`);
+        if ((cons.get(sel.n)?.score ?? 0) >= 75) fit.push("is steady match to match");
+        const note = S.notes[evKey()]?.[sel.n];
+        main = `
+        <div class="sc-card"><h3 class="sc-h3">Best first picks for us</h3><p class="muted">Ranked by our average chance to beat the other alliances that would form. Tap one to see the field.</p>
+          <div class="sc-table-wrap"><table class="sc-table sc-alpicks"><thead><tr>${["Team", "OPR", "Auto", "TeleOp", "Steady", "Our alliance", "Win chance", "Toughest"].map((h) => `<th scope="col"><span>${h}</span></th>`).join("")}</tr></thead><tbody>
+          ${picks.slice(0, 10).map((p) => { const t = tOf(p.n); return `<tr class="${p === sel ? "sel" : ""}" data-pick="${p.n}" tabindex="0"><th scope="row"><b>${p.n}</b><small>${esc(t.name)}</small></th><td class="num">${fmt1(t.opr)}</td><td class="num">${fmt1(t.auto)}</td><td class="num">${fmt1(t.dc)}</td><td class="num">${cons.get(p.n)?.score ?? "—"}</td><td class="num">${Math.round(p.mean)}</td><td><div class="sc-bar"><i style="width:${Math.round(p.avg * 100)}%"></i><span>${pc(p.avg)}</span></div></td><td class="num">${p.worst ? `${p.worst.teams[0]} <small>${pc(p.worst.p)}</small>` : "—"}</td></tr>`; }).join("")}
+          </tbody></table></div></div>
+        <div class="sc-card"><h3 class="sc-h3">If we pick ${sel.n}${selT.name ? ` (${esc(selT.name)})` : ""}</h3>
+          <p>${fit.length ? `${sel.n} ${fit.join(", ")}. ` : ""}Our alliance is predicted to score about <b>${Math.round(sel.mean)}</b>, with an average <b>${pc(sel.avg)}</b> chance against the other alliances.${note?.avoid ? " <b>You marked this team “Avoid” in your notes.</b>" : note?.want ? " ★ You marked them as a wanted partner." : ""}</p>
+          <ol class="sc-allist">${sel.alliances.map((a, i) => { const mine = a.includes(team), v = sel.vs.find((x) => x.teams === a); return `<li class="${mine ? "mine" : ""}"><span class="sc-seed">${i + 1}</span><span class="sc-teams">${chips(a)}</span><span class="sc-alscore">~${Math.round(ScoutModel.alliance(a, oprOf, cons).mean)}</span><span class="sc-alwin">${mine ? "Us" : `We win ${pc(v.p)}`}</span></li>`; }).join("")}</ol></div>`;
+      }
+    } else {
+      const al = ScoutModel.draft({ order: seedOrder, K, size, value, taken });
+      const where = al.findIndex((a) => a.includes(team));
+      const pool = seedOrder.filter((n) => !taken.has(n) && !al.some((a) => a[0] === n)), myRank = pool.sort((a, b) => oprOf(b) - oprOf(a)).indexOf(team) + 1;
+      // Captains whose likely pick is close to us in strength: we're a realistic alternative for them
+      const close = al.filter((a) => !a.includes(team) && a[1] != null && oprOf(a[1]) <= oprOf(team) * 1.2).map((a) => a[0]);
+      main = `
+        <div class="sc-card"><h3 class="sc-h3">${!ours ? "Likely alliances" : where >= 0 ? `We'd most likely join alliance ${where + 1}` : "We may not be picked"}</h3>
+          ${ours ? `<p>${where >= 0 ? `If captains pick the highest OPR left, captain <b>${al[where][0]}</b>${tOf(al[where][0]).name ? ` (${esc(tOf(al[where][0]).name)})` : ""} would pick us.` : `We rank #${myRank} by OPR among teams that aren't captains, so captains picking purely by OPR would pass us.`}
+            ${close.length ? ` We're close in strength to the likely picks of captain${close.length === 1 ? "" : "s"} <b>${close.join(", ")}</b>: talk to them about what we add (a reliable autonomous, consistency, or a specific mechanism).` : ""}
+            Use <b>Plan as</b> above to see our picks if we end up a captain.</p>` : `<p class="muted">Steel Surge isn't at this event. This is how selection would go by OPR.</p>`}
+          <ol class="sc-allist">${al.map((a, i) => `<li class="${a.includes(team) ? "mine" : ""}"><span class="sc-seed">${i + 1}</span><span class="sc-teams">${chips(a)}</span><span class="sc-alscore">~${Math.round(ScoutModel.alliance(a, oprOf, cons).mean)}</span></li>`).join("")}</ol></div>`;
+    }
+    body.innerHTML = controls + main + `<p class="fine">A planning aid, not a prediction of what captains will do: real captains weigh their own scouting, can pick other captains, and can decline. Alliance scores add up each team's OPR.</p>`;
+    $("[data-k]", body).addEventListener("change", (e) => { S.captains = Number(e.target.value); save(); viewAlliances(); });
+    $("[data-size]", body).addEventListener("change", (e) => { S.alSize = Number(e.target.value); save(); viewAlliances(); });
+    $("[data-seed]", body)?.addEventListener("change", (e) => { S.alSeed = Number(e.target.value); save(); viewAlliances(); });
+    $$("[data-pick]", body).forEach((r) => { const go = () => { S.alPick = Number(r.dataset.pick); save(); viewAlliances(); }; r.addEventListener("click", go); r.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); }); });
+    $$("[data-team]", body).forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); teamDialog(Number(b.dataset.team)); }));
   }
 
   /* ---- Pick list ---- */

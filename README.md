@@ -86,7 +86,10 @@ How the Code Lab works: `minijava.js` runs a simplified Java in the browser with
 ```
 *.html, arcade/*.html     Generated pages. Edit tools/build_pages.py, not these.
 content/                  content.json (editable) + auto-refreshed data
-assets/js/site.js         Header, footer, content loading, FTCScout, page logic
+assets/js/site.js         Shared by every page: header, footer, theme, content, FTCScout, accessibility
+assets/js/pages/          One file per page (home, team, ftc, media…), loaded only on that page
+assets/js/*-model.js etc. Logic without page code (scouting math, calendar files, Kilovolt matching,
+                          portfolio rules), tested by tools/test_features.js
 assets/js/editor.js       Team editor
 assets/css/               site.css (design tokens at the top) + page styles
 tools/                    Page builder, checks, tests, image generators, data refresh

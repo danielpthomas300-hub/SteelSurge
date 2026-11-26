@@ -87,6 +87,39 @@
     return { rows, keys, left: left.length, played: played.length, total: quals.length, official, winRP };
   }
 
-  const ScoutModel = { rng, consistency, swing, alliance, winChance, project };
+  /** Alliance selection, simplified: the top K teams are captains, in order. Each round every captain
+      picks once (round 2 goes in reverse, for 3-team alliances). A captain takes the most valuable team
+      still available, unless `forced` names its pick. Teams in `taken` can't be picked.
+      (Real captains can also pick other captains and can decline; this doesn't model that.) */
+  function draft({ order, K = 4, size = 2, value, forced = {}, taken = new Set() }) {
+    const used = new Set(taken), alliances = [];
+    for (const n of order) { if (alliances.length >= K) break; if (!used.has(n)) { alliances.push([n]); used.add(n); } }
+    for (let r = 0; r < size - 1; r++) {
+      const seq = alliances.map((_, i) => (r % 2 ? alliances.length - 1 - i : i));
+      for (const i of seq) {
+        let pick = forced[alliances[i][0]]?.[r];
+        if (pick == null || used.has(pick)) pick = order.filter((n) => !used.has(n)).sort((a, b) => value(b) - value(a))[0];
+        if (pick == null) continue;
+        alliances[i].push(pick); used.add(pick);
+      }
+    }
+    return alliances;
+  }
+  /** For a captain `us`: every first pick still available, ranked by our average chance to beat the
+      other alliances that would form if we chose them. */
+  function firstPicks({ order, K = 4, size = 2, us, oprOf, cons, taken = new Set(), value = oprOf }) {
+    const caps = draft({ order, K, size: 1, value, taken }).map((a) => a[0]);
+    if (!caps.includes(us)) return null;
+    const pool = order.filter((n) => n !== us && !taken.has(n) && !caps.includes(n));
+    return pool.map((x) => {
+      const al = draft({ order, K, size, value, taken, forced: { [us]: [x] } }), ours = al.find((a) => a[0] === us);
+      const A = alliance(ours, oprOf, cons);
+      const vs = al.filter((a) => a !== ours).map((teams) => ({ teams, p: winChance(A, alliance(teams, oprOf, cons)) }));
+      const avg = vs.length ? vs.reduce((t, v) => t + v.p, 0) / vs.length : 1, worst = vs.reduce((m, v) => (!m || v.p < m.p ? v : m), null);
+      return { n: x, ours, mean: A.mean, avg, worst, vs, alliances: al };
+    }).sort((a, b) => Math.round(b.avg * 100) - Math.round(a.avg * 100) || b.mean - a.mean); // within a percent counts as a tie: then the stronger alliance
+  }
+
+  const ScoutModel = { rng, consistency, swing, alliance, winChance, project, draft, firstPicks };
   if (typeof module === "object" && module.exports) module.exports = ScoutModel; else root.ScoutModel = ScoutModel;
 })(typeof window !== "undefined" ? window : globalThis);
