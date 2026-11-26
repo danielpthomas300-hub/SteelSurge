@@ -58,6 +58,46 @@
   const LOGO = `<img class="brand-mark" src="${url("assets/img/logo-mark.png")}" alt="" width="34" height="34">`;
 
   /* ---------------- Theme ---------------- */
+  /* ---------------- Accessibility settings (per visitor, saved on this device) ----------------
+     Text size, high contrast, reduced motion, easier reading, underlined links, a stronger
+     focus outline, and color-blind-friendly alliance colors. The <head> script applies them
+     before the page paints; this panel changes them. */
+  const A11Y_KEY = "ss-a11y", A11Y_DEFAULTS = { text: 0, contrast: false, calm: false, read: false, links: false, focus: false, cb: false };
+  const a11y = () => ({ ...A11Y_DEFAULTS, ...(store.get(A11Y_KEY) || {}) });
+  function applyA11y(s = a11y()) {
+    const h = document.documentElement;
+    [1, 2].forEach((n) => h.classList.toggle(`a11y-text-${n}`, s.text === n));
+    for (const k of ["contrast", "read", "links", "focus", "cb", "calm"]) h.classList.toggle(`a11y-${k}`, !!s[k]);
+    let teamStill = false; try { teamStill = localStorage.getItem("ss-no-motion") === "1"; } catch {}
+    h.classList.toggle("no-motion", !!s.calm || teamStill);
+    dispatchEvent(new Event("ss:a11y"));
+  }
+  const A11Y_OPTS = [
+    ["contrast", "High contrast", "Brighter text, stronger borders, no see-through panels."],
+    ["calm", "Reduce motion", "Stops background animations, glows, and moving effects."],
+    ["read", "Easier reading", "More space between letters, words, and lines, in a plainer font."],
+    ["links", "Underline links", "Makes every link easy to spot."],
+    ["focus", "Strong focus outline", "A thick outline shows where you are when using a keyboard."],
+    ["cb", "Color-blind-friendly alliances", "Red and blue alliances get labels and patterns, not just color."],
+  ];
+  function openA11y() {
+    let dlg = document.getElementById("a11y-dialog");
+    if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "a11y-dialog"; dlg.className = "a11y-dialog"; dlg.setAttribute("aria-labelledby", "a11y-title"); document.body.append(dlg); }
+    const draw = () => {
+      const s = a11y();
+      dlg.innerHTML = `<form method="dialog" class="a11y-inner">
+        <header><h2 id="a11y-title">Accessibility</h2><button class="icon-btn" value="close" aria-label="Close">${ICON.close}</button></header>
+        <p class="a11y-note">Saved on this device for every page of the site.</p>
+        <div class="a11y-row"><span id="a11y-size">Text size</span><div class="a11y-seg" role="radiogroup" aria-labelledby="a11y-size">${["Normal", "Large", "Extra large"].map((l, i) => `<button type="button" role="radio" aria-checked="${s.text === i}" data-text="${i}" class="${s.text === i ? "on" : ""}" style="font-size:${14 + i * 2}px">${l}</button>`).join("")}</div></div>
+        ${A11Y_OPTS.map(([k, label, sub]) => `<label class="a11y-opt"><input type="checkbox" data-k="${k}"${s[k] ? " checked" : ""}><i aria-hidden="true"></i><span><b>${label}</b><small>${sub}</small></span></label>`).join("")}
+        <footer><button type="button" class="btn ghost sm" data-reset>Reset all</button><button class="btn primary sm" value="close">Done</button></footer></form>`;
+      dlg.querySelectorAll("[data-text]").forEach((b) => b.addEventListener("click", () => { store.set(A11Y_KEY, { ...a11y(), text: Number(b.dataset.text) }); applyA11y(); draw(); dlg.querySelector(`[data-text="${b.dataset.text}"]`).focus(); }));
+      dlg.querySelectorAll("[data-k]").forEach((i) => i.addEventListener("change", () => { store.set(A11Y_KEY, { ...a11y(), [i.dataset.k]: i.checked }); applyA11y(); }));
+      dlg.querySelector("[data-reset]").addEventListener("click", () => { store.set(A11Y_KEY, { ...A11Y_DEFAULTS }); applyA11y(); draw(); toast("Accessibility settings reset"); });
+    };
+    draw(); dlg.showModal();
+  }
+
   const theme = {
     get: () => document.documentElement.dataset.theme || "dark",
     set(t) {
@@ -138,7 +178,7 @@
     const a = look(c), css = accentCss(a);
     let el = document.getElementById("ss-look");
     if (css) { if (!el) { el = document.createElement("style"); el.id = "ss-look"; document.head.append(el); } el.textContent = css; } else el?.remove();
-    document.documentElement.classList.toggle("no-motion", a.animations === false);
+    document.documentElement.classList.toggle("no-motion", a.animations === false || a11y().calm);
     if (!persist) return;
     try {
       css ? localStorage.setItem("ss-look-css", css) : localStorage.removeItem("ss-look-css");
@@ -303,6 +343,7 @@
         <nav class="nav" aria-label="Main">${links}</nav>
         <div class="header-actions">
           ${trophiesOn ? `<a class="icon-btn trophy-btn" href="${url("trophies.html")}" aria-label="Your trophies" title="Your trophies">${ICON.trophy}<span class="trophy-count" data-trophy-count hidden></span></a>` : ""}
+          <button class="icon-btn a11y-btn" type="button" aria-label="Accessibility settings" title="Accessibility settings"><span aria-hidden="true">Aa</span></button>
           <button class="icon-btn theme-btn" type="button" aria-label="Switch light or dark theme">${ICON.moon}${ICON.sun}</button>
           <a class="btn primary sm header-cta" href="${url("sponsors.html")}">Sponsor us</a>
           <button class="icon-btn menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav">${ICON.menu}</button>
@@ -315,6 +356,7 @@
     host.after(mobile);
 
     $(".theme-btn", host).addEventListener("click", theme.toggle);
+    $(".a11y-btn", host).addEventListener("click", openA11y);
     const menuBtn = $(".menu-btn", host);
     const setMenu = (open) => {
       mobile.classList.toggle("open", open); document.body.classList.toggle("nav-open", open);
@@ -345,6 +387,7 @@
             <li><a href="${url("sponsors.html")}">Become a sponsor</a></li>
             <li><a href="${esc(c.team.joinFormUrl)}" target="_blank" rel="noopener">Join the team</a></li>
             <li><a href="${url("contact.html")}">Contact us</a></li>
+            <li><button type="button" class="footer-link" data-a11y>Accessibility settings</button></li>
           </ul></div>
           <div><h2>Follow</h2><ul>${c.team.instagram ? `<li><a href="https://www.instagram.com/${esc(String(c.team.instagram).replace(/^@/, ""))}/" target="_blank" rel="noopener">Instagram</a></li>` : ""}${socials}<li><a href="https://www.firstinspires.org/robotics/ftc" target="_blank" rel="noopener">About FIRST Tech Challenge</a></li></ul></div>
         </div>
@@ -359,6 +402,7 @@
           <span>Live stats from <a href="https://ftcscout.org/teams/${esc(c.team.number)}" target="_blank" rel="noopener">FTCScout</a> · <a href="${url("editor.html")}" title="Developer mode (Ctrl+Shift+E)">Team editor</a></span>
         </div>
       </div>`;
+    host.querySelector("[data-a11y]")?.addEventListener("click", openA11y);
   }
 
   function renderPreviewPill() {
@@ -704,7 +748,9 @@
       }
       ripples = ripples.filter((r) => r.t < 0.9);
     }
+    const calm = () => document.documentElement.classList.contains("a11y-calm");
     function frame(now) {
+      if (calm()) { staticFrame(); return; } // visitor turned on "reduce motion"
       const dt = Math.min(0.05, (now - last) / 1000); last = now; time += dt;
       const k = intensity();
       ctx.clearRect(0, 0, w, h);
@@ -718,7 +764,7 @@
       if (visible) raf = requestAnimationFrame(frame);
     }
     readColors(); layout();
-    const relayout = () => { layout(); if (reducedMotion) staticFrame(); };
+    const relayout = () => { layout(); if (reducedMotion || document.documentElement.classList.contains("a11y-calm")) staticFrame(); };
     addEventListener("resize", relayout);
     addEventListener("ss:theme", () => requestAnimationFrame(() => { readColors(); if (reducedMotion) staticFrame(); }));
     function staticFrame() { ctx.clearRect(0, 0, w, h); drawGlow(); drawFloor(); }
@@ -739,10 +785,11 @@
       if (fr && Math.hypot(x - fx, y - fy) < fr * 1.2) { spawnBolt(); spawnBolt(); }
     });
     const resume = () => { cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(frame); };
+    addEventListener("ss:a11y", () => { if (!calm() && visible) resume(); });
     new IntersectionObserver(([en]) => { visible = en.isIntersecting; if (visible) resume(); }).observe(canvas);
     document.addEventListener("visibilitychange", () => { visible = !document.hidden; if (visible) resume(); });
     // The logo settles in after its entrance animation, so measure again once it has
-    setTimeout(layout, 1000);
+    setTimeout(relayout, 1000);
     for (let i = 0; i < 30; i++) { spawnSpark(); sparks[sparks.length - 1].life = Math.random() * 2; }
     for (let i = 0; i < 3; i++) { spawnPulse(); pulses[pulses.length - 1].p = Math.random() * 0.8; }
     raf = requestAnimationFrame(frame);
@@ -1570,6 +1617,6 @@
     document.dispatchEvent(new CustomEvent("ss:ready", { detail: c }));
   }
 
-  window.SS = Object.assign(window.SS || {}, { ICON, LOGO, esc, store, toast, url, loadContent, loadFTC, theme, GAMES, gameArt, seasonLabel, currentSeason, DRAFT_KEY, PREVIEW_KEY, CONTROL_DEFAULTS, controls, siteOff, weekly, weeklySubmit, outreachStat, LOOK_DEFAULTS, ACCENTS, applyLook, HOME_DEFAULTS, HOME_CREWS, BUILD_STEPS, calendarEvents });
+  window.SS = Object.assign(window.SS || {}, { ICON, LOGO, esc, store, toast, url, loadContent, loadFTC, theme, GAMES, gameArt, seasonLabel, currentSeason, DRAFT_KEY, PREVIEW_KEY, CONTROL_DEFAULTS, controls, siteOff, weekly, weeklySubmit, outreachStat, LOOK_DEFAULTS, ACCENTS, applyLook, HOME_DEFAULTS, HOME_CREWS, BUILD_STEPS, calendarEvents, a11y, openA11y });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })();

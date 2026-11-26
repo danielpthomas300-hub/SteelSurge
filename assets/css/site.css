@@ -1276,3 +1276,61 @@ html.no-motion .season-card::after { animation: none; }
 @media (prefers-reduced-motion: reduce) { .ftc-live-dot { animation: none; } }
 .ftc-live-foot { display: flex; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
 .ftc-live-foot:empty { display: none; }
+
+/* ==========================================================================
+   Accessibility settings (Aa button in the header)
+   ========================================================================== */
+.a11y-btn span { font: 700 15px/1 var(--font-display); letter-spacing: -0.02em; }
+.footer-link { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+.footer-link:hover { color: var(--text); }
+.a11y-dialog { border: 1px solid var(--line-2); border-radius: 20px; background: var(--surface); color: var(--text); padding: 0; width: min(480px, calc(100vw - 32px)); box-shadow: var(--shadow-lg); }
+.a11y-dialog::backdrop { background: rgba(3, 6, 10, .6); backdrop-filter: blur(3px); }
+.a11y-inner { padding: 22px clamp(16px, 4vw, 26px); display: grid; gap: 10px; }
+.a11y-inner header { display: flex; justify-content: space-between; align-items: center; }
+.a11y-inner h2 { font-size: 22px; margin: 0; }
+.a11y-note { margin: -4px 0 6px; font-size: 13.5px; color: var(--muted); }
+.a11y-row { display: grid; gap: 8px; margin-bottom: 4px; font-weight: 600; font-size: 14.5px; }
+.a11y-seg { display: flex; gap: 4px; padding: 4px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); }
+.a11y-seg button { flex: 1; padding: 9px 6px; border: 0; border-radius: 9px; background: none; color: var(--muted); font-weight: 600; cursor: pointer; }
+.a11y-seg button.on { background: var(--surge); color: var(--surge-ink); }
+.a11y-opt { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); cursor: pointer; }
+.a11y-opt:hover { border-color: var(--line-2); }
+.a11y-opt input { position: absolute; opacity: 0; pointer-events: none; }
+.a11y-opt i { flex: none; width: 40px; height: 23px; border-radius: 999px; background: var(--surface-3); border: 1px solid var(--line-2); position: relative; transition: background .15s; }
+.a11y-opt i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 17px; height: 17px; border-radius: 50%; background: var(--muted); transition: transform .2s, background .15s; }
+.a11y-opt input:checked + i { background: var(--surge); border-color: var(--surge); }
+.a11y-opt input:checked + i::after { transform: translateX(17px); background: var(--surge-ink); }
+.a11y-opt input:focus-visible + i { outline: 2px solid var(--surge); outline-offset: 2px; }
+.a11y-opt span { display: grid; gap: 2px; }
+.a11y-opt b { font-size: 14.5px; }
+.a11y-opt small { font-size: 12.5px; color: var(--muted); }
+.a11y-inner footer { display: flex; justify-content: space-between; margin-top: 6px; }
+
+/* Text size: scales the whole page, so layouts stay proportional */
+html.a11y-text-1 body { zoom: 1.12; }
+html.a11y-text-2 body { zoom: 1.25; }
+
+/* High contrast */
+html.a11y-contrast, html.a11y-contrast[data-theme="dark"] { --bg: #000; --bg-2: #05080c; --surface: #0b1017; --surface-2: #141c26; --surface-3: #202b38; --text: #fff; --muted: #e2e8ef; --dim: #c5ced9; --line: #5d6d80; --line-2: #8394a8; }
+html.a11y-contrast[data-theme="light"] { --bg: #fff; --bg-2: #f2f4f7; --surface: #fff; --surface-2: #eef1f5; --surface-3: #e2e7ee; --text: #000; --muted: #1b2430; --dim: #2c3845; --line: #6c7888; --line-2: #48525f; }
+html.a11y-contrast * { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; text-shadow: none !important; }
+html.a11y-contrast .hero::after { background: linear-gradient(90deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 70%, transparent) 45%, transparent 70%); }
+
+/* Easier reading */
+html.a11y-read { --font-body: Verdana, Tahoma, "Segoe UI", system-ui, sans-serif; --font-display: Verdana, Tahoma, "Segoe UI", system-ui, sans-serif; }
+html.a11y-read body, html.a11y-read p, html.a11y-read li, html.a11y-read dd, html.a11y-read td { letter-spacing: .03em; word-spacing: .12em; line-height: 1.75; }
+html.a11y-read h1, html.a11y-read h2, html.a11y-read h3 { letter-spacing: 0; line-height: 1.2; }
+
+/* Underlined links */
+html.a11y-links a:not(.btn):not(.brand):not(.card):not(.icon-btn) { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+
+/* Strong focus outline */
+html.a11y-focus *:focus-visible { outline: 3px solid var(--amber) !important; outline-offset: 3px !important; box-shadow: 0 0 0 6px color-mix(in srgb, var(--amber) 30%, transparent) !important; }
+
+/* Color-blind-friendly alliances: a label and a pattern, not just red and blue */
+html.a11y-cb .sc-al { position: relative; padding-top: 18px; }
+html.a11y-cb .sc-al::before { position: absolute; top: 4px; left: 8px; font: 700 9.5px/1 var(--font-mono); letter-spacing: .14em; }
+html.a11y-cb .sc-al.red { background-image: repeating-linear-gradient(45deg, rgba(255, 93, 93, .2) 0 5px, transparent 5px 11px); }
+html.a11y-cb .sc-al.red::before { content: "RED ◆"; color: #ff8a8a; }
+html.a11y-cb .sc-al.blue { background-image: radial-gradient(rgba(59, 168, 255, .35) 1.4px, transparent 1.6px); background-size: 8px 8px; }
+html.a11y-cb .sc-al.blue::before { content: "BLUE ●"; color: #7cc4ff; }
