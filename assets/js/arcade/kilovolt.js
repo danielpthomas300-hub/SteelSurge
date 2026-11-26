@@ -59,11 +59,7 @@
 
   /* ---------------- Data ---------------- */
   let TEAMS = [], BY_NUM = new Map(), INDEX = new Map(), CATS = [], META = null;
-  const norm = (s) => s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
-  const DROP = new Set(["the", "team", "robotics", "robotic", "ftc", "frc", "club", "inc"]);
-  const key1 = (s) => norm(s).replace(/ /g, "");
-  const key2 = (s) => norm(s).split(" ").filter((w) => !DROP.has(w)).join("");
-  const words = (s) => new Set(norm(s).split(" "));
+  const { norm, key1, key2, words, fkey, answerKeys, nearest, matchList } = window.KilovoltMatch; // kilovolt-match.js
 
   async function loadData() {
     const res = await fetch("../content/teams.json", { cache: "no-cache" });
@@ -85,17 +81,14 @@
     .map((p, i) => ({ id: `team-${i}`, type: "ftc", own: true, text: String(p.prompt).trim(), items: p.answers.map((a) => String(a).replace(/\|/g, "/").trim()).filter(Boolean).join("|") }));
 
   /* ---------------- FTC knowledge prompts (kilovolt-facts.js) ---------------- */
-  // Answers are compared without capitals, spaces, punctuation, "the", or plural endings
-  const sing = (w) => (w.length > 3 && /(ch|sh|x)es$/.test(w) ? w.slice(0, -2) : w.length > 3 && /[^s]s$/.test(w) ? w.slice(0, -1) : w);
-  const fkey = (s) => norm(String(s).replace(/['’]/g, "")).split(" ").filter((w) => w && !["the", "a", "an"].includes(w)).map(sing).join("");
+  // Answers are compared without capitals, spaces, punctuation, "the", or plural endings (kilovolt-match.js)
   const FACT_ALL = new Map();
   function buildFacts(list) {
     for (const f of list || []) {
       const seen = new Set(), items = [];
       f.items.split("|").map((n) => n.trim()).filter(Boolean).forEach((name) => {
         // "Tank" counts for "Tank drive", "Inspire" for "Inspire Award", "Color" for "Color sensor"…
-        const short = / (award|drive|wheels?|zones?|sensor)$/i.test(name) ? fkey(name.replace(/ (award|drive|wheels?|zones?|sensor)$/i, "")) : "";
-        const keys = [...new Set([fkey(name), short.length >= 3 ? short : ""])].filter((k) => k && !seen.has(k));
+        const keys = answerKeys(name).filter((k) => !seen.has(k));
         if (!keys.length) return; keys.forEach((k) => seen.add(k)); items.push({ name, rank: items.length, keys });
       });
       const cat = { type: f.type, id: f.id, text: f.text, season: f.season || "", facts: true, own: !!f.own, items, valid: items, test: () => false };
@@ -108,13 +101,8 @@
   /** Returns { item, fits } for the best match, or null when it isn't on any list. */
   function findFact(raw, cat) {
     const k = fkey(raw); if (!k) return null;
-    const exact = cat.items.find((it) => it.keys.includes(k));
-    if (exact) return { item: exact, fits: true };
-    const hits = nearest(k, cat.items.flatMap((it) => it.keys));
-    if (hits) {
-      const items = [...new Set(hits.map((h) => cat.items.find((it) => it.keys.includes(h))))];
-      return items.length > 1 ? { ambiguous: true } : { item: items[0], fits: true, fuzzy: true };
-    }
+    const m = matchList(cat.items, raw);
+    if (m) return m.ambiguous ? m : { item: m.item, fits: true, fuzzy: m.fuzzy };
     const other = (FACT_ALL.get(k) || []).find((x) => x.cat !== cat);
     return other ? { item: other.it, fits: false, cat: other.cat } : null;
   }
@@ -332,38 +320,6 @@
   const seedFor = (key) => [...key].reduce((h, ch) => Math.imul(h ^ ch.charCodeAt(0), 16777619), 2166136261);
 
   /* ---------------- Matching an answer ---------------- */
-  /** Typo distance: one wrong, missing, or extra letter is 1, and so is two letters swapped ("cnoe" → "cone"). */
-  function lev(a, b, max) {
-    if (Math.abs(a.length - b.length) > max) return max + 1;
-    let pp = null, prev = Array.from({ length: b.length + 1 }, (_, j) => j), prevBest = 0;
-    for (let i = 1; i <= a.length; i++) {
-      const cur = [i]; let best = i;
-      for (let j = 1; j <= b.length; j++) {
-        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-        if (pp && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) cur[j] = Math.min(cur[j], pp[j - 2] + 1);
-        best = Math.min(best, cur[j]);
-      }
-      if (best > max && prevBest > max) return max + 1;
-      pp = prev; prev = cur; prevBest = best;
-    }
-    return prev[b.length];
-  }
-  /**
-   * Spelling slack. Capitals, spaces, punctuation, "the", and plurals never matter. Beyond that,
-   * answers under 4 letters must be exact, 4–12 letters may have one typo, and 13+ may have two.
-   * The first letter must match, and a typo that's equally close to two different answers isn't guessed.
-   */
-  const slack = (n) => (n < 4 ? 0 : n < 13 ? 1 : 2);
-  function nearest(k, keys) {
-    const max = slack(k.length); if (!max) return null;
-    let best = max + 1, hits = [];
-    for (const x of keys) {
-      if (x[0] !== k[0] || Math.abs(x.length - k.length) > max) continue;
-      const d = lev(x, k, max);
-      if (d < best) { best = d; hits = [x]; } else if (d === best && d <= max) hits.push(x);
-    }
-    return best <= max ? hits : null;
-  }
   /** Returns { team, fits } for the best match, or { numberOnly } / { ambiguous } / null. */
   function findTeam(raw, cat) {
     let text = raw.trim(); if (!text) return null;

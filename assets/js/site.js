@@ -1008,38 +1008,24 @@
       kind: e.kind || "Team event", comp: false, link: e.link || "", detail: e.detail || "" }));
     return [...comps, ...own].filter((e) => e.start && (e.end || e.start) >= today).sort((a, b) => (a.start + (a.time || "")).localeCompare(b.start + (b.time || "")));
   }
-  const ymd = (d) => d.replace(/-/g, "");
-  const nextDay = (d) => { const x = parseDate(d); x.setDate(x.getDate() + 1); return `${x.getFullYear()}${String(x.getMonth() + 1).padStart(2, "0")}${String(x.getDate()).padStart(2, "0")}`; };
-  const hm = (t) => String(t).replace(":", "").padEnd(4, "0") + "00";
-  const icsText = (s) => String(s || "").replace(/\\/g, "\\\\").replace(/([,;])/g, "\\$1").replace(/\r?\n/g, "\\n");
-  /** One .ics file for any number of events (works with Google, Apple, and Outlook calendars). */
-  function icsFile(events) {
-    const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
-    const fold = (line) => line.length <= 74 ? line : line.match(/.{1,73}/g).join("\r\n ");
-    const body = events.flatMap((e) => {
-      const when = e.time ? [`DTSTART:${ymd(e.start)}T${hm(e.time)}`, `DTEND:${ymd(e.end || e.start)}T${hm(e.endTime || e.time)}`] : [`DTSTART;VALUE=DATE:${ymd(e.start)}`, `DTEND;VALUE=DATE:${nextDay(e.end || e.start)}`];
-      return ["BEGIN:VEVENT", `UID:${e.id}@steelsurge-27254`, `DTSTAMP:${stamp}`, ...when, `SUMMARY:${icsText(e.title)}`, e.place && `LOCATION:${icsText(e.place)}`, `DESCRIPTION:${icsText([e.detail, e.link].filter(Boolean).join("\n"))}`, e.link && `URL:${e.link}`, "END:VEVENT"].filter(Boolean);
-    });
-    return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Steel Surge FTC 27254//Season calendar//EN", "CALSCALE:GREGORIAN", "X-WR-CALNAME:Steel Surge events", ...body, "END:VCALENDAR"].map(fold).join("\r\n") + "\r\n";
-  }
+  // Calendar files and Google links live in ics.js (loaded on the home and Team pages)
+  const icsFile = (events) => window.SSCalendar.icsFile(events);
   function downloadIcs(events, name) {
     const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([icsFile(events)], { type: "text/calendar" })); a.download = name; document.body.append(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Calendar file downloaded. Open it to add the event.");
   }
-  const googleCal = (e) => {
-    const dates = e.time ? `${ymd(e.start)}T${hm(e.time)}/${ymd(e.end || e.start)}T${hm(e.endTime || e.time)}` : `${ymd(e.start)}/${nextDay(e.end || e.start)}`;
-    const q = new URLSearchParams({ action: "TEMPLATE", text: e.title, dates, details: [e.detail, e.link].filter(Boolean).join("\n\n"), location: e.place || "" });
-    return `https://calendar.google.com/calendar/render?${q}`;
-  };
+  const googleCal = (e) => window.SSCalendar.googleCal(e);
   const fmtTime = (t) => { if (!t) return ""; const [h, m] = t.split(":").map(Number); return `${((h + 11) % 12) + 1}:${String(m || 0).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`; };
   const whenText = (e) => { const multi = e.end && e.end !== e.start; return `${fmtDate(e.start)}${multi ? ` – ${fmtDate(e.end)}` : ""}${e.time ? ` · ${fmtTime(e.time)}${e.endTime ? `–${fmtTime(e.endTime)}` : ""}` : ""}`; };
   /** "Add to calendar" buttons for one event. */
-  const calButtons = (e) => `<div class="cal-add"><a class="btn sm" href="${esc(googleCal(e))}" target="_blank" rel="noopener">${ICON.plus || "+"} Google Calendar</a><button class="btn sm ghost" type="button" data-ics="${esc(e.id)}">Apple / Outlook (.ics)</button></div>`;
+  const calButtons = (e) => !window.SSCalendar ? "" : `<div class="cal-add"><a class="btn sm" href="${esc(googleCal(e))}" target="_blank" rel="noopener">${ICON.plus || "+"} Google Calendar</a><button class="btn sm ghost" type="button" data-ics="${esc(e.id)}">Apple / Outlook (.ics)</button></div>`;
   function wireCalButtons(host, events) {
     host.querySelectorAll("[data-ics]").forEach((b) => b.addEventListener("click", () => { const e = events.find((x) => x.id === b.dataset.ics); if (e) downloadIcs([e], `${e.title.replace(/[^\w]+/g, "-").replace(/^-|-$/g, "").toLowerCase() || "event"}.ics`); }));
   }
   function renderCalendar(c, ftc) {
     const host = $("#calendar-list"); if (!host) return;
+    // ics.js loads just after this script: draw again once it's there, so the add-to-calendar buttons appear
+    if (!window.SSCalendar && document.readyState !== "complete") addEventListener("load", () => renderCalendar(c, ftc), { once: true });
     const evs = calendarEvents(c, ftc);
     host.innerHTML = evs.length ? evs.map((e) => { const d = parseDate(e.start); return `
       <article class="event cal-event reveal${e.comp ? " is-comp" : ""}">
@@ -1147,6 +1133,7 @@
     if (s?.next) {
       badge.innerHTML = `<b>Up next</b> ${esc(s.next.name)} · ${fmtDate(s.next.start)}`; ftcHost.insertAdjacentHTML("afterbegin", nextEventCard(s.next));
       const ev = calendarEvents(c, ftc).find((e) => e.comp), card = $(".next-event", ftcHost);
+      if (ev && card && !window.SSCalendar) await new Promise((r) => (document.readyState === "complete" ? r() : addEventListener("load", r, { once: true })));
       if (ev && card) { card.insertAdjacentHTML("beforeend", `${calButtons(ev)}<a class="link-arrow cal-more" href="${url("team.html")}#calendar">Full season calendar ${ICON.arrow}</a>`); wireCalButtons(card, [ev]); }
     }
     runCounts(ftcHost); initReveal(ftcHost);
@@ -1583,6 +1570,14 @@
     if (/[?&]ask=/.test(location.search)) go(); else if ("requestIdleCallback" in window) requestIdleCallback(go, { timeout: 2500 }); else setTimeout(go, 1200);
   }
 
+  /* ---------------- Offline support (sw.js, generated by tools/build_pages.py) ---------------- */
+  function initOffline() {
+    if (!("serviceWorker" in navigator) || location.protocol === "file:" || PAGE === "editor") return;
+    navigator.serviceWorker.register(url("sw.js")).catch(() => {});
+    addEventListener("offline", () => toast("You're offline. Pages you've opened, scouting, and the calculator still work."));
+    addEventListener("online", () => toast("Back online"));
+  }
+
   /* ---------------- Boot ---------------- */
   async function boot() {
     let c;
@@ -1614,6 +1609,7 @@
     initReveal();
     initToTop();
     loadSteelAI();
+    initOffline();
     document.dispatchEvent(new CustomEvent("ss:ready", { detail: c }));
   }
 

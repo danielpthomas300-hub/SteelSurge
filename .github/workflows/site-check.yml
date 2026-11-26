@@ -46,3 +46,6 @@ jobs:
 
       - name: Code Lab answers, drills, and robot challenges work
         run: node tools/test_codelab.js
+
+      - name: Kilovolt, scouting, calendar, and portfolio features work
+        run: node tools/test_features.js

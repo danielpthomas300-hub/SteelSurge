@@ -138,7 +138,7 @@ pages["index.html"] = shell("Steel Surge — FTC Robotics Team 27254", "Steel Su
         <div class="cta-band reveal" id="home-cta">
           <div><h2>Power the surge</h2><p>Sponsors keep our robot running and our outreach growing. Every tier comes with real visibility for your business.</p></div>
           <div class="actions"><a class="btn primary" href="sponsors.html">See sponsor tiers {A}</a><a class="btn" href="contact.html">Get in touch</a></div>
-        </div>'''), jsonld=JSONLD)
+        </div>'''), jsonld=JSONLD, js=("ics.js",))
 
 pages["team.html"] = shell("Team" + T, "Meet the students behind Steel Surge, FTC team 27254: mechanical, programming, and outreach.", "team",
   page_hero("The team", "Meet the crew", "Students who design, build, code, and promote our robot every season.", "team-lead")
@@ -152,7 +152,7 @@ pages["team.html"] = shell("Team" + T, "Meet the students behind Steel Surge, FT
   + section(f'''        <div class="cta-band reveal">
           <div><h2>Want to join Steel Surge?</h2><p>Builders, coders, designers, and storytellers welcome. No experience needed, just curiosity and commitment.</p></div>
           <div class="actions"><a class="btn primary" id="join-link" href="#" target="_blank" rel="noopener">Fill out the interest form {A}</a></div>
-        </div>'''), path="team.html")
+        </div>'''), path="team.html", js=("ics.js",))
 
 # The old Competition page now forwards to the team's story on the Team page
 pages["achievements.html"] = f'''<!doctype html>
@@ -319,7 +319,7 @@ pages["calculator.html"] = shell("Score calculator and scouting" + T, "Free FTC 
           </div>
         </div>
         <div class="calc-mobile-bar"><span>Total</span><b id="calc-bar-total">0</b><button class="btn sm" type="button" id="calc-jump">Breakdown</button></div>
-        </div>"""), path="calculator.html", css=("scouting.css", "portfolio.css"), js=("calc-data.js", "calculator.js", "scouting.js", "portfolio.js"))
+        </div>"""), path="calculator.html", css=("scouting.css", "portfolio.css"), js=("calc-data.js", "calculator.js", "scout-model.js", "scouting.js", "portfolio-rules.js", "portfolio.js"))
 
 pages["codelab.html"] = shell("Code Lab" + T, "Practice FTC Java programming in your browser: find bugs in real robot code, write methods that are checked instantly, and program a simulated robot's autonomous.", "codelab",
   page_hero("Code Lab", "Practice FTC programming", "Learn the Java that runs FTC robots, right in your browser: find bugs in real robot code, write methods that get checked instantly, then program a robot and drive it. Plus short CAD and outreach lessons for the whole team. No setup and no account needed.")
@@ -494,7 +494,7 @@ pages["arcade/kilovolt.html"] = game_page(
     [("round", "Prompt", "1/7"), ("charge", "Charge", "0 V"), ("streak", "Streak", "0")], [],
     ["Each round has 7 prompts. Five ask for a team, like “Name an FTC team from Ohio.” One asks about a past FTC game, like “Name a game element from SKYSTONE,” and one about FTC in general: awards, robot parts, sensors, code, and more.", "For team prompts, type the <b>name</b> of a real FTC team that fits. Capitals, spaces, and plurals don't matter, and one typo is forgiven (two in long names) as long as the first letter is right. You get one answer per prompt, and the clock is running.", "Any correct answer charges you up, but the less famous the team, the more it's worth: <b>Spark</b> (100 V), Static, Current, Voltage, Overload, and <b>Full Surge</b> (1,000 V).", "Team fame is based on each team's awards, seasons, and events, using official data from FTCScout, and covers every FTC team since 2019–20. On the other prompts, the less obvious answers are worth more.", "Everyone gets the same <b>Daily Charge</b>, once a day. Want more? Play <b>Unlimited</b> rounds as often as you like.", "<b>Round settings</b> shape Unlimited rounds: 5 to 15 prompts or <b>Endless</b> (keep going until your third miss), teams only or FTC knowledge only, the topics you want, prompts that match your difficulty, no timer, and no repeats. Custom rounds don't count toward your best score.", "<b>Practice</b> has no timer and no score, and shows every answer after each prompt, so it's a good way to study FTC history.", "<b>My stats</b> shows your Daily Charge history: streaks, best and average days, the last 30 days, and how your answers spread across the tiers."],
     [("Submit an answer", ["Enter"]), ("Next prompt", ["Enter"]), ("Skip", ["Click Skip"])],
-    "", "Kilovolt: an FTC trivia game", extra_js=("arcade/kilovolt-facts.js",))
+    "", "Kilovolt: an FTC trivia game", extra_js=("arcade/kilovolt-match.js", "arcade/kilovolt-facts.js"))
 
 pages["editor.html"] = head("Team editor · Steel Surge", "Team-only content editor.", "editor", noindex=True, css=("editor.css",), js=("sweep.js", "editor.js")) + '''  <div id="app"><div class="ed-lock"><p class="muted">Loading editor…</p></div></div>
 </body>
@@ -506,6 +506,56 @@ for name, html in pages.items():
     with open(os.path.join(OUT, name), "w", encoding="utf-8", newline="\n") as f:
         f.write(html)
 
+# Offline support: a service worker that keeps every page and the files they use, so the
+# site (scouting, the calculator, the Code Lab, the arcade) works at venues with bad Wi-Fi.
+# Rebuilt with each version, so publishing refreshes everyone's offline copy.
+import re as _re
+_core = {"./"} | {n for n in pages if n != "editor.html"}
+for _n, _html in pages.items():
+    if _n == "editor.html":
+        continue
+    for _ref in _re.findall(r'(?:src|href)="(?:\.\.?/)?(assets/[^"#]+)"', _html):
+        _core.add(_ref)
+_core |= {"content/content.json", "content/seasons.json", "manifest.webmanifest", "assets/img/icon-192.png"}
+SW_JS = """/* Steel Surge offline support (generated by tools/build_pages.py, don't edit).
+   Pages: fresh from the network when online, saved copy when offline.
+   Versioned files (?v=): saved copy first (the version changes when they do).
+   Content data: fresh first, saved copy offline. Other site files: saved copy, refreshed in the background. */
+const VERSION = "%(V)s", CORE = "ss-core-" + VERSION, RUNTIME = "ss-runtime";
+const FILES = %(FILES)s;
+self.addEventListener("install", (e) => {
+  e.waitUntil(caches.open(CORE).then((c) => Promise.all(FILES.map((f) => c.add(new Request(f, { cache: "reload" })).catch(() => {})))).then(() => self.skipWaiting()));
+});
+self.addEventListener("activate", (e) => {
+  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith("ss-core-") && k !== CORE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+});
+const fromNetwork = (req, timeout) => new Promise((ok, fail) => {
+  const t = timeout ? setTimeout(() => fail(new Error("slow")), timeout) : 0;
+  fetch(req).then((r) => { clearTimeout(t); ok(r); }, (err) => { clearTimeout(t); fail(err); });
+});
+const keep = (req, res) => { if (res && res.ok && res.type === "basic") { const copy = res.clone(); caches.open(RUNTIME).then((c) => c.put(req, copy)); } return res; };
+const OFFLINE = `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline · Steel Surge</title>
+<body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#090c11;color:#e9eef4;font:16px/1.6 system-ui,sans-serif;text-align:center;padding:24px">
+<div><h1 style="margin:0 0 8px">You're offline</h1><p style="color:#97a4b4;max-width:420px">This page hasn't been saved on this device yet. Pages you've opened before, plus scouting, the score calculator, the Code Lab, and the arcade, still work.</p>
+<p><a style="color:#3ba8ff" href="./">Go to the home page</a> · <a style="color:#3ba8ff" href="./calculator.html">Match tools</a></p></div></body>`;
+self.addEventListener("fetch", (e) => {
+  const req = e.request, url = new URL(req.url);
+  if (req.method !== "GET" || url.origin !== location.origin) return; // other sites (FTCScout, YouTube…) go straight to the network
+  if (/\\/editor\\.html$/.test(url.pathname)) return; // the editor always needs the live content
+  if (req.mode === "navigate") {
+    e.respondWith(fromNetwork(req, 4000).then((r) => keep(req, r)).catch(async () =>
+      (await caches.match(req, { ignoreSearch: true })) || new Response(OFFLINE, { headers: { "Content-Type": "text/html; charset=utf-8" } })));
+    return;
+  }
+  if (url.search.includes("v=")) { e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((r) => keep(req, r)))); return; }
+  if (url.pathname.includes("/content/")) { e.respondWith(fetch(req).then((r) => keep(req, r)).catch(() => caches.match(req, { ignoreSearch: true }).then((hit) => hit || Response.error()))); return; }
+  e.respondWith(caches.match(req, { ignoreSearch: true }).then((hit) => { const net = fetch(req).then((r) => keep(req, r)).catch(() => hit); return hit || net; }));
+});
+"""
+import json as _json
+with open(os.path.join(OUT, "sw.js"), "w", encoding="utf-8", newline="\n") as f:
+    f.write(SW_JS % {"V": V, "FILES": _json.dumps(sorted(_core), indent=0).replace("\n", "")})
+
 # Sitemap + robots
 urls = [n for n in pages if n not in ("404.html", "editor.html", "achievements.html")]
 with open(os.path.join(OUT, "sitemap.xml"), "w", encoding="utf-8", newline="\n") as f:
@@ -515,4 +565,4 @@ with open(os.path.join(OUT, "sitemap.xml"), "w", encoding="utf-8", newline="\n")
     f.write("</urlset>\n")
 with open(os.path.join(OUT, "robots.txt"), "w", encoding="utf-8", newline="\n") as f:
     f.write(f"User-agent: *\nAllow: /\nSitemap: {SITE}sitemap.xml\n")
-print(f"Built {len(pages)} pages (asset version {V}).")
+print(f"Built {len(pages)} pages (asset version {V}); offline copy keeps {len(_core)} files.")

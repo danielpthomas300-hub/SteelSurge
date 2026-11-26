@@ -47,7 +47,7 @@ A static site: plain HTML, CSS, and JavaScript. No server, no database, no month
 
 **GitHub Actions** (the repo's Actions tab, where you can also run each by hand):
 - **Refresh site data:** daily. Needs **Settings → Actions → General → Workflow permissions → Read and write** (already set).
-- **Site check:** every push. Checks scripts, content, links, puzzle levels, and the Code Lab, and emails whoever pushed if something breaks.
+- **Site check:** every push. Checks scripts, content, links, puzzle levels, the Code Lab, and Kilovolt, scouting, calendar, and portfolio logic, and emails whoever pushed if something breaks.
 - **Weekly link check:** Mondays. Opens an issue listing broken outside links or deleted videos, and closes it once they work again.
 - **Website check-in:** every other Monday. Posts an issue summarizing site health and stale content (both sites up to date, jobs passing, outreach logged, recent updates).
 
@@ -97,7 +97,7 @@ tools/                    Page builder, checks, tests, image generators, data re
 |---|---|
 | Run locally | `python tools/serve.py`, then open http://localhost:5173 |
 | Rebuild pages after changing HTML, CSS, or JS | `python tools/build_pages.py` (stamps a new version so visitors get updates) |
-| Run every check | `python tools/check_content.py`, `python tools/check_links.py`, `node tools/check_levels.js`, `node tools/test_codelab.js` |
+| Run every check | `python tools/check_content.py`, `python tools/check_links.py`, `node tools/check_levels.js`, `node tools/test_codelab.js`, `node tools/test_features.js` |
 | Check outside links | `node tools/check_external.mjs` |
 | New logo or icons | Replace `assets/img/brand/logo-source.png`, then `python tools/make_images.py`, `python tools/make_og.py` (link previews), and `python tools/make_merch.py` (needs `pip install pillow`) |
 | Publish code changes | Commit and push to `main`; GitHub Pages updates itself. Redeploy Netlify separately (see above). |

@@ -166,13 +166,13 @@
         </div>
         <p class="sc-src">${ev.offline ? `<b>Offline:</b> showing the copy saved ${new Date(ev.fetched).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}. ` : ""}${anyEvent ? "Stats are from matches at this event" : "No matches played here yet, so stats are each team's best from the season so far"}${anyEvent && seasonSrc ? " (teams marked · haven't played here yet, so their season numbers are shown)" : ""}. Data from <a href="https://ftcscout.org/events/${ev.season}/${esc(ev.code)}" target="_blank" rel="noopener">FTCScout</a>.</p>
       </div>
-      <div class="sc-views" role="tablist" aria-label="Scouting views">${[["teams", "Teams"], ["matches", ours ? "Our matches" : "Matches"], ["proj", "Projection"], ["picks", "Pick list"], ["share", "Share notes"]].map(([k, l]) => `<button type="button" role="tab" aria-selected="${S.view === k}" data-view="${k}">${l}</button>`).join("")}</div>
+      <div class="sc-views" role="tablist" aria-label="Scouting views">${[["teams", "Teams"], ...(ours ? [["brief", "Next match"]] : []), ["matches", ours ? "Our matches" : "Matches"], ["proj", "Projection"], ["picks", "Pick list"], ["share", "Share notes"]].map(([k, l]) => `<button type="button" role="tab" aria-selected="${S.view === k}" data-view="${k}">${l}</button>`).join("")}</div>
       <div class="sc-body" data-body></div>
       <dialog class="sc-dialog" data-dialog></dialog>`;
     $("[data-refresh]", host).addEventListener("click", () => refresh());
     $("[data-change]", host).addEventListener("click", () => { S.last = null; save(); picker(); });
     $$("[data-view]", host).forEach((b) => b.addEventListener("click", () => { S.view = b.dataset.view; save(); draw(); }));
-    ({ teams: viewTeams, matches: viewMatches, proj: viewProjection, picks: viewPicks, share: viewShare }[S.view] || viewTeams)();
+    ({ teams: viewTeams, brief: ours ? viewBrief : viewTeams, matches: viewMatches, proj: viewProjection, picks: viewPicks, share: viewShare }[S.view] || viewTeams)();
   }
 
   /* ---- Teams ---- */
@@ -251,26 +251,7 @@
      their alliance's score minus their partners' OPR. Steady (0–100) is high when those
      shares stay close to the team's average. */
   let consCache = null;
-  function consAll() {
-    if (consCache?.ev === ev) return consCache.map;
-    const map = new Map();
-    for (const t of ev.teams) {
-      const list = [];
-      for (const m of ev.matches) {
-        if (m.rs == null || m.bs == null) continue;
-        const side = m.red.includes(t.n) ? ["red", m.rs] : m.blue.includes(t.n) ? ["blue", m.bs] : null; if (!side) continue;
-        const partners = m[side[0]].filter((x) => x !== t.n);
-        list.push({ m, v: side[1] - partners.reduce((s, x) => s + oprOf(x), 0) });
-      }
-      if (!list.length) continue;
-      const vals = list.map((x) => x.v), mean = vals.reduce((a, b) => a + b, 0) / vals.length;
-      const sd = Math.sqrt(vals.reduce((a, b) => a + (b - mean) ** 2, 0) / Math.max(1, vals.length - 1));
-      const enough = vals.length >= 3;
-      map.set(t.n, { list, n: vals.length, mean, sd, low: Math.min(...vals), high: Math.max(...vals), score: enough ? Math.round(100 * Math.exp(-sd / Math.max(Math.abs(mean), 15))) : null });
-    }
-    consCache = { ev, map };
-    return map;
-  }
+  const consAll = () => (consCache?.ev === ev ? consCache.map : (consCache = { ev, map: ScoutModel.consistency(ev.teams, ev.matches, oprOf) }).map);
   const consOf = (n) => consAll().get(n) || null;
   const steadyLabel = (v) => (v == null ? "" : v >= 75 ? "Steady" : v >= 50 ? "Some swings" : "Up and down");
   const steadyTone = (v) => (v == null ? "" : v >= 75 ? "ok" : v >= 50 ? "mid" : "low");
@@ -292,56 +273,10 @@
      for a future match = what a win is worth at this event × win + the team's usual bonus
      ranking points per match. Both are measured from this event's results, so it follows
      each season's ranking rules without hard-coding them. */
-  function rng(seed) { let s = seed >>> 0; return () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
   let projCache = null;
   function project(K) {
     if (projCache?.ev === ev && projCache.K === K) return projCache.res;
-    const quals = ev.matches.filter((m) => m.level === "Quals");
-    const played = quals.filter((m) => m.rs != null && m.bs != null), left = quals.filter((m) => m.rs == null || m.bs == null);
-    const T = ev.teams, N = T.length, idx = new Map(T.map((t, i) => [t.n, i]));
-    // Standings now: official when FTCScout has them, otherwise counted from the schedule (2 points a win, 1 a tie)
-    const official = T.some((t) => t.rp != null && t.played > 0);
-    const sched = T.map(() => ({ w: 0, l: 0, t: 0, g: 0 }));
-    for (const m of played) for (const [side, mine, theirs] of [[m.red, m.rs, m.bs], [m.blue, m.bs, m.rs]]) for (const n of side) { const b = sched[idx.get(n)]; if (!b) continue; b.g++; mine > theirs ? b.w++ : mine < theirs ? b.l++ : b.t++; }
-    const now = T.map((t, i) => {
-      if (official && t.played > 0 && t.rp != null) return { g: t.played, rs: t.rp * t.played, w: t.w ?? 0, l: t.l ?? 0, t: t.t ?? 0, tb1: t.tb1 ?? 0, tb2: t.tb2 ?? 0, rank: t.rank };
-      const c = sched[i]; return { g: c.g, rs: 2 * c.w + c.t, w: c.w, l: c.l, t: c.t, tb1: 0, tb2: 0, rank: null };
-    });
-    // What a win is worth here, and each team's usual bonus ranking points, from a line fit of ranking score vs win rate
-    let winRP = 2, bonus = T.map(() => 0);
-    const pts = now.map((x, i) => (x.g ? { i, x: (x.w + 0.5 * x.t) / x.g, y: x.rs / x.g } : null)).filter(Boolean);
-    if (official && pts.length >= 4) {
-      const mx = pts.reduce((s, p) => s + p.x, 0) / pts.length, my = pts.reduce((s, p) => s + p.y, 0) / pts.length;
-      const vx = pts.reduce((s, p) => s + (p.x - mx) ** 2, 0);
-      if (vx > 1e-6) winRP = Math.min(4, Math.max(1, pts.reduce((s, p) => s + (p.x - mx) * (p.y - my), 0) / vx));
-      const res = new Map(pts.map((p) => [p.i, p.y - winRP * p.x])), avgRes = [...res.values()].reduce((a, b) => a + b, 0) / res.size;
-      bonus = T.map((_, i) => Math.max(0, res.get(i) ?? avgRes));
-    }
-    const swing = (n) => { const c = consOf(n); const o = Math.max(oprOf(n), 0); return c?.n >= 3 ? Math.min(60, Math.max(5, c.sd)) : 6 + 0.3 * o; };
-    const alliance = (side) => ({ mean: side.reduce((s, n) => s + Math.max(oprOf(n), 0), 0), sd: Math.sqrt(side.reduce((s, n) => s + swing(n) ** 2, 0)) });
-    const plan = left.map((m) => ({ m, r: alliance(m.red), b: alliance(m.blue), ours: m.red.includes(team) || m.blue.includes(team) }));
-    const RUNS = left.length ? 2000 : 1, rand = rng(ev.fetched || 1);
-    const gauss = () => { let u = 0; while (!u) u = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rand()); };
-    const rankHist = T.map(() => new Array(N).fill(0)), top = new Array(N).fill(0), key = plan.map(() => ({ wins: 0, topIfWin: 0, topIfLoss: 0 })), us = idx.get(team);
-    const byRank = (st) => T.map((_, i) => i).sort((a, b) => (st[b].g ? st[b].rs / st[b].g : 0) - (st[a].g ? st[a].rs / st[a].g : 0) || st[b].tb1 - st[a].tb1 || st[b].tb2 - st[a].tb2);
-    for (let run = 0; run < RUNS; run++) {
-      const st = now.map((x) => ({ ...x })), wonOurs = [];
-      for (const p of plan) {
-        const rs = p.r.mean + gauss() * p.r.sd, bs = p.b.mean + gauss() * p.b.sd;
-        for (const [side, mine, theirs] of [[p.m.red, rs, bs], [p.m.blue, bs, rs]]) for (const n of side) { const i = idx.get(n); if (i == null) continue; st[i].g++; st[i].rs += (mine > theirs ? winRP : 0) + bonus[i]; }
-        wonOurs.push(p.ours ? (p.m.red.includes(team) ? rs > bs : bs > rs) : null);
-      }
-      // Once qualifications are over, FTC's own ranking is the answer
-      const order = !left.length && official && T.every((t) => t.rank != null || !t.played) ? T.map((_, i) => i).sort((a, b) => (T[a].rank ?? 999) - (T[b].rank ?? 999)) : byRank(st);
-      order.forEach((i, r) => { rankHist[i][r]++; if (r < K) top[i]++; });
-      if (us != null) { const usTop = order.indexOf(us) < K; plan.forEach((p, j) => { if (wonOurs[j] == null) return; if (wonOurs[j]) { key[j].wins++; if (usTop) key[j].topIfWin++; } else if (usTop) key[j].topIfLoss++; }); }
-    }
-    const pct = (h, q) => { let c = 0; for (let r = 0; r < h.length; r++) { c += h[r]; if (c >= q * RUNS) return r + 1; } return h.length; };
-    const rows = T.map((t, i) => ({ n: t.n, name: t.name, cur: now[i], mid: pct(rankHist[i], 0.5), lo: pct(rankHist[i], 0.1), hi: pct(rankHist[i], 0.9), avgRank: rankHist[i].reduce((s, c, r) => s + c * (r + 1), 0) / RUNS, top: top[i] / RUNS }))
-      .sort((a, b) => a.avgRank - b.avgRank);
-    const keys = plan.map((p, j) => ({ p, ...key[j] })).filter((k) => k.p.ours).map((k) => ({ m: k.p.m, pWin: k.wins / RUNS, ifWin: k.wins ? k.topIfWin / k.wins : null, ifLoss: RUNS - k.wins ? k.topIfLoss / (RUNS - k.wins) : null }))
-      .map((k) => ({ ...k, swing: (k.ifWin ?? 0) - (k.ifLoss ?? 0) })).sort((a, b) => b.swing - a.swing);
-    const res = { rows, keys, left: left.length, played: played.length, total: quals.length, official, winRP };
+    const res = ScoutModel.project({ teams: ev.teams, matches: ev.matches, team, K, seed: ev.fetched || 1, oprOf, cons: consAll() });
     projCache = { ev, K, res };
     return res;
   }
@@ -388,6 +323,76 @@
       <div class="sc-tools">${ours ? `<label class="sc-check"><input type="checkbox" data-only ${S.onlyOurs ? "checked" : ""}> Only Steel Surge's matches</label>` : `<span class="muted">Steel Surge isn't at this event.</span>`}<span class="sc-legend">Numbers under teams are OPR. Before a match, “~” is the predicted score (the alliance's OPRs added up).</span></div>
       ${list.length ? `<div class="sc-matches">${list.map(matchRow).join("")}</div>` : `<div class="sc-card sc-empty">The match schedule isn't posted yet. It usually appears on FTCScout the morning of the event. Press Refresh then.</div>`}`;
     $("[data-only]", body)?.addEventListener("change", (e) => { S.onlyOurs = e.target.checked; save(); viewMatches(); });
+    $$("[data-team]", body).forEach((b) => b.addEventListener("click", () => teamDialog(Number(b.dataset.team))));
+  }
+
+  /* ---- Next-match briefing ----
+     One screen for queueing: who's with us and against us, what they're good at (stats and
+     the team's notes), the predicted score and win chance, and plain-language callouts. */
+  const matchLabel = (m) => (m.level === "Quals" ? `Q${m.n}` : `${m.level === "DoubleElim" || m.level === "Playoffs" ? "Playoff" : m.level} ${m.series || m.n}`);
+  const matchKey = (m) => `${m.level}-${m.n}-${m.series || 0}`;
+  function viewBrief() {
+    const body = $("[data-body]", host);
+    const mine = ev.matches.filter((m) => m.red.includes(team) || m.blue.includes(team));
+    const upcoming = mine.filter((m) => m.rs == null || m.bs == null);
+    if (!mine.length) { body.innerHTML = `<div class="sc-card sc-empty">Our match schedule isn't posted yet. It usually appears on FTCScout the morning of the event. Press Refresh then.</div>`; return; }
+    if (!upcoming.length) { body.innerHTML = `<div class="sc-card sc-empty">All of Steel Surge's matches here have been played. See <b>Our matches</b> for results, or <b>Pick list</b> for alliance selection.</div>`; return; }
+    const m = upcoming.find((x) => matchKey(x) === S.briefMatch) || upcoming[0];
+    const tOf = (n) => ev.teams.find((t) => t.n === n) || { n, name: "", opr: 0 };
+    const noteOf = (n) => S.notes[evKey()]?.[n] || {};
+    const usRed = m.red.includes(team), our = usRed ? m.red : m.blue, opp = usRed ? m.blue : m.red, partners = our.filter((n) => n !== team);
+    const cons = consAll(), A = ScoutModel.alliance(our, oprOf, cons), B = ScoutModel.alliance(opp, oprOf, cons), pWin = ScoutModel.winChance(A, B);
+    const sum = (side, k) => side.reduce((s, n) => s + (tOf(n)[k] ?? 0), 0), pc = (v) => `${Math.round(v * 100)}%`;
+    // When
+    let when = "";
+    if (m.time) { const t = new Date(m.time), mins = Math.round((t - Date.now()) / 60000); when = `${t.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}${mins > 0 && mins < 600 ? ` · in about ${mins < 60 ? `${mins} min` : `${Math.round(mins / 6) / 10} h`}` : mins <= 0 && mins > -90 ? " · scheduled now (events often run late)" : ""}`; }
+    // Callouts, most useful first
+    const tips = [];
+    tips.push(pWin >= 0.65 ? ["good", `We're favored: about a ${pc(pWin)} chance to win, predicted ${Math.round(A.mean)} to ${Math.round(B.mean)}.`] : pWin <= 0.35 ? ["bad", `They're favored: about a ${pc(pWin)} chance for us, predicted ${Math.round(A.mean)} to ${Math.round(B.mean)}. A clean match and no penalties matter most.`] : ["mid", `Close match: about ${pc(pWin)} for us, predicted ${Math.round(A.mean)} to ${Math.round(B.mean)}. Endgame and penalties could decide it.`]);
+    const dAuto = sum(our, "auto") - sum(opp, "auto"), dTele = sum(our, "dc") - sum(opp, "dc");
+    if (Math.abs(dAuto) >= 5) tips.push(dAuto > 0 ? ["good", `We should lead after autonomous by about ${Math.round(dAuto)} points.`] : ["mid", `Their autonomous outscores ours by about ${Math.round(-dAuto)} points. Plan to win it back in TeleOp.`]);
+    if (Math.abs(dTele) >= 8) tips.push(dTele > 0 ? ["good", `Our alliance is stronger in TeleOp by about ${Math.round(dTele)} points.`] : ["mid", `Their TeleOp is about ${Math.round(-dTele)} points stronger. Fast, clean cycles matter.`]);
+    const threat = opp.map(tOf).sort((a, b) => (b.opr || 0) - (a.opr || 0))[0];
+    if (threat && (threat.opr || 0) > 0 && (threat.opr || 0) >= 0.6 * B.mean && opp.length > 1) tips.push(["mid", `Watch ${threat.n}${threat.name ? ` (${threat.name})` : ""}: they score most of their alliance's points (OPR ${fmt1(threat.opr)}).`]);
+    for (const n of partners) {
+      const t = tOf(n), nt = noteOf(n), au = nt.auton, c = cons.get(n);
+      if (au === "None" || au === "Parks only" || (!au && (t.auto ?? 0) < 3)) tips.push(["mid", `Our partner ${n} has ${au === "Parks only" ? "only a parking" : "little or no"} autonomous. Run our best autonomous and leave them room.`]);
+      else if (au === "Scores a lot" || (t.auto ?? 0) >= 15) tips.push(["info", `Our partner ${n} has a strong autonomous. Agree before queueing who runs which path so you don't collide.`]);
+      if (nt.avoid) tips.push(["bad", `You marked ${n} “Avoid” in your notes. Check your notes on them before the match.`]);
+      if (c?.score != null && c.score < 50) tips.push(["mid", `Our partner ${n} swings a lot from match to match (low ${fmt1(c.low)}, high ${fmt1(c.high)}). Don't count on their average.`]);
+    }
+    for (const n of opp) {
+      const nt = noteOf(n);
+      if ((nt.strong || []).includes("Defense")) tips.push(["mid", `${n} plays defense (from your notes). Plan an escape route.`]);
+      const c = cons.get(n); if (c?.score != null && c.score < 45) tips.push(["info", `${n} is up and down (low ${fmt1(c.low)}, high ${fmt1(c.high)}): they could have an off match, or a great one.`]);
+    }
+    const k = m.level === "Quals" ? project(S.captains).keys.find((x) => matchKey(x.m) === matchKey(m)) : null;
+    if (k && k.ifWin != null && k.ifLoss != null && k.ifWin - k.ifLoss >= 0.08) tips.push(["info", `This one matters: our chance to be a top-${S.captains} captain is about ${pc(k.ifWin)} if we win and ${pc(k.ifLoss)} if we lose.`]);
+    // Team cards
+    const card = (n, side) => {
+      const t = tOf(n), nt = noteOf(n), c = cons.get(n);
+      const chips = [nt.drive, nt.auton && `Auto: ${nt.auton}`, ...(nt.strong || [])].filter(Boolean);
+      return `<button type="button" class="sc-bteam ${side}${n === team ? " us" : ""}" data-team="${n}">
+        <span class="sc-bteam-top"><b>${n}</b>${n === team ? '<i class="tag ok">Us</i>' : ""}${nt.want ? `<i class="sc-want" title="Want as a partner">${I.star}</i>` : ""}${nt.avoid ? '<i class="tag" title="Marked Avoid">Avoid</i>' : ""}</span>
+        <small class="sc-bname">${esc(t.name) || "Team " + n}</small>
+        <span class="sc-bstats"><span><em>Rank</em>${t.rank ?? "—"}</span><span><em>OPR</em>${fmt1(t.opr)}</span><span><em>Auto</em>${fmt1(t.auto)}</span><span><em>TeleOp</em>${fmt1(t.dc)}</span><span><em>Steady</em>${c?.score ?? "—"}</span></span>
+        ${chips.length || nt.rel ? `<span class="sc-bnotes">${chips.map((x) => `<i>${esc(x)}</i>`).join("")}${nt.rel ? `<i>${"★".repeat(nt.rel)}</i>` : ""}</span>` : `<span class="sc-bnotes muted">No notes yet. Tap to add.</span>`}
+      </button>`;
+    };
+    const ourColor = usRed ? "red" : "blue", oppColor = usRed ? "blue" : "red";
+    body.innerHTML = `
+      <div class="sc-card sc-brief-head">
+        <div><span class="sc-label">Next match</span><h3>${matchLabel(m)} <span class="muted">· ${usRed ? "Red" : "Blue"} alliance</span></h3>${when ? `<p class="muted">${esc(when)}</p>` : ""}</div>
+        ${upcoming.length > 1 ? `<label class="sc-captains"><span>Brief for</span><select class="input select" data-pick-match>${upcoming.slice(0, 12).map((x) => `<option value="${matchKey(x)}"${x === m ? " selected" : ""}>${matchLabel(x)}${x.time ? ` · ${new Date(x.time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}` : ""}</option>`).join("")}</select></label>` : ""}
+        <div class="sc-odds" role="img" aria-label="Win chance ${pc(pWin)}"><div class="sc-odds-bar"><i class="${ourColor}" style="width:${Math.round(pWin * 100)}%"></i><i class="${oppColor}"></i></div><span><b>${pc(pWin)}</b> win chance</span><span class="muted">Predicted ${Math.round(A.mean)} – ${Math.round(B.mean)}</span></div>
+      </div>
+      <div class="sc-card sc-tips"><h4 class="sc-label">What to know</h4><ul>${tips.map(([tone, t]) => `<li class="${tone}">${esc(t)}</li>`).join("")}</ul></div>
+      <div class="sc-brief-sides">
+        <section class="sc-al-col ${ourColor}"><h4 class="sc-label">With us</h4>${our.map((n) => card(n, ourColor)).join("")}</section>
+        <section class="sc-al-col ${oppColor}"><h4 class="sc-label">Against us</h4>${opp.map((n) => card(n, oppColor)).join("")}</section>
+      </div>
+      <p class="fine">Predictions use each team's OPR and how much their scores usually swing. Your notes come from this phone and from teammates' shared links. Tap a team to add notes.</p>`;
+    $("[data-pick-match]", body)?.addEventListener("change", (e) => { S.briefMatch = e.target.value; save(); viewBrief(); });
     $$("[data-team]", body).forEach((b) => b.addEventListener("click", () => teamDialog(Number(b.dataset.team))));
   }
 
