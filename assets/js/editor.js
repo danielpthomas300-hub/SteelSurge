@@ -21,7 +21,7 @@
 
   /* ---------------- Sidebar groups and "view on site" links ---------------- */
   const GROUPS = [
-    ["Site", ["overview", "controls", "appearance", "home", "faq", "kvprompts"]],
+    ["Site", ["overview", "controls", "sweep", "appearance", "home", "faq", "kvprompts"]],
     ["Team", ["team", "members", "values", "projects", "mentors"]],
     ["Season", ["calendar", "achievements", "outreach"]],
     ["Media", ["featuredVideos", "updates"]],
@@ -43,7 +43,7 @@
   const SECTIONS = [
     { id: "overview", title: "Overview", icon: "chart", desc: "Everything at a glance: what's on the site, what needs attention, and quick ways to post something new.", get: () => null, set: () => {}, custom: true },
     { id: "controls", title: "Master controls", icon: "gear", desc: "Switches for the whole site: maintenance mode, a site-wide announcement, and which features are turned on. Like every change here, they go live when you publish.",
-      get: (c) => ({ ...(window.SS?.CONTROL_DEFAULTS || {}), ...(c.controls || {}) }), set: (c, v) => (c.controls = v),
+      get: (c) => ({ ...(window.SS?.CONTROL_DEFAULTS || {}), ...(c.controls || {}) }), set: (c, v) => { const was = !!c.controls?.maintenance; c.controls = v; if (was && !v.maintenance) suggestSweep(); },
       fields: [
         { k: "_mx", label: "Maintenance mode", type: "heading", hint: "Shows a 'we'll be right back' page on every page of the site. The Team editor keeps working, and on this device you can still view the site." },
         { k: "maintenance", label: "Turn on maintenance mode", type: "bool" },
@@ -230,6 +230,8 @@
         { k: "replyNote", label: "How fast you reply", type: "text", hint: "Shown on the form and after sending. Empty uses “We usually reply within a few days.”" },
         { k: "formEndpoint", label: "Form delivery address", type: "url", hint: "Advanced. FormSubmit endpoint that emails messages to the team. Leave as is unless the team email changes." },
       ] },
+    { id: "sweep", title: "Site sweep", icon: "check", desc: "Check the whole live site in about 20 seconds: every page and internal link, the published content, the automatic data refreshes, and the site switches. Run it after publishing, and before turning maintenance mode off.",
+      get: () => null, set: () => {}, custom: true },
     { id: "settings", title: "Editor settings", icon: "gear", desc: "Change the editor passcode, and back up or restore your draft.",
       get: (c) => c.dev, set: (c, v) => (c.dev = v), custom: true },
   ];
@@ -273,6 +275,60 @@
     });
   }
 
+  /* ---------------- Site sweep (sweep.js does the checking) ---------------- */
+  const SWEEP_KEY = "ss-sweep-last";
+  let sweepAsked = false;
+  /** Turning maintenance mode off is the moment to check everything before visitors come back. */
+  function suggestSweep() {
+    if (sweepAsked) return; sweepAsked = true;
+    setTimeout(() => {
+      if (!confirm("Maintenance mode is off in your draft. Run a site sweep now to check the live site before visitors come back?")) return;
+      const sec = SECTIONS.find((x) => x.id === "sweep"); sec.__autorun = true; jumpTo({ sec: "sweep" });
+    }, 350);
+  }
+  function sweepPanel(host, autorun) {
+    const GROUP_ORDER = ["Pages and links", "Content", "Site switches", "Automatic data"], RANK = { bad: 0, warn: 1, info: 2, ok: 3 };
+    const ICONS = { bad: "✕", warn: "!", info: "i", ok: "✓" };
+    const dirty = dirtySections().filter((s) => !s.custom).length;
+    host.innerHTML = `<div class="ed-sweep">
+      <div class="ed-card ed-sweep-head">
+        <div><p>Checks what visitors see right now on the <b>live site</b>. Outside websites (like tutorial links) can't be tested from a browser; the weekly GitHub link check covers those.</p>
+          ${dirty ? `<p class="hint">You have ${dirty} unpublished change${dirty === 1 ? "" : "s"}. The sweep checks the published site, not your draft.</p>` : ""}</div>
+        <button type="button" class="btn primary" id="sweep-run">${icon("check")} Run sweep</button>
+      </div>
+      <div class="ed-card ed-sweep-prog" id="sweep-prog" hidden><div class="ed-sweep-bar"><i></i></div><span aria-live="polite"></span></div>
+      <div id="sweep-out"></div></div>`;
+    const out = $("#sweep-out", host), btn = $("#sweep-run", host), prog = $("#sweep-prog", host);
+    const draw = (res) => {
+      const when = new Date(res.at), mins = Math.round((Date.now() - res.at) / 60000);
+      const ago = mins < 1 ? "just now" : mins < 60 ? `${mins} min ago` : when.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+      const { bad, warn } = res.counts, mood = bad ? `${bad} problem${bad === 1 ? "" : "s"} to fix` : warn ? `No problems, ${warn} thing${warn === 1 ? "" : "s"} to check` : "Everything checks out";
+      const groups = GROUP_ORDER.map((g) => [g, res.results.filter((r) => r.group === g).sort((a, b) => RANK[a.level] - RANK[b.level])]).filter(([, l]) => l.length);
+      const fixBtn = (f) => !f ? "" : f.href ? `<a class="btn ghost sm" href="${esc(f.href)}" target="_blank" rel="noopener">${esc(f.label || "Open")} ${extIco}</a>` : `<button type="button" class="btn ghost sm" data-fix-sec="${esc(f.sec)}"${f.field ? ` data-fix-field="${esc(f.field)}"` : ""}>Fix</button>`;
+      out.innerHTML = `
+        <div class="ed-card ed-sweep-sum ${bad ? "is-bad" : warn ? "is-warn" : "is-ok"}">
+          <div class="ed-sweep-mood"><i aria-hidden="true">${bad ? "✕" : warn ? "!" : "✓"}</i><div><h2>${mood}</h2><p class="muted">Ran ${ago} · ${res.pages} pages and ${res.files} files checked</p></div></div>
+          <div class="ed-sweep-counts">${[["bad", "Problems"], ["warn", "To check"], ["ok", "Passed"], ["info", "Notes"]].map(([k, l]) => `<span class="${k}"><b>${res.counts[k]}</b>${l}</span>`).join("")}</div>
+        </div>
+        ${groups.map(([g, list]) => `<section class="ed-card ed-sweep-group"><h3>${esc(g)}</h3><ul>${list.map((r) => `<li class="${r.level}"><i aria-hidden="true">${ICONS[r.level]}</i><p>${esc(r.text)}</p>${fixBtn(r.fix)}</li>`).join("")}</ul></section>`).join("")}`;
+      $$("[data-fix-sec]", out).forEach((b) => b.addEventListener("click", () => jumpTo({ sec: b.dataset.fixSec, field: b.dataset.fixField })));
+    };
+    const go = async () => {
+      if (!window.SiteSweep) { out.innerHTML = `<div class="ed-card"><p>The sweep couldn't start. Reload the editor and try again.</p></div>`; return; }
+      btn.disabled = true; prog.hidden = false; out.innerHTML = "";
+      try {
+        const res = await window.SiteSweep.run({ repo: draft.dev?.repo || "danielpthomas300-hub/SteelSurge", onProgress: (t, p) => { $("span", prog).textContent = t; $("i", prog).style.width = `${Math.round(p * 100)}%`; } });
+        store.set(SWEEP_KEY, res); draw(res);
+        window.SS?.toast(res.counts.bad ? `Sweep found ${res.counts.bad} problem${res.counts.bad === 1 ? "" : "s"}` : "Sweep finished: no problems");
+      } catch (e) { out.innerHTML = `<div class="ed-card"><p>The sweep stopped: ${esc(e.message || "something went wrong")}. Check your connection and try again.</p></div>`; }
+      btn.disabled = false; prog.hidden = true;
+    };
+    btn.addEventListener("click", go);
+    const lastRun = store.get(SWEEP_KEY);
+    if (autorun) go(); else if (lastRun) draw(lastRun);
+    else out.innerHTML = `<div class="ed-card ed-sweep-empty"><p class="muted">No sweep has been run on this device yet. Press <b>Run sweep</b> to check the site.</p></div>`;
+  }
+
   /* ---------------- Overview dashboard ---------------- */
   const today = () => new Date().toISOString().slice(0, 10);
   const seasonStart = () => { const n = new Date(), y = n.getMonth() >= 8 ? n.getFullYear() : n.getFullYear() - 1; return { y, start: `${y}-09-01`, label: `${y}–${String(y + 1).slice(2)}` }; };
@@ -298,6 +354,10 @@
     if (!sp.length) out.push(["info", "No sponsors are listed yet. The sponsor wall shows a “become our first sponsor” message.", "sponsors"]);
     else { const noLogo = sp.filter((x) => !x.logo).length; if (noLogo) out.push(["info", `${noLogo} sponsor${noLogo === 1 ? " has" : "s have"} no logo (their name is shown instead).`, "sponsors"]); }
     if (!c.team?.instagram) out.push(["info", "No Instagram handle set. Social links appear across the site once it's added.", "team"]);
+    const sw = store.get(SWEEP_KEY), swDays = sw ? Math.floor((Date.now() - sw.at) / 864e5) : null;
+    if (!sw) out.push(["info", "No site sweep has been run on this device yet. It checks every page, link, and data refresh in about 20 seconds.", "sweep"]);
+    else if (sw.counts?.bad) out.push(["warn", `The last site sweep (${swDays ? `${swDays} day${swDays === 1 ? "" : "s"} ago` : "today"}) found ${sw.counts.bad} problem${sw.counts.bad === 1 ? "" : "s"}.`, "sweep"]);
+    else if (swDays > 14) out.push(["info", `The last site sweep was ${swDays} days ago.`, "sweep"]);
     return out;
   }
   const QUICK = [
@@ -308,9 +368,11 @@
     ["members", null, "Add a team member", "users", () => ({ name: "", role: "", dept: DEPTS[0], photo: "", bio: "", funFact: "" }), "end"],
     ["sponsors", null, "Add a sponsor", "heart", () => ({ name: "", tier: "", url: "", logo: "" }), "end"],
     ["controls", null, "Post an announcement", "flag", null, "field:banner"],
+    ["sweep", null, "Run a site sweep", "check", null, "run"],
   ];
   function quickAdd([secId, nested, , , blank, where]) {
     const sec = SECTIONS.find((x) => x.id === secId);
+    if (secId === "sweep") { sec.__autorun = true; jumpTo({ sec: "sweep" }); return; }
     if (!blank) { jumpTo({ sec: secId, field: where.split(":")[1] }); return; }
     if (nested) {
       const obj = { ...(sec.get(draft) || {}) }, list = [...(obj[nested] || [])];
@@ -376,6 +438,7 @@
       if (k === "maintenance" && b.checked && !confirm("Turn on maintenance mode? After you publish, visitors only see a “We'll be right back” page.")) { b.checked = false; return; }
       if (k === "banner" && b.checked && !String(ctl.bannerText || "").trim()) { b.checked = false; jumpTo({ sec: "controls", field: "bannerText" }); window.SS?.toast("Write the announcement first, then switch the banner on"); return; }
       draft.controls = { ...ctl, [k]: b.checked }; changed(); save(); renderPanel();
+      if (k === "maintenance" && !b.checked && ctl.maintenance) suggestSweep();
     }));
     $("#ov-publish", host)?.addEventListener("click", openPublish);
   }
@@ -718,6 +781,8 @@
     const host = $("#form", panel);
     if (sec.id === "overview") {
       host.className = ""; overviewPanel(host);
+    } else if (sec.id === "sweep") {
+      host.className = ""; sweepPanel(host, sec.__autorun); sec.__autorun = false;
     } else if (sec.custom) {
       settingsPanel(host);
     } else if (sec.list) {

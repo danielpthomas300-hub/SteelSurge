@@ -12,7 +12,7 @@ A static site: plain HTML, CSS, and JavaScript. No server, no database, no month
 2. Make changes. Drafts save on your device as you type. **Live preview** shows the real page beside the form.
 3. Click **Publish** → review the list of changes and any warnings → copy → open `content.json` on GitHub → paste → **Commit changes**. GitHub Pages updates in about a minute.
 
-**Handy editor features:** the **Overview** page shows what needs attention and has quick actions (log outreach, post an update, add a member or sponsor). **Ctrl + K** searches everything. **Ctrl + Z** undoes any change, even a deleted item. Back up or restore a draft under **Editor settings**.
+**Handy editor features:** the **Overview** page shows what needs attention and has quick actions (log outreach, post an update, add a member or sponsor). **Ctrl + K** searches everything. **Ctrl + Z** undoes any change, even a deleted item. Back up or restore a draft under **Editor settings**. **Site sweep** (Site → Site sweep, or the Overview's quick actions) checks every page, internal link, picture, and data refresh on the live site in seconds, with a Fix button for each problem. Run it after publishing and before turning maintenance mode off (the editor offers to).
 
 **Photos and logos:** use **Prepare a new image** on the photo field. It crops, shrinks, and downloads the file; then upload it to `assets/img/team/`, `projects/`, or `sponsors/` on GitHub (the Publish dialog links there).
 

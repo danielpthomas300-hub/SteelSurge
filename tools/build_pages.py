@@ -496,7 +496,7 @@ pages["arcade/kilovolt.html"] = game_page(
     [("Submit an answer", ["Enter"]), ("Next prompt", ["Enter"]), ("Skip", ["Click Skip"])],
     "", "Kilovolt: an FTC trivia game", extra_js=("arcade/kilovolt-facts.js",))
 
-pages["editor.html"] = head("Team editor · Steel Surge", "Team-only content editor.", "editor", noindex=True, css=("editor.css",), js=("editor.js",)) + '''  <div id="app"><div class="ed-lock"><p class="muted">Loading editor…</p></div></div>
+pages["editor.html"] = head("Team editor · Steel Surge", "Team-only content editor.", "editor", noindex=True, css=("editor.css",), js=("sweep.js", "editor.js")) + '''  <div id="app"><div class="ed-lock"><p class="muted">Loading editor…</p></div></div>
 </body>
 </html>
 '''
