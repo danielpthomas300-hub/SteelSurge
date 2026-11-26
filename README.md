@@ -47,7 +47,7 @@ A static site: plain HTML, CSS, and JavaScript. No server, no database, no month
 
 **GitHub Actions** (the repo's Actions tab, where you can also run each by hand):
 - **Refresh site data:** daily. Needs **Settings → Actions → General → Workflow permissions → Read and write** (already set).
-- **Site check:** every push. Checks scripts, content, links, puzzle levels, the Code Lab, and Kilovolt, scouting, calendar, and portfolio logic, and emails whoever pushed if something breaks.
+- **Site check:** every push. Checks scripts, content, links, puzzle levels, the Code Lab, and Kilovolt, scouting, calendar, portfolio, and robot calculator logic, and emails whoever pushed if something breaks.
 - **Weekly link check:** Mondays. Opens an issue listing broken outside links or deleted videos, and closes it once they work again.
 - **Website check-in:** every other Monday. Posts an issue summarizing site health and stale content (both sites up to date, jobs passing, outreach logged, recent updates).
 
@@ -89,7 +89,7 @@ content/                  content.json (editable) + auto-refreshed data
 assets/js/site.js         Shared by every page: header, footer, theme, content, FTCScout, accessibility
 assets/js/pages/          One file per page (home, team, ftc, media…), loaded only on that page
 assets/js/*-model.js etc. Logic without page code (scouting math, calendar files, Kilovolt matching,
-                          portfolio rules), tested by tools/test_features.js
+                          portfolio rules, robot calculator math), tested by tools/test_features.js
 assets/js/editor.js       Team editor
 assets/css/               site.css (design tokens at the top) + page styles
 tools/                    Page builder, checks, tests, image generators, data refresh

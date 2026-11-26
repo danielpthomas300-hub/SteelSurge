@@ -282,15 +282,17 @@ pages["ftc.html"] = shell("What is FTC?" + T, "New to FIRST Tech Challenge? How 
   open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ftc_page.html"), encoding="utf-8").read(), path="ftc.html",
   extra_head='\n  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>\n  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>', js=("pages/ftc.js",))
 
-pages["calculator.html"] = shell("Score calculator and scouting" + T, "Free FTC match tools: a score calculator for every FIRST Tech Challenge game since 2017–18, an event scouting tool with live FTCScout stats and rank projections, and an engineering portfolio check.", "calculator",
-  page_hero("Match tools", "Score calculator and scouting", "Score any FTC match since 2017–18 with point values from the official manuals, or scout an event: live stats for every team, notes on your phone, and an alliance pick list. Or check your engineering portfolio before judging.")
+pages["calculator.html"] = shell("Score calculator and scouting" + T, "Free FTC match tools: a score calculator for every FIRST Tech Challenge game since 2017–18, an event scouting tool with live FTCScout stats and rank projections, an engineering portfolio check, and robot calculators.", "calculator",
+  page_hero("Match tools", "Score calculator and scouting", "Score any FTC match since 2017–18 with point values from the official manuals, or scout an event: live stats for every team, notes on your phone, and an alliance pick list. Or check your engineering portfolio before judging, and work out gear ratios, encoder ticks, and arm torque.")
   + section(f"""        <div class="mt-tabs" role="tablist" aria-label="Match tools">
           <button type="button" role="tab" class="mt-tab" id="mt-tab-calc" aria-controls="mt-calc" aria-selected="true" data-mt="calc">{I('<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h8"/>')}<span><b>Score calculator</b><small>Tap what an alliance scored</small></span></button>
           <button type="button" role="tab" class="mt-tab" id="mt-tab-scout" aria-controls="mt-scout" aria-selected="false" data-mt="scout">{I('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M8 11h6M11 8v6"/>')}<span><b>Event scouting</b><small>Stats, notes, and pick list</small></span></button>
           <button type="button" role="tab" class="mt-tab" id="mt-tab-port" aria-controls="mt-port" aria-selected="false" data-mt="port">{I('<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 14l2 2 4-4"/>')}<span><b>Portfolio check</b><small>Get ready for judging</small></span></button>
+          <button type="button" role="tab" class="mt-tab" id="mt-tab-bot" aria-controls="mt-bot" aria-selected="false" data-mt="bot">{I('<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/>')}<span><b>Robot calculators</b><small>Gearing, encoders, mecanum, arms</small></span></button>
         </div>
         <div id="mt-scout" role="tabpanel" aria-labelledby="mt-tab-scout" hidden><div id="scout"><noscript><p>Scouting needs JavaScript.</p></noscript></div></div>
         <div id="mt-port" role="tabpanel" aria-labelledby="mt-tab-port" hidden><div id="portfolio"><noscript><p>The portfolio check needs JavaScript.</p></noscript></div></div>
+        <div id="mt-bot" role="tabpanel" aria-labelledby="mt-tab-bot" hidden><div id="robotcalc"><noscript><p>The robot calculators need JavaScript.</p></noscript></div></div>
         <div id="mt-calc" role="tabpanel" aria-labelledby="mt-tab-calc">
         <div class="calc">
           <div class="calc-pick">
@@ -319,7 +321,7 @@ pages["calculator.html"] = shell("Score calculator and scouting" + T, "Free FTC 
           </div>
         </div>
         <div class="calc-mobile-bar"><span>Total</span><b id="calc-bar-total">0</b><button class="btn sm" type="button" id="calc-jump">Breakdown</button></div>
-        </div>"""), path="calculator.html", css=("scouting.css", "portfolio.css"), js=("calc-data.js", "calculator.js", "scout-model.js", "scouting.js", "portfolio-rules.js", "portfolio.js"))
+        </div>"""), path="calculator.html", css=("scouting.css", "portfolio.css", "robot.css"), js=("calc-data.js", "calculator.js", "scout-model.js", "scouting.js", "portfolio-rules.js", "portfolio.js", "robot-math.js", "robot-calc.js"))
 
 pages["codelab.html"] = shell("Code Lab" + T, "Practice FTC Java programming in your browser: find bugs in real robot code, write methods that are checked instantly, and program a simulated robot's autonomous.", "codelab",
   page_hero("Code Lab", "Practice FTC programming", "Learn the Java that runs FTC robots, right in your browser: find bugs in real robot code, write methods that get checked instantly, then program a robot and drive it. Plus short CAD and outreach lessons for the whole team. No setup and no account needed.")

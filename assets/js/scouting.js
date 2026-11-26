@@ -36,13 +36,14 @@
   };
 
   /* ---------------- Tabs on the Match tools page ---------------- */
-  let tabs = $$(".mt-tab"); const panels = { calc: $("#mt-calc"), scout: $("#mt-scout"), port: $("#mt-port") };
+  let tabs = $$(".mt-tab"); const panels = { calc: $("#mt-calc"), scout: $("#mt-scout"), port: $("#mt-port"), bot: $("#mt-bot") };
+  const HASH = { scout: "#scout", port: "#portfolio", bot: "#robot" };
   let started = false;
   function setTab(t, push = true) {
     if (!panels[t]) t = "calc";
     tabs.forEach((b) => { const on = b.dataset.mt === t; b.setAttribute("aria-selected", String(on)); b.tabIndex = on ? 0 : -1; });
     for (const [k, p] of Object.entries(panels)) if (p) p.hidden = k !== t;
-    if (push) history.replaceState(null, "", t === "scout" ? "#scout" : t === "port" ? "#portfolio" : location.pathname + location.search);
+    if (push) history.replaceState(null, "", HASH[t] || location.pathname + location.search);
     if (t === "scout" && !started) { started = true; start(); }
   }
   tabs.forEach((b) => b.addEventListener("click", () => setTab(b.dataset.mt)));
@@ -51,11 +52,12 @@
     const c = e.detail; if (!c) return;
     if (window.SS?.controls?.(c).scouting === false) {
       $("#mt-tab-scout")?.remove(); panels.scout?.remove(); delete panels.scout; tabs = $$(".mt-tabs .mt-tab");
-      if (!/^#portfolio/.test(location.hash)) setTab("calc", false);
+      if (!/^#(portfolio|robot)/.test(location.hash)) setTab("calc", false);
     }
   });
   if (/^#scout/.test(location.hash)) setTab("scout", false);
   if (/^#portfolio/.test(location.hash)) setTab("port", false);
+  if (/^#robot/.test(location.hash)) setTab("bot", false);
 
   /* ---------------- Data from FTCScout ---------------- */
   async function gql(query) {

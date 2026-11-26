@@ -4,6 +4,8 @@
      Scouting predictions and rank projection    assets/js/scout-model.js
      Calendar files and Google links             assets/js/ics.js
      Portfolio check scoring                     assets/js/portfolio-rules.js
+     Robot calculators (drivetrain, encoders,    assets/js/robot-math.js
+       mecanum, arm and lift)
    Usage: node tools/test_features.js */
 "use strict";
 const path = require("path");
@@ -172,6 +174,72 @@ test("Portfolio: an empty portfolio scores zero with every tip listed", () => {
 test("Portfolio: word counts and sentences", () => {
   eq(PR.words("We built 2 robots, quickly."), 5);
   eq(PR.sentences("Our Robot\nThe intake grabs pixels fast. It never jams in testing."), ["Our Robot.", "The intake grabs pixels fast.", "It never jams in testing."].filter((s) => s.length > 20));
+});
+
+/* ---------------- Robot calculators ---------------- */
+const RM = require(path.join(ROOT, "assets/js/robot-math.js"));
+test("Robot: motor specs match the makers' pages", () => {
+  const ids = new Set();
+  for (const m of RM.MOTORS) { ok(!ids.has(m.id), `duplicate motor ${m.id}`); ids.add(m.id); ok(m.rpm > 0 && m.stallNm > 0 && m.cpr > 0 && m.stallA > 0, `${m.id} is missing a spec`); }
+  const y312 = RM.motor("gb-312"); eq([y312.ratio, y312.rpm, y312.cpr], [19.2, 312, 537.7]); near(y312.stallNm, 24.3 * 0.0980665, 1e-9);
+  eq(RM.motor("gb-435").cpr, 384.5); eq(RM.motor("rev-core").cpr, 288); near(RM.motor("rev-up20").cpr, 529.2, 1e-9);
+  // Free speed falls as the ratio rises, and torque grows (within a brand's planetary line)
+  const gbs = RM.MOTORS.filter((m) => m.brand === "goBILDA");
+  for (let i = 1; i < gbs.length; i++) ok(gbs[i].rpm < gbs[i - 1].rpm && gbs[i].stallNm > gbs[i - 1].stallNm, `${gbs[i].id} out of order`);
+});
+test("Robot: gear stages multiply, and bad stages count as 1:1", () => {
+  eq(RM.gearRatio([]), 1); eq(RM.gearRatio([{ driver: 20, driven: 40 }]), 2);
+  near(RM.gearRatio([{ driver: 20, driven: 40 }, { driver: 15, driven: 45 }]), 6, 1e-12);
+  eq(RM.gearRatio([{ driver: 0, driven: 40 }, null]), 1); eq(RM.gearRatio([{ driver: 40, driven: 20 }]), 0.5);
+});
+test("Robot: drivetrain speed, force, and times", () => {
+  const m = RM.motor("gb-312"), r = RM.drivetrain({ m, wheelD: 0.096, motors: 4, mass: 14, mu: 0.7 });
+  near(r.wheelRpm, 312, 1e-9); near(r.free, (312 / 60) * Math.PI * 0.096, 1e-9); near(r.top, r.free * 0.8, 1e-9);
+  near(r.motorForce, (4 * m.stallNm * 0.85) / 0.048, 1e-6); near(r.grip, 0.7 * 14 * 9.80665, 1e-9);
+  eq(r.slips, true); near(r.push, r.grip, 1e-9);
+  ok(r.tile > 0 && r.tile < r.twoTiles && r.twoTiles < r.field, "times should grow with distance");
+  ok(r.field > 3.6576 / r.top, "can't beat crossing the field at top speed the whole way");
+  const geared = RM.drivetrain({ m, ext: 2, wheelD: 0.096, motors: 4, mass: 14 });
+  near(geared.wheelRpm, 156, 1e-9); near(geared.motorForce, r.motorForce * 2, 1e-6);
+  eq(RM.drivetrain({ m, wheelD: 0 }), null);
+  eq(RM.timeTo(1, { top: 1, force: 0, grip: 10, mass: 10 }), Infinity);
+});
+test("Robot: encoder ticks per inch and per degree", () => {
+  const r = RM.encoder({ cpr: 537.7, wheelD: 0.096 });
+  near(r.perRev, 537.7, 1e-9); near(r.perM * 0.0254, 45.29, 0.01); near(r.perDeg, 537.7 / 360, 1e-12);
+  near(RM.encoder({ cpr: 288, ext: 3 }).perDeg, 2.4, 1e-12); eq(RM.encoder({ cpr: 288 }).perM, null); eq(RM.encoder({ cpr: 0 }), null);
+});
+test("Robot: mecanum wheel powers and the reverse", () => {
+  eq(RM.mecanum(1, 0, 0), { fl: 1, fr: 1, bl: 1, br: 1 });
+  eq(RM.mecanum(0, 1, 0), { fl: 1, fr: -1, bl: -1, br: 1 });
+  eq(RM.mecanum(0, 0, 1), { fl: 1, fr: -1, bl: 1, br: -1 });
+  eq(RM.mecanum(1, 1, 0), { fl: 1, fr: 0, bl: 0, br: 1 }); // diagonal: scaled so nothing passes 1
+  for (const [d, s, t] of [[0.5, 0.2, 0], [0.3, -0.4, 0.2], [-0.2, 0.1, -0.3]]) {
+    const mo = RM.mecanumMotion(RM.mecanum(d, s, t)); near(mo.drive, d, 1e-12); near(mo.strafe, s, 1e-12); near(mo.turn, t, 1e-12);
+  }
+  const w = RM.mecanum(1, 1, 1); ok(Math.max(...Object.values(w).map(Math.abs)) <= 1 + 1e-12, "no wheel past full power");
+});
+test("Robot: arm and lift torque", () => {
+  const m = RM.motor("gb-117"), a = RM.arm({ m, length: 0.3, loadKg: 1, armKg: 0 });
+  near(a.need, 9.80665 * 0.3, 1e-9); near(a.have, m.stallNm * 0.85, 1e-9); near(a.share, a.need / a.have, 1e-12);
+  eq(a.verdict, "ok"); ok(a.rpm < 117 && a.rpm > 0, "slower under load"); ok(a.amps > 0.25 && a.amps < 9.2, "current between free and stall");
+  near(RM.arm({ m, length: 0.3, loadKg: 0, armKg: 2 }).need, 9.80665 * 2 * 0.15, 1e-9); // arm weight acts at half its length
+  eq(RM.arm({ m, length: 1, loadKg: 5 }).verdict, "stall"); eq(RM.arm({ m, length: 1, loadKg: 5 }).rpm, 0);
+  near(RM.arm({ m, motors: 2, length: 0.3, loadKg: 1 }).share, a.share / 2, 1e-12); // two motors halve the share
+  const l = RM.lift({ m: RM.motor("gb-312"), spoolD: 0.038, massKg: 2 });
+  near(l.need, 2 * 9.80665 * 0.019, 1e-9); eq(l.verdict, "easy"); ok(l.speed > 0 && l.speed < (312 / 60) * Math.PI * 0.038, "lift speed under load");
+});
+
+test("Robot: field-centric turns field directions into robot directions", () => {
+  eq(RM.fieldCentric(1, 0, 0), { drive: 1, strafe: 0 });
+  const left = RM.fieldCentric(1, 0, 90); near(left.drive, 0, 1e-12); near(left.strafe, 1, 1e-12); // facing left: field-forward is the robot's right
+  const back = RM.fieldCentric(1, 0, 180); near(back.drive, -1, 1e-12); near(back.strafe, 0, 1e-12);
+  const any = RM.fieldCentric(0.6, -0.3, 37); near(Math.hypot(any.drive, any.strafe), Math.hypot(0.6, 0.3), 1e-12, "same stick strength");
+});
+test("Robot: arm torque at an angle and hold power", () => {
+  const m = RM.motor("gb-117"), flat = RM.arm({ m, length: 0.3, loadKg: 1 }), up = RM.arm({ m, length: 0.3, loadKg: 1, angle: 60 });
+  near(up.need, flat.need * 0.5, 1e-9); near(up.flat, flat.need, 1e-12); near(flat.kG, flat.share, 1e-12);
+  near(RM.arm({ m, length: 0.3, loadKg: 1, angle: 90 }).need, 0, 1e-9); near(RM.arm({ m, length: 0.3, loadKg: 1, angle: -60 }).need, up.need, 1e-9);
 });
 
 /* ---------------- Report ---------------- */
